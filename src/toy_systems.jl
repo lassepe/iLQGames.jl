@@ -33,10 +33,15 @@ struct Car5D <: ControlSystem{5, 2}
 end
 
 function dx(cs::Car5D, x::SVector{5}, u::SVector{2}, t::Real)
+    # position: x
     dx1 = x[5] * cos(x[3])
+    # position: y
     dx2 = x[5] * sin(x[3])
+    # orientation
     dx3 = x[5] * tan(x[4]) / cs.l
+    # steering angle
     dx4 = u[1]
+    # speed
     dx5 = u[2]
 
     return @SVector[dx1, dx2, dx3, dx4, dx5]
