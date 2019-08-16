@@ -2,6 +2,7 @@
 using Test
 using iLQGames
 using BenchmarkTools
+using InteractiveUtils
 
 # TODO: maybe move this in some other package
 macro inferred_with_info(expr)
