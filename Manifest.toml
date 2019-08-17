@@ -130,10 +130,10 @@ uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
 version = "0.0.10"
 
 [[Distances]]
-deps = ["LinearAlgebra", "Printf", "Random", "Statistics", "Test"]
-git-tree-sha1 = "a135c7c062023051953141da8437ed74f89d767a"
+deps = ["LinearAlgebra", "Statistics"]
+git-tree-sha1 = "44bd29b50552dfd0a0b674b925de2719f3b9bb0b"
 uuid = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
-version = "0.8.0"
+version = "0.8.1"
 
 [[Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
