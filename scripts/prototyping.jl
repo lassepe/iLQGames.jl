@@ -31,7 +31,17 @@ function solve_lq_game(As::AbstractVector{AbstractMatrix},
     horizon = length(As)
     num_players = length(first(Bs))
     total_xdim = first(size(first(As)))
-    total_udim = sum(last(size(Bi)) for Bi in first(Bs))
+    # the number of controls for every player
+    u_dims = [last(Bi) for Bi in first(Bs)]
+    u_idx_cumsum = cumsum(u_dims)
+    # the index range for every player
+    # TODO: maybe use this in more places
+    u_idx_range = map(1:num_players) do ii
+        first_idx = ii == 1 ? 1 : u_idx_cumsum[ii-1] + 1
+        last_idx = u_idx_cumsum[ii]
+        return first_idx:last_idx
+    end
+    total_udim = sum(u_dims)
 
     # initialize some intermediate representations
 
@@ -39,6 +49,8 @@ function solve_lq_game(As::AbstractVector{AbstractMatrix},
     Z = last(Qs)
     # linear cost to go
     ζ = last(lis)
+
+    strategies = []
 
     # working backwards in time to solve the dynamic program
     for kk in horizon:-1:1
@@ -67,7 +79,7 @@ function solve_lq_game(As::AbstractVector{AbstractMatrix},
                 # TODO: maybe think about col-major optimization here for
                 # caching or windowing to avoid concatenating
                 # append the column for the jth player to the current row
-                S_row = hcat(S_row, (ii == jj ? R[ii] + BᵢZᵢ * B[jj] : BᵢZᵢ * B[jj]))
+                S_row = hcat(S_row, (ii == jj ? R[ii][ii] + BᵢZᵢ * B[jj] : BᵢZᵢ * B[jj]))
             end
             # append the fully constructed row to the full S-Matrix
             S = vcat(S, S_row)
@@ -77,7 +89,9 @@ function solve_lq_game(As::AbstractVector{AbstractMatrix},
         # solve for the gains `P` and feed forward terms `α` simulatiously
         P_and_α = S \ A
         P = P_and_α[:, 1:total_udim]
+        P_split = [P[:, u_idx_range[ii]] for ii in 1:num_players]
         α = P_and_α[:, end]
+        α_split = [α[u_idx_range[ii]] for i in 1:num_players]
 
         # compute F and β as intermediate result for estimating the cost to go
         # for the next step backwards in time
@@ -89,8 +103,14 @@ function solve_lq_game(As::AbstractVector{AbstractMatrix},
         # update Z and ζ (cost to go representation for the next step backwards
         # in time)
         for ii in 1:num_players
-            ζ[ii] = F' * (ζ[ii] + Z[ii] * β) + l[ii] + P.... # TODO
-            Z[ii] = F' * Z[ii] * F + Q[ii] + # TODO (maybe use smart indexing, offset arrays or subarrays for this)
+            ζ[ii] = F' * (ζ[ii] + Z[ii] * β) + l[ii] + sum(P_split[jj]' * R[ii][jj] * α_split[jj] for jj in 1:num_players)
+            # TODO (maybe use smart indexing, offset arrays or subarrays for this)
+            # Also this should be expressablea s one large matrix equation without any explicit sum
+            Z[ii] = F' * Z[ii] * F + Q[ii] + sum(P_split[jj]' * R[ii][jj] * P_split[jj] for jj in 1:num_players)
         end
+
+        pushfirst!(strategies, (P_split, α_split))
     end
+
+    return strategies
 end
