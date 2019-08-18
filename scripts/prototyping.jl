@@ -1,6 +1,9 @@
 using Revise
 using DocStringExtensions
 
+using LinearAlgebra
+using StaticArrays
+
 """
 $(TYPEDSIGNATURES)
 
@@ -23,11 +26,11 @@ Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖ�
         (cost that player a sees if player b takes a certain control action)
 
 """
-function solve_lq_game(As::AbstractVector{AbstractMatrix},
-                       Bs::AbstractVector{AbstractVector{AbstractMatrix}},
-                       Qs::AbstractVector{AbstractVector{AbstractMatrix}},
+function solve_lq_game(As::AbstractVector{AbstractArray},
+                       Bs::AbstractVector{AbstractVector{AbstractArray}},
+                       Qs::AbstractVector{AbstractVector{AbstractArray}},
                        ls::AbstractVector{AbstractVector{AbstractVector}},
-                       Rs::AbstractVector{AbstractVector{AbstractVector{AbstractMatrix}}})
+                       Rs::AbstractVector{AbstractVector{AbstractVector{AbstractArray}}})
     horizon = length(As)
     num_players = length(first(Bs))
     total_xdim = first(size(first(As)))
@@ -87,7 +90,7 @@ function solve_lq_game(As::AbstractVector{AbstractMatrix},
         end
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
-        P_and_α = S \ A
+        P_and_α = S \ Y
         P = P_and_α[:, 1:total_udim]
         P_split = [P[:, u_idx_range[ii]] for ii in 1:num_players]
         α = P_and_α[:, end]
@@ -114,3 +117,90 @@ function solve_lq_game(As::AbstractVector{AbstractMatrix},
 
     return strategies
 end
+
+
+# solve two-player inifinite horizion (time-invariant) LQ game by Lyapunov
+# iterations
+function solve_lyapunov_iterations(A::AbstractArray, B1::AbstractArray, B2::AbstractArray,
+                                   Q1::AbstractArray, Q2::AbstractArray,
+                                   R11::AbstractArray, R12::AbstractArray,
+                                   R21::AbstractArray, R22::AbstractArray, n_iter::Int=100)
+
+    # Initialize cost-to-go with terminal state cost
+    Z1 = Q1
+    Z2 = Q2
+
+    # Initialize controls
+    P1 = (R11 + B1' * Z1 * B1) \ (B1' * Z1 * A)
+    P2 = (R22 + B2' * Z2 * B2) \ (B2' * Z2 * A)
+
+    for ii in 1:n_iter
+        P1_old = P1
+        P2_old = P2
+
+        P1 = (R11 + B1' * Z1 * B1) \ (B1' * Z1 * (A - B2 * P2_old))
+        P2 = (R22 + B2' * Z2 * B2) \ (B2' * Z2 * (A - B1 * P1_old))
+
+        Z1 = (A - B1 * P1 - B2 * P2)' * Z1 * (A - B1 * P1 - B2 * P2) + P1' * R11 * P1 + P2' * R12 * P2 + Q1
+        Z2 = (A - B1 * P1 - B2 * P2)' * Z2 * (A - B1 * P1 - B2 * P2) + P1' * R21 * P1 + P2' * R22 * P2 + Q2
+    end
+
+    return (P1, P2)
+end
+
+# Testing the solver at a simple example: A two-player point mass 1D system.
+
+# The state composes of position and oritation. Therefore, the system dynamics
+# are a pure integrator.
+ΔT = 0.1
+H = 10.0
+N_STEPS = Int(H / ΔT)
+
+# contiuous time system
+A = [0 1; 0 0]
+B1 = [0.05, 1.0]
+B2 = [0.032, 0.11]
+
+# discrete version (See trick
+# https://en.wikipedia.org/wiki/Discretization#Discretization_of_linear_state_space_models)
+eABT = exp([A B1 B2; zeros(2, 4)] * ΔT)
+A_disc = SMatrix{2,2}(eABT[1:2, 1:2])
+B1_disc = SMatrix{2,1}(eABT[1:2, 3])
+B2_disc = SMatrix{2,1}(eABT[1:2, 4])
+
+# state cost
+Q1 = @SMatrix [1 0; 0 1]
+Q2 = -Q1
+l1 = @SVector zeros(2)
+l2 = -l1
+
+# control cost
+R11 = @SMatrix [1]
+R12 = @SMatrix [0]
+R21 = @SMatrix [0]
+R22 = @SMatrix [1]
+
+# sequence for the finite horizon
+As = repeat([A_disc], N_STEPS)
+Bs = repeat([[B1_disc, B2_disc]], N_STEPS)
+Qs = repeat([[Q1, Q2]], N_STEPS)
+ls = repeat([[l1, l2]], N_STEPS)
+Rs = repeat([[[R11, R12], [R21, R22]]], N_STEPS)
+
+# Lyapunov test:
+
+
+# 1.
+# First let's solve for the strategies when using Lyapunov
+# Benchmark to see whethe we are doing useless memory allocation. Looks good!
+# @benchmark solve_lyapunov_iterations($A_disc, $B1_disc, $B2_disc, $Q1, $Q2,
+#                                      $R11, $R12, $R21, $R22)
+# Actual Run
+P1, P2 = solve_lyapunov_iterations(A_disc, B1_disc, B2_disc, Q1, Q2, R11, R12,
+                                   R21, R22)
+
+# 2.
+# Now let's to the same thing with the finite horizoin solver. We would expect
+# the gains of the strategies at the beginning of the game to be similar to the
+# Lyapunov inifinite horizoin solution.
+
