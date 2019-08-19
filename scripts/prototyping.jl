@@ -26,24 +26,20 @@ Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖ�
         (cost that player a sees if player b takes a certain control action)
 
 """
-function solve_lq_game(As::AbstractVector,
-                       Bs::AbstractVector,
-                       Qs::AbstractVector,
-                       ls::AbstractVector,
-                       Rs::AbstractVector)
+function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector, Rs::SVector)
     horizon = length(As)
     num_players = length(first(Bs))
     total_xdim = first(size(first(As)))
     # the number of controls for every player
-    u_dims = [last(size(Bi)) for Bi in first(Bs)]
+    u_dims = SVector{num_players}([last(size(Bi)) for Bi in first(Bs)])
     u_idx_cumsum = cumsum(u_dims)
     # the index range for every player
     # TODO: maybe use this in more places
-    u_idx_range = map(1:num_players) do ii
+    u_idx_range = SVector{num_players}(map(1:num_players) do ii
         first_idx = ii == 1 ? 1 : u_idx_cumsum[ii-1] + 1
         last_idx = u_idx_cumsum[ii]
-        return first_idx:last_idx
-    end
+        return SVector{u_dims[ii]}([i for i in first_idx:last_idx])
+    end)
     total_udim = sum(u_dims)
 
     # initializting the optimal ocst to go representation for dynamic
@@ -68,8 +64,8 @@ function solve_lq_game(As::AbstractVector,
         # form [S1s; S2s; ...] * [P1; P2; ...] = [Y1; Y2; ...].
 
         # Setup the S and Y matrix of the S * X = Y matrix equation
-        S = zeros(0, total_udim)
-        Y = zeros(0, total_xdim + 1)
+        S = @SMatrix zeros(0, total_udim)
+        Y = @SMatrix zeros(0, total_xdim + 1)
 
         # TODO maybe optimize this to allow for SMatrix or at least MMatrix.
         # Maybe concatenating is the better thing to do here if things are
@@ -78,7 +74,7 @@ function solve_lq_game(As::AbstractVector,
             BᵢZᵢ = B[ii]' * Z[ii]
             udim_ii = last(size(B[ii]))
             # the current set of rows that we construct for player ii
-            S_row = zeros(udim_ii, 0)
+            S_row = @SMatrix zeros(udim_ii, 0)
             # the term for own own control cost
             for jj in 1:num_players
                 # TODO: maybe think about col-major optimization here for
@@ -93,11 +89,11 @@ function solve_lq_game(As::AbstractVector,
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
         P_and_α = S \ Y
-        P = P_and_α[:, 1:total_udim]
+        P = P_and_α[:, SVector{total_udim}([i for i in 1:total_udim])]
         α = P_and_α[:, end]
 
-        P_split = [P[u_idx_range[ii], :] for ii in 1:num_players]
-        α_split = [α[u_idx_range[ii]] for ii in 1:num_players]
+        P_split = SVector{num_players}([P[u_idx_range[ii], :] for ii in 1:num_players])
+        α_split = SVector{num_players}([α[u_idx_range[ii]] for ii in 1:num_players])
 
         # compute F and β as intermediate result for estimating the cost to go
         # for the next step backwards in time
