@@ -92,16 +92,21 @@ function solve_lq_game(As::AbstractVector,
         # solve for the gains `P` and feed forward terms `α` simulatiously
         P_and_α = S \ Y
         P = P_and_α[:, 1:total_udim]
-        P_split = [P[u_idx_range[ii], :] for ii in 1:num_players]
         α = P_and_α[:, end]
+
+        P_split = [P[u_idx_range[ii], :] for ii in 1:num_players]
         α_split = [α[u_idx_range[ii]] for ii in 1:num_players]
 
         # compute F and β as intermediate result for estimating the cost to go
         # for the next step backwards in time
         # TODO: the splat operator here might be really slow
-        B_row_vec = hcat(Bs...)
-        F = A - B_row_vec * P
-        β = -B_row_vec * α
+        B_row_vec = hcat(B...)
+        # TODO: this is weird! This should totally give the same result but
+        # somehow it does not. Numerical issues?
+        # F = A - B_row_vec * P
+        # β = -B_row_vec * α
+        F = A - sum(B[ii] * P_split[ii] for ii in num_players)
+        β = -sum(B[ii] * α_split[ii] for ii in num_players)
 
         # update Z and ζ (cost to go representation for the next step backwards
         # in time)
