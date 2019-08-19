@@ -26,16 +26,16 @@ Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖ�
         (cost that player a sees if player b takes a certain control action)
 
 """
-function solve_lq_game(As::AbstractVector{AbstractArray},
-                       Bs::AbstractVector{AbstractVector{AbstractArray}},
-                       Qs::AbstractVector{AbstractVector{AbstractArray}},
-                       ls::AbstractVector{AbstractVector{AbstractVector}},
-                       Rs::AbstractVector{AbstractVector{AbstractVector{AbstractArray}}})
+function solve_lq_game(As::AbstractVector,
+                       Bs::AbstractVector,
+                       Qs::AbstractVector,
+                       ls::AbstractVector,
+                       Rs::AbstractVector)
     horizon = length(As)
     num_players = length(first(Bs))
     total_xdim = first(size(first(As)))
     # the number of controls for every player
-    u_dims = [last(Bi) for Bi in first(Bs)]
+    u_dims = [last(size(Bi)) for Bi in first(Bs)]
     u_idx_cumsum = cumsum(u_dims)
     # the index range for every player
     # TODO: maybe use this in more places
@@ -46,19 +46,19 @@ function solve_lq_game(As::AbstractVector{AbstractArray},
     end
     total_udim = sum(u_dims)
 
-    # initialize some intermediate representations
-
+    # initializting the optimal ocst to go representation for dynamic
+    # programming
     # quadratic cost to go
     Z = last(Qs)
     # linear cost to go
-    ζ = last(lis)
+    ζ = last(ls)
 
     strategies = []
 
     # working backwards in time to solve the dynamic program
     for kk in horizon:-1:1
         # convenience shorthands for the relevant quantities
-        A = As[k]; B = Bs[k]; Q = Qs[k]; l = ls[k]; R = Rs[k];
+        A = As[kk]; B = Bs[kk]; Q = Qs[kk]; l = ls[kk]; R = Rs[kk];
 
         # Compute Ps given previously computed Zs.
         # Refer to equation 6.17a in Basar and Olsder.
@@ -67,7 +67,7 @@ function solve_lq_game(As::AbstractVector{AbstractArray},
 
         # Setup the S and Y matrix of the S * X = Y matrix equation
         S = zeros(0, total_udim)
-        Y = zeros(0, total_xdim)
+        Y = zeros(0, total_xdim + 1)
 
         # TODO maybe optimize this to allow for SMatrix or at least MMatrix.
         # Maybe concatenating is the better thing to do here if things are
@@ -82,19 +82,19 @@ function solve_lq_game(As::AbstractVector{AbstractArray},
                 # TODO: maybe think about col-major optimization here for
                 # caching or windowing to avoid concatenating
                 # append the column for the jth player to the current row
-                S_row = hcat(S_row, (ii == jj ? R[ii][ii] + BᵢZᵢ * B[jj] : BᵢZᵢ * B[jj]))
+                S_row = hcat(S_row, (ii == jj ? R[ii][ii] + BᵢZᵢ * B[ii] : BᵢZᵢ * B[jj]))
             end
             # append the fully constructed row to the full S-Matrix
             S = vcat(S, S_row)
-            Y = vcat([(BᵢZᵢ*A) (B[ii]'*ζ(ii))])
+            Y = vcat(Y, [(BᵢZᵢ*A) (B[ii]'*ζ[ii])])
         end
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
         P_and_α = S \ Y
         P = P_and_α[:, 1:total_udim]
-        P_split = [P[:, u_idx_range[ii]] for ii in 1:num_players]
+        P_split = [P[u_idx_range[ii], :] for ii in 1:num_players]
         α = P_and_α[:, end]
-        α_split = [α[u_idx_range[ii]] for i in 1:num_players]
+        α_split = [α[u_idx_range[ii]] for ii in 1:num_players]
 
         # compute F and β as intermediate result for estimating the cost to go
         # for the next step backwards in time
@@ -157,28 +157,33 @@ H = 10.0
 N_STEPS = Int(H / ΔT)
 
 # contiuous time system
-A = [0 1; 0 0]
-B1 = [0.05, 1.0]
-B2 = [0.032, 0.11]
-
-# discrete version (See trick
-# https://en.wikipedia.org/wiki/Discretization#Discretization_of_linear_state_space_models)
-eABT = exp([A B1 B2; zeros(2, 4)] * ΔT)
-A_disc = SMatrix{2,2}(eABT[1:2, 1:2])
-B1_disc = SMatrix{2,1}(eABT[1:2, 3])
-B2_disc = SMatrix{2,1}(eABT[1:2, 4])
+#      A = [0 1; 0 0]
+#      B1 = [0.05, 1.0]
+#      B2 = [0.032, 0.11]
+#
+#      # discrete version (See trick
+#      # https://en.wikipedia.org/wiki/Discretization#Discretization_of_linear_state_space_models)
+#
+#      # TODO: there still seems to be some numerical issue with the linearization
+#      eABT = exp([A B1 B2; zeros(2, 4)] * ΔT)
+#      A_disc = SMatrix{2,2}(eABT[1:2, 1:2])
+#      B1_disc = SMatrix{2,1}(eABT[1:2, 3])
+#      B2_disc = SMatrix{2,1}(eABT[1:2, 4])
+A_disc = SMatrix{2, 2}([1.0 ΔT; 0.0 1.0])
+B1_disc = SMatrix{2, 1}([0.5 * ΔT^2, ΔT])
+B2_disc = SMatrix{2, 1}([0.32 * ΔT^2, 0.11 * ΔT])
 
 # state cost
-Q1 = @SMatrix [1 0; 0 1]
+Q1 = @SMatrix [1. 0.; 0. 1.]
 Q2 = -Q1
 l1 = @SVector zeros(2)
 l2 = -l1
 
 # control cost
-R11 = @SMatrix [1]
-R12 = @SMatrix [0]
-R21 = @SMatrix [0]
-R22 = @SMatrix [1]
+R11 = @SMatrix [1.]
+R12 = @SMatrix [0.]
+R21 = @SMatrix [0.]
+R22 = @SMatrix [1.]
 
 # sequence for the finite horizon
 As = repeat([A_disc], N_STEPS)
@@ -199,8 +204,18 @@ Rs = repeat([[[R11, R12], [R21, R22]]], N_STEPS)
 P1, P2 = solve_lyapunov_iterations(A_disc, B1_disc, B2_disc, Q1, Q2, R11, R12,
                                    R21, R22)
 
+@info "Lyapunov solution P1"
+show(P1)
+# NOTE: comapring this to the cpp implementation we get approximtaely the same
+# solution as the cpp lyampunov
+
 # 2.
 # Now let's to the same thing with the finite horizoin solver. We would expect
 # the gains of the strategies at the beginning of the game to be similar to the
 # Lyapunov inifinite horizoin solution.
+strategies = solve_lq_game(As, Bs, Qs, ls, Rs)
+println("")
+@info "LQGame solution P1"
+show(strategies |> first |> first |> first)
 
+# TODO: it is correct that the alphas are zero but the Ps converge to the wrong thing.
