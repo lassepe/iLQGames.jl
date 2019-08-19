@@ -49,9 +49,11 @@ function solve_lq_game(As::AbstractVector,
     # initializting the optimal ocst to go representation for dynamic
     # programming
     # quadratic cost to go
-    Z = last(Qs)
+
+    # TODO: this was the bug  beacuse the Qs were mutated! This way Z copys Q.
+    Z = MArray(last(Qs))
     # linear cost to go
-    ζ = last(ls)
+    ζ = MArray(last(ls))
 
     strategies = []
 
@@ -103,10 +105,19 @@ function solve_lq_game(As::AbstractVector,
         B_row_vec = hcat(B...)
         # TODO: this is weird! This should totally give the same result but
         # somehow it does not. Numerical issues?
-        # F = A - B_row_vec * P
-        # β = -B_row_vec * α
-        F = A - sum(B[ii] * P_split[ii] for ii in num_players)
-        β = -sum(B[ii] * α_split[ii] for ii in num_players)
+        # Version 1
+        F = A - B_row_vec * P
+        β = -B_row_vec * α
+        # Version 2 -- TODO: somehow this produces the wrong result while version 1 and 3 are okay
+        # F = A - sum(B[ii] * P_split[ii] for ii in num_players)
+        # β = -sum(B[ii] * α_split[ii] for ii in num_players)
+        # Version 3.
+        # F = A
+        # β = zeros(total_xdim)
+        # for ii in 1:num_players
+        #     F -= B[ii] * P_split[ii]
+        #     β -= B[ii] * α_split[ii]
+        # end
 
         # update Z and ζ (cost to go representation for the next step backwards
         # in time)
@@ -191,11 +202,11 @@ R21 = @SMatrix [0.]
 R22 = @SMatrix [1.]
 
 # sequence for the finite horizon
-As = repeat([A_disc], N_STEPS)
-Bs = repeat([[B1_disc, B2_disc]], N_STEPS)
-Qs = repeat([[Q1, Q2]], N_STEPS)
-ls = repeat([[l1, l2]], N_STEPS)
-Rs = repeat([[[R11, R12], [R21, R22]]], N_STEPS)
+As = SVector{N_STEPS}(repeat([A_disc], N_STEPS))
+Bs = SVector{N_STEPS}(repeat([SVector{2}([B1_disc, B2_disc])], N_STEPS))
+Qs = SVector{N_STEPS}(repeat([SVector{2}([Q1, Q2])], N_STEPS))
+ls = SVector{N_STEPS}(repeat([SVector{2}([l1, l2])], N_STEPS))
+Rs = SVector{N_STEPS}(repeat([SVector{2}([SVector{2}([R11, R12]), SVector{2}([R21, R22])])], N_STEPS))
 
 # Lyapunov test:
 
