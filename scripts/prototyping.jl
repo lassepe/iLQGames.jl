@@ -26,22 +26,22 @@ Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖ�
         (cost that player a sees if player b takes a certain control action)
 
 """
-function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector, Rs::SVector)
+function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector,
+                       Rs::SVector, val_total_u::Val{NU} = Val{2}()) where {NU}
     horizon = length(As)
-    num_players = 2; #length(first(Bs))
+    num_players = length(first(Bs))
     total_xdim = first(size(first(As)))
     # the number of controls for every player
     u_dims = SVector{num_players}([last(size(Bi)) for Bi in first(Bs)])
     u_idx_cumsum = cumsum(u_dims)
     # the index range for every player
-    u_idx_range = SVector{num_players}(map(1:num_players) do ii
-        first_idx = ii == 1 ? 1 : u_idx_cumsum[ii-1] + 1
-        last_idx = u_idx_cumsum[ii]
-        return SVector{u_dims[ii]}([i for i in first_idx:last_idx])
-    end)
-    # TODO: this must be a template paramter
-    total_udim = 2
-    total_u_idx_range = SVector{total_udim}([i for i in 1:total_udim])
+    u_idx_range = SVector{num_players}([begin
+                                            first_idx = (ii == 1 ? 1 : u_idx_cumsum[ii-1] + 1);
+                                            last_idx = u_idx_cumsum[ii];
+                                            SVector{u_dims[ii]}(first_idx:last_idx)
+                                        end for ii in 1:num_players])
+    total_udim = NU
+    total_u_idx_range = SVector{total_udim}(1:total_udim)
 
     # initializting the optimal ocst to go representation for dynamic
     # programming
@@ -106,7 +106,7 @@ function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector, Rs::S
         # for the next step backwards in time
         # TODO: optimize! -- the splat operator here is very slow
         # (https://github.com/JuliaArrays/StaticArrays.jl/issues/361)
-        B_row_vec = hcat(B...)
+        B_row_vec = hcat(B.data...)
         # TODO: this is weird! This should totally give the same result but
         # somehow it does not. Numerical issues?
         # Version 1
