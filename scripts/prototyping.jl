@@ -4,6 +4,14 @@ using DocStringExtensions
 using LinearAlgebra
 using StaticArrays
 
+@generated function static_splat(f::Function, v::Union{SVector{S, T}, MVector{S, T}}) where {S, T}
+    expr = Expr(:call, :f)
+    for i in 1:S
+        push!(expr.args, :(v[$i]))
+    end
+    return expr
+end
+
 """
 $(TYPEDSIGNATURES)
 
@@ -46,7 +54,6 @@ function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector,
     # initializting the optimal ocst to go representation for dynamic
     # programming
     # quadratic cost to go
-
     # TODO: this was the bug  beacuse the Qs were mutated! This way Z copys Q.
     Z = Vector(last(Qs))
     # linear cost to go
@@ -106,7 +113,7 @@ function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector,
         # for the next step backwards in time
         # TODO: optimize! -- the splat operator here is very slow
         # (https://github.com/JuliaArrays/StaticArrays.jl/issues/361)
-        B_row_vec = hcat(B.data...)
+        B_row_vec = static_splat(hcat, B)
         # TODO: this is weird! This should totally give the same result but
         # somehow it does not. Numerical issues?
         # Version 1
