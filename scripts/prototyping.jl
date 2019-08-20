@@ -230,4 +230,17 @@ println("")
 @info "LQGame solution P1"
 show(strategies |> first |> first |> first)
 
-# TODO: it is correct that the alphas are zero but the Ps converge to the wrong thing.
+using Profile
+using ProfileView
+using BenchmarkTools
+function b()
+    b = @benchmark solve_lq_game($As, $Bs, $Qs, $ls, $Rs)
+    show(stdout, "text/plain", b)
+end
+function p()
+    Profile.clear()
+    @profile begin for i in 1:100
+            solve_lq_game(As, Bs, Qs, ls, Rs)
+    end end
+    ProfileView.view()
+end
