@@ -9,4 +9,7 @@ module iLQGames
 
     # some toy systems to play with
     include("toy_systems.jl")
+
+    # the basic solver for linear quadratic games
+    include("solve_lq_game.jl")
 end # module
