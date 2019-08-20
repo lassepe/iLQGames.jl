@@ -28,30 +28,34 @@ Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖ�
 """
 function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector, Rs::SVector)
     horizon = length(As)
-    num_players = length(first(Bs))
+    num_players = 2; #length(first(Bs))
     total_xdim = first(size(first(As)))
     # the number of controls for every player
     u_dims = SVector{num_players}([last(size(Bi)) for Bi in first(Bs)])
     u_idx_cumsum = cumsum(u_dims)
     # the index range for every player
-    # TODO: maybe use this in more places
     u_idx_range = SVector{num_players}(map(1:num_players) do ii
         first_idx = ii == 1 ? 1 : u_idx_cumsum[ii-1] + 1
         last_idx = u_idx_cumsum[ii]
         return SVector{u_dims[ii]}([i for i in first_idx:last_idx])
     end)
-    total_udim = sum(u_dims)
+    # TODO: this must be a template paramter
+    total_udim = 2
+    total_u_idx_range = SVector{total_udim}([i for i in 1:total_udim])
 
     # initializting the optimal ocst to go representation for dynamic
     # programming
     # quadratic cost to go
 
     # TODO: this was the bug  beacuse the Qs were mutated! This way Z copys Q.
-    Z = MArray(last(Qs))
+    Z = Vector(last(Qs))
     # linear cost to go
-    ζ = MArray(last(ls))
+    ζ = Vector(last(ls))
 
-    strategies = []
+    # TODO: figure these types out automatically. Also the dimensions might actually not be the same!
+    strategies = Vector(undef, horizon)
+    P_split = Vector(undef, num_players)
+    α_split = Vector(undef, num_players)
 
     # working backwards in time to solve the dynamic program
     for kk in horizon:-1:1
@@ -64,12 +68,11 @@ function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector, Rs::S
         # form [S1s; S2s; ...] * [P1; P2; ...] = [Y1; Y2; ...].
 
         # Setup the S and Y matrix of the S * X = Y matrix equation
+        # TODO: optimize! -- this takes too long, total_udim not known at compile time?
+        # - when total_udim is known at compile time, things are sooo much faster!
         S = @SMatrix zeros(0, total_udim)
         Y = @SMatrix zeros(0, total_xdim + 1)
 
-        # TODO maybe optimize this to allow for SMatrix or at least MMatrix.
-        # Maybe concatenating is the better thing to do here if things are
-        # static?
         for ii in 1:num_players
             BᵢZᵢ = B[ii]' * Z[ii]
             udim_ii = last(size(B[ii]))
@@ -83,48 +86,56 @@ function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector, Rs::S
                 S_row = hcat(S_row, (ii == jj ? R[ii][ii] + BᵢZᵢ * B[ii] : BᵢZᵢ * B[jj]))
             end
             # append the fully constructed row to the full S-Matrix
+            # TODO: optimize! -- this still takes quite a bit of time.
             S = vcat(S, S_row)
             Y = vcat(Y, [(BᵢZᵢ*A) (B[ii]'*ζ[ii])])
         end
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
         P_and_α = S \ Y
-        P = P_and_α[:, SVector{total_udim}([i for i in 1:total_udim])]
+        # TODO: optimize! -- this splitting seems to cost a lot of time
+        P = P_and_α[:, total_u_idx_range]
         α = P_and_α[:, end]
 
-        P_split = SVector{num_players}([P[u_idx_range[ii], :] for ii in 1:num_players])
-        α_split = SVector{num_players}([α[u_idx_range[ii]] for ii in 1:num_players])
+        for ii in 1:num_players
+            P_split[ii] = P[u_idx_range[ii], :]
+            α_split[ii] = α[u_idx_range[ii]]
+        end
 
         # compute F and β as intermediate result for estimating the cost to go
         # for the next step backwards in time
-        # TODO: the splat operator here might be really slow
+        # TODO: optimize! -- the splat operator here is very slow
+        # (https://github.com/JuliaArrays/StaticArrays.jl/issues/361)
         B_row_vec = hcat(B...)
         # TODO: this is weird! This should totally give the same result but
         # somehow it does not. Numerical issues?
         # Version 1
         F = A - B_row_vec * P
         β = -B_row_vec * α
-        # Version 2 -- TODO: somehow this produces the wrong result while version 1 and 3 are okay
-        # F = A - sum(B[ii] * P_split[ii] for ii in num_players)
-        # β = -sum(B[ii] * α_split[ii] for ii in num_players)
-        # Version 3.
-        # F = A
-        # β = zeros(total_xdim)
-        # for ii in 1:num_players
-        #     F -= B[ii] * P_split[ii]
-        #     β -= B[ii] * α_split[ii]
-        # end
 
         # update Z and ζ (cost to go representation for the next step backwards
         # in time)
         for ii in 1:num_players
-            ζ[ii] = F' * (ζ[ii] + Z[ii] * β) + l[ii] + sum(P_split[jj]' * R[ii][jj] * α_split[jj] for jj in 1:num_players)
-            # TODO (maybe use smart indexing, offset arrays or subarrays for this)
-            # Also this should be expressablea s one large matrix equation without any explicit sum
-            Z[ii] = F' * Z[ii] * F + Q[ii] + sum(P_split[jj]' * R[ii][jj] * P_split[jj] for jj in 1:num_players)
+        #    # 1. Version
+        #    # TODO: optimize! -- this sum takes a lot of the time. Can we make a pure matrix expression for this?
+        #    ζ[ii] = F' * (ζ[ii] + Z[ii] * β) + l[ii] + sum(P_split[jj]' * R[ii][jj] * α_split[jj] for jj in 1:num_players)
+        #    # TODO: optimize! -- this sum takes a lot of the time. Can we make a pure matrix expression for this?
+        #    # somehow this has to be resolved at runtime???
+        #    Z[ii] = F' * Z[ii] * F + Q[ii] + sum(P_split[jj]' * R[ii][jj] * P_split[jj] for jj in 1:num_players)
+            # 2. Version
+            ζ[ii] = (F' * (ζ[ii] + Z[ii] * β) + l[ii])
+            Z[ii] = (F' * Z[ii] * F + Q[ii])
+            for jj in 1:num_players
+                PjRij = P_split[jj]' * R[ii][jj]
+                ζ[ii] += PjRij * α_split[jj]
+                Z[ii] += PjRij * P_split[jj]
+            end
         end
 
-        pushfirst!(strategies, (P_split, α_split))
+        # TODO also add α_split
+        # TODO: optimize! -- there must be something faster than this. Maybe
+        # look at how they do it in `DynamicalSystems.jl` and/or `DifferentialEquations.jl`
+        strategies[kk] = (P_split, α_split)
     end
 
     return strategies
@@ -205,8 +216,6 @@ ls = SVector{N_STEPS}(repeat([SVector{2}([l1, l2])], N_STEPS))
 Rs = SVector{N_STEPS}(repeat([SVector{2}([SVector{2}([R11, R12]), SVector{2}([R21, R22])])], N_STEPS))
 
 # Lyapunov test:
-
-
 # 1.
 # First let's solve for the strategies when using Lyapunov
 # Benchmark to see whethe we are doing useless memory allocation. Looks good!
