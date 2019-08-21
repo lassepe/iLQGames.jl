@@ -1,6 +1,11 @@
 using Test
 using StaticArrays
-using iLQGames: solve_lq_game
+
+using iLQGames:
+    NPlayerLinearDynamics,
+    QuadraticPlayerCost,
+    NPlayerFiniteHorizonLQGame,
+    solve_lq_game
 
 using Profile
 using ProfileView
@@ -71,16 +76,30 @@ const R11 = @SMatrix [1.]
 const R12 = @SMatrix [0.]
 const R21 = @SMatrix [0.]
 const R22 = @SMatrix [1.]
-
-# sequence for the finite horizon
+# the matrix version of the problem
 const As = SVector{N_STEPS}(repeat([A_disc], N_STEPS))
 const Bs = SVector{N_STEPS}(repeat([SVector{2}([B1_disc, B2_disc])], N_STEPS))
 const Qs = SVector{N_STEPS}(repeat([SVector{2}([Q1, Q2])], N_STEPS))
 const ls = SVector{N_STEPS}(repeat([SVector{2}([l1, l2])], N_STEPS))
 const Rs = SVector{N_STEPS}(repeat([SVector{2}([SVector{2}([R11, R12]), SVector{2}([R21, R22])])], N_STEPS))
 
+# the struct version of the prblem
+# dynamics
+const joint_dynamics = NPlayerLinearDynamics(A_disc, (P1=B1_disc, P2=B2_disc))
+# cost
+const R1 = (P1=R11, P2=R12)
+const R2 = (P1=R21, P2=R22)
+const cost1 = QuadraticPlayerCost(Q1, l1, R1)
+const cost2 = QuadraticPlayerCost(Q2, l2, R2)
+const joint_cost = (P1=cost1, P2=cost2)
+
+const ltv_dynamics = SVector{N_STEPS}(repeat([joint_dynamics], N_STEPS))
+const qtv_cost = SVector{N_STEPS}(repeat([joint_cost], N_STEPS))
+# constructing the game
+const lqGame = NPlayerFiniteHorizonLQGame(ltv_dynamics, qtv_cost)
+
 function benchmark_solve_lq_game()
-    b = @benchmark solve_lq_game($As, $Bs, $Qs, $ls, $Rs)
+    b = @benchmark solve_lq_game(As, Bs, Qs, ls, Rs)
     show(stdout, "text/plain", b)
     println()
 end
@@ -100,7 +119,7 @@ function test_lyapunov()
                                        R21, R22)
 
     # 2. LQ game solution
-    strategies = solve_lq_game(As, Bs, Qs, ls, Rs)
+    strategies = solve_lq_game(lqGame)
     (P1_lqg, P2_lqg), _ = first(strategies)
 
     @info """
@@ -120,14 +139,14 @@ end
 
 function test_global_nash()
     # compute nash solution:
-    strategies = solve_lq_game(As, Bs, Qs, ls, Rs)
+    strategies = solve_lq_game(lqGame)
     (P1_lqg, P2_lqg), (α1_lqg, α2_lqg) = first(strategies)
     # TODO -- for now we skil this test
 end
 
 @testset "solve_lq_games.jl" begin
-    benchmark_solve_lq_game()
+    # benchmark_solve_lq_game()
     test_lyapunov()
-    test_global_nash()
+    # test_global_nash()
 end;
 
