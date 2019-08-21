@@ -5,6 +5,84 @@ using StaticArrays
 include("utils.jl")
 
 """
+$(TYPEDEF)
+
+A struct to represent a multi-player dynamical system.
+
+# Parameters
+
+- `NX`: the numer of states
+- `PS`: a tuple of player symbols
+- `T`:  the type of the A matrix
+- `TB`: the type tuple of the b-matrices
+
+# Fields
+
+$(TYPEDFIELDS)
+"""
+struct NPlayerLinearDynamics{NP, NX, PS, T, TB<:NTuple{NP, SMatrix}}
+    "The time series of state transition matrices."
+    A::SMatrix{NX, NX, T}
+    "A named tuple that maps a player symbol to a matrix for that player"
+    B::NamedTuple{PS, TB}
+end
+"""
+$(TYPEDEF)
+
+A struct to represent the quadratic players costs for a singel player in a
+game.
+
+# Parameters
+
+- `NP`: the number of players
+- `NX`: the number of states
+- `PS`: a tuple of player symbols
+- `T`: the matrix element type (e.g. Flaot64)
+- `TR`: the type tuple of R-matrices
+
+# Fields
+
+$(TYPEDFIELDS)
+"""
+struct QuadraticPlayerCost{NP, NX, PS, T, TR<:NTuple{NP, SMatrix}}
+    "The qudratic state cost matrix"
+    Q::SMatrix{NX, NX, T}
+    "The linear state cost."
+    l::SVector{NX, T}
+    "A named tuple that maps a :player to the quadratic control cost matirx,
+    that represents the cost that *this* player encounters for :player taking a
+    certain control u"
+    R::NamedTuple{PS, TR}
+end
+
+"""
+$(TYPEDEF)
+
+A struct to represent a multi-player player differential game.
+
+# Parameters
+
+- `NP`: the number of players
+- `NX`: the number of states
+- `PS` a tuple of player symbols
+- `H`: the horizon of the game (number of steps, Int)
+- `TD`: the type of the dynamics representation
+
+# Fields
+
+$(TYPEDFIELDS)
+"""
+struct NPlayerFiniteHorizonLQGame{NP, NX, PS, H,
+                                  TD<:NPlayerLinearDynamics{NP, NX, PS},
+                                  TC<:NTuple{NP, QuadraticPlayerCost{NP, NX, PS}}}
+    "The linear, time varying dynamics of the system"
+    linear_dynamics::SVector{H, TD}
+    "The quadratic, time varying costs for each player in terms of a vector
+    NamedTuples mapping :player to the corresponding cost representation."
+    quadratic_cost::SVector{H, NamedTuple{PS, TC}}
+end
+
+"""
 $(TYPEDSIGNATURES)
 
 Solve a time-varying, finite horizon LQ-game to find closed-loop NASH feedback
@@ -26,6 +104,10 @@ Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖ�
         (cost that player a sees if player b takes a certain control action)
 
 """
+
+# TODO: Maybe the input to this should be a named-tuple of structs to properly
+# handle the problem of type stability for different input dimensions over
+# players
 function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector,
                        Rs::SVector, val_total_u::Val{NU} = Val{2}()) where {NU}
     horizon = length(As)
@@ -139,3 +221,26 @@ function solve_lq_game(As::SVector, Bs::SVector, Qs::SVector, ls::SVector,
     return strategies
 end
 
+# TODO: remove -- test code:
+Q1 = @SMatrix [1. 0.; 0. 1.]
+l1 = @SVector [1., 2.]
+R1 = (P1=(@SMatrix [1.0 0.0; 0.0 1.0]), P2=(@SMatrix [1.0]))
+qpc1 = QuadraticPlayerCost(Q1, l1, R1)
+
+Q2 = -Q1
+l2 = -l1
+R2 = R1
+qpc2 = QuadraticPlayerCost(Q2, l2, R2)
+
+# A simple dynamical system:
+A = @SMatrix [1.0 1.0; 0.0 1.0]
+B1 = @SMatrix [1.0 0.0; 0.0 1.0]
+B2 = @SMatrix [1.0; 0.0]
+npld = NPlayerLinearDynamics(A, (P1=B1, P2=B2))
+
+# constructing the game
+const H = 100
+ltv_dynamcis = SVector{H}(repeat([npld], H))
+qtv_cost = SVector{H}(repeat([(P1=qpc1, P2=qpc2)], H))
+
+lqGame = NPlayerFiniteHorizonLQGame(ltv_dynamcis, qtv_cost)
