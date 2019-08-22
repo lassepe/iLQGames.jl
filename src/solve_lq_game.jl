@@ -7,31 +7,17 @@ include("utils.jl")
 """
 $(TYPEDEF)
 
-A struct to represent a multi-player dynamical system.
-
-# Parameters
-
-- `nx`: the numer of states
-- `np`: the number of players
-- `ps`: a tuple of player symbols
-- `T`:  the type of the A matrix
-- `TB`: the type tuple of the b-matrices
-
-# Fields
-
-$(TYPEDFIELDS)
+A struct to represent a simple control system with linear dynamics
 """
-struct NPlayerLinearDynamics{nx, np, ps, T, TB<:NTuple{np, SMatrix}}
-    "The time series of state transition matrices."
-    A::SMatrix{nx, nx, T}
-    "A named tuple that maps a player symbol to a matrix for that player"
-    B::NamedTuple{ps, TB}
+struct LinearSystem{nx, nu, TA<:SMatrix{nx, nu}, TB<:SMatrix{nx, nu}}
+    "The state transitioni matrix"
+    A::TA
+    "The control input matrix"
+    B::TB
 end
-n_states(d::NPlayerLinearDynamics{nx}) where {nx} = nx
-n_players(d::NPlayerLinearDynamics{nx, np}) where {nx, np} = np
-player_names(n::NPlayerLinearDynamics{nx, np, ps}) where {nx, np, ps} = ps
-# TODO there must be a way to get this non-allocating
-u_dims(d::NPlayerLinearDynamics) = NamedTuple{player_names(d)}((last(size(Bi)) for Bi in d.B))
+
+n_states(ls::LinearSystem{nx}) where {nx} = nx
+n_controls(ls::LinearSystem{nx, nu}) where {nx, nu} = nu
 
 """
 $(TYPEDEF)
@@ -42,59 +28,67 @@ game.
 # Parameters
 
 - `nx`: the number of states
-- `np`: the number of players
-- `ps`: a tuple of player symbols
-- `T`: the matrix element type (e.g. Flaot64)
-- `TR`: the type tuple of R-matrices
+- `nu`: the number of controls
 
 # Fields
 
 $(TYPEDFIELDS)
 """
-struct QuadraticPlayerCost{nx, np, ps, T, TR<:NTuple{np, SMatrix}}
+struct QuadraticPlayerCost{nx, nu, TQ<:SMatrix{nx, nx}, TL<:SVector{nx}, TR<:SMatrix{nu, nu}}
     "The qudratic state cost matrix"
-    Q::SMatrix{nx, nx, T}
+    Q::TQ
     "The linear state cost."
-    l::SVector{nx, T}
+    l::TL
     "A named tuple that maps a :player to the quadratic control cost matirx,
     that represents the cost that *this* player encounters for :player taking a
     certain control u"
-    R::NamedTuple{ps, TR}
+    R::TR
 end
+n_states(qpc::QuadraticPlayerCost{nx}) where {nx} = nx
+n_controls(qpc::QuadraticPlayerCost{nx, nu}) where {nx, nu} = nu
 
 """
 $(TYPEDEF)
 
-A struct to represent a multi-player player differential game.
+A struct to represent a multi-player linear system where each player controls a
+range of inputs.
 
 # Parameters
 
-- `nx`: the number of states
-- `np`: the number of players
-- `ps` a tuple of player symbols
-- `h`: the horizon of the game (number of steps, Int)
-- `TD`: the type of the dynamics representation
-- `TC`: the type tuple of cost represntations
+- `uids`: the indices of the control inputs for every player
+- `np`:   the number of players
+- `nx`    the number of states
+- `nu`:   the number of controls
+- `h`:    the horizon of the game (number of steps, Int)
+- `T`:    the element type (e.g. Float64)
 
 # Fields
 
 $(TYPEDFIELDS)
 """
-struct NPlayerFiniteHorizonLQGame{nx, np, ps, h,
-                                  TD<:NPlayerLinearDynamics{nx, np, ps},
-                                  TC<:NTuple{np, QuadraticPlayerCost{nx, np, ps}}}
-    "The linear, time varying dynamics of the system"
-    dynamics::SVector{h, TD}
-    "The quadratic, time varying costs for each player in terms of a vector
-    NamedTuples mapping :player to the corresponding cost representation."
-    cost::SVector{h, NamedTuple{ps, TC}}
-end
+# TODO: I think this is never needed in it's standalone form. This could just
+# directly be the LQGame.
+struct FiniteHorizonLQGame{uids, h, TD<:SVector{h}, TP<:SVector{h}}
+    "The full system dynamics"
+    dyn::TD
+    "The cost representation"
+    player_costs::TP
 
-n_states(g::NPlayerFiniteHorizonLQGame{nx}) where {nx} = nx
-n_players(g::NPlayerFiniteHorizonLQGame{nx, np}) where {nx, np} = np
-player_names(g::NPlayerFiniteHorizonLQGame{nx, np, ps}) where {nx, np, ps} = ps
-horizon(g::NPlayerFiniteHorizonLQGame{nx, np, ps, h}) where {nx, np, ps, h} = h
-# TODO: statically access the control dimensions
+    FiniteHorizonLQGame{uids}(dyn::TD, player_costs::TP) where {uids, h, TD<:SVector{h}, TP<:SVector{h}} = begin
+        # TODO: maybe add checks for correct dimensions
+        @assert isempty(intersect(uids...)) "Invalid uids: Two players can not control the same input"
+        @assert all(isbits(uir) for uir in uids) "Invalid uids: all ranges should be isbits to make things fast."
+        @assert all(eltype(uir) == Int for uir in uids) "Invalid uids: the elements of the u_idx_range should be integers."
+        new{uids, h, TD, TP}(dyn, player_costs)
+    end
+end
+# Do these properly ()
+n_states(g::FiniteHorizonLQGame{uids, h, SVector{h, LinearSystem{nx, nu, TA, TB}}}) where {uids, h, nx, nu, TA, TB} = nx
+n_controls(g::FiniteHorizonLQGame{uids, h, SVector{h, LinearSystem{nx, nu, TA, TB}}}) where {uids, h, nx, nu, TA, TB} = nu
+
+n_players(g::FiniteHorizonLQGame{uids}) where {uids} = length(uids)
+u_idx_ranges(g::FiniteHorizonLQGame{uids}) where {uids} = uids
+horizon(g::FiniteHorizonLQGame{uids, h}) where {uids, h} = h
 
 """
 $(TYPEDSIGNATURES)
@@ -107,89 +101,67 @@ Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖ�
 """
 
 # TODO: NU should be known at compile time from g
-function solve_lq_game(g::NPlayerFiniteHorizonLQGame, val_total_u::Val{nu} = Val{2}()) where {nu}
-    # the number of controls for every player
-    u_idx_cumsum = NamedTuple{player_names(g)}(cumsum(collect(values(u_dims(first(g.dynamics))))))
-    # the index range for every player
-    u_idx_range = NamedTuple{player_names(g)}([begin
-                                                first_idx = (ii == 1 ? 1 : u_idx_cumsum[ii-1] + 1);
-                                                last_idx = u_idx_cumsum[ii];
-                                                SVector{u_dims(first(g.dynamics))[ii]}(first_idx:last_idx)
-                                            end for ii in 1:length(player_names(g))])
-    total_u_idx_range = SVector{nu}(1:nu)
+function solve_lq_game(g::FiniteHorizonLQGame)
+    total_u_idx_range = SVector{n_controls(g)}(1:n_controls(g))
     # TODO: maybe also move everything above to game contruction. This only
     # needs to be done once and can even be known at parse-time
 
     # initializting the optimal cost to go representation for DP
     # quadratic cost to go
-    Z = NamedTuple{player_names(g)}(player_cost.Q for player_cost in last(g.cost))
-    ζ = NamedTuple{player_names(g)}(player_cost.l for player_cost in last(g.cost))
+    Z = [pc.Q for pc in last(g.player_costs)]
+    ζ = [pc.l for pc in last(g.player_costs)]
 
     # TODO: figure these types out automatically. Also the dimensions might actually not be the same!
-    strategies = Vector(undef, horizon(g))
-    P_split = Vector(undef, n_players(g))
-    α_split = Vector(undef, n_players(g))
+    P_type = SMatrix{n_controls(g), n_states(g)}
+    α_type = SVector{n_controls(g)}
+    strategies = Vector{Tuple{P_type, α_type}}(undef, horizon(g))
+
+    # Setup the S and Y matrix of the S * X = Y matrix equation
+    S = @MMatrix zeros(n_controls(g), n_controls(g))
+    Y = @MMatrix zeros(n_controls(g), n_states(g) + 1)
 
     # working backwards in time to solve the dynamic program
     for kk in horizon(g):-1:1
-        dyn = g.dynamics[kk]
-        cost = g.cost[kk]
+        dyn = g.dyn[kk]
+        cost = g.player_costs[kk]
         # convenience shorthands for the relevant quantities
-        A = dyn.A; B = dyn.B
+        A = dyn.A
+        B = dyn.B
 
         # Compute Ps given previously computed Zs.
         # Refer to equation 6.17a in Basar and Olsder.
         # This will involve solving a system of matrix linear equations of the
         # form [S1s; S2s; ...] * [P1; P2; ...] = [Y1; Y2; ...].
-
-        # Setup the S and Y matrix of the S * X = Y matrix equation
-        # TODO: optimize! -- this takes too long, nu not known at compile time?
-        S = @SMatrix zeros(0, nu)
-        Y = @SMatrix zeros(0, n_states(g) + 1)
-
-        # TODO: I think this can be written as an outer product to avoid concatenating
-        # So if we had the full vector:
-        # S = B' Z B + blkdiag(R)
-        # Y = B' Z A
-        for ii in 1:n_players(g)
-            BᵢZᵢ = B[ii]' * Z[ii]
-            udim_ii = last(size(B[ii]))
+        for (ii, udxᵢ) in enumerate(u_idx_ranges(g))
+            BᵢZᵢ = B[:, udxᵢ]' * Z[ii]
             # the current set of rows that we construct for player ii
-            S_row = @SMatrix zeros(udim_ii, 0)
-            # the term for own own control cost
-            for jj in 1:n_players(g)
-                # append the column for the jth player to the current row
-                S_row = hcat(S_row, (ii == jj ? cost[ii].R[ii] + BᵢZᵢ * B[ii] : BᵢZᵢ * B[jj]))
-            end
+            S[udxᵢ, :] = cost[ii].R[udxᵢ, total_u_idx_range] + BᵢZᵢ*B
             # append the fully constructed row to the full S-Matrix
-            S = vcat(S, S_row)
-            Y = vcat(Y, [(BᵢZᵢ*A) (B[ii]'*ζ[ii])])
+            Y[udxᵢ, :] = [(BᵢZᵢ*A) (B[:, udxᵢ]'*ζ[ii])]
         end
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
-        P_and_α = S \ Y
-        # TODO: optimize! -- this splitting seems to cost a lot of time
-        P = P_and_α[:, total_u_idx_range]
-        α = P_and_α[:, end]
-
-        for ii in 1:n_players(g)
-            P_split[ii] = P[u_idx_range[ii], :]
-            α_split[ii] = α[u_idx_range[ii]]
-        end
+        P_and_α = (S \ Y)
+        P = SMatrix{n_controls(g), n_states(g)}(P_and_α[:, total_u_idx_range])
+        α = SVector{n_controls(g)}(P_and_α[:, end])
 
         # compute F and β as intermediate result for estimating the cost to go
-        B_row_vec = hcat(B...)
-        F = A - B_row_vec * P
-        β = -B_row_vec * α
+        F = A - B * P
+        β = -B * α
 
         # update Z and ζ (cost to go representation for the next step backwards
         # in time)
-        ζ = NamedTuple{player_names(g)}((F' * (ζ[ii] + Z[ii] * β) + cost[ii].l) + sum(P_split[jj]'*cost[ii].R[jj]*α_split[jj] for jj in 1:n_players(g)) for ii in 1:n_players(g))
-        Z = NamedTuple{player_names(g)}(F' * Z[ii] * F + cost[ii].Q + sum(P_split[jj]'*cost[ii].R[jj]*P_split[jj] for jj in 1:n_players(g)) for ii in 1:n_players(g))
+        for ii in 1:n_players(g)
+            cᵢ= cost[ii]
+            PRᵢ = P' * cᵢ.R
+            ζ[ii] = (F' * (ζ[ii] + Z[ii] * β) + cᵢ.l) + PRᵢ * α
+            Z[ii] = (F' * Z[ii] * F + cost[ii].Q) + PRᵢ * P
+
+        end
 
         # TODO: optimize! -- there must be something faster than this. Maybe
         # look at how they do it in `DynamicalSystems.jl` and/or `DifferentialEquations.jl`
-        strategies[kk] = (P_split, α_split)
+        strategies[kk] = (P, α)
     end
 
     return strategies
