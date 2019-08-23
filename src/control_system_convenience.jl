@@ -1,23 +1,23 @@
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x::AbstractVector, u::AbstractVector, t::Real)
+    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::Real)
 
 A convencience implementaiton of `linearize` using `ForwardDiff.jl`. Overload
 this with an explicit version to get better performance.
 """
-function linearize(cs::ControlSystem, x::AbstractVector, u::AbstractVector, t::Real)
+function linearize(cs::ControlSystem, x::SVector, u::SVector, t::Real)
     A = ForwardDiff.jacobian(x->dx(cs, x, u, t), x)
     B = ForwardDiff.jacobian(u->dx(cs, x, u, t), u)
     return LinearSystem(A, B)
 end
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x0::AbstractVector, u::AbstractVector, t0::Real, ΔT::Real)
+    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::Real, ΔT::Real)
 
 A convencience implementaiton of `integrate` using RungeKutta of order 4 as
 convencience default. You may impelement your own integrator here. Consider
 using `DifferentialEquations.jl.
 """
-function integrate(cs::ControlSystem, x0::AbstractVector, u::AbstractVector, t0::Real, ΔT::Real, k::Int=2)
+function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::Real, ΔT::Real, k::Int=2)
     Δt = ΔT/k
 
     x = x0
