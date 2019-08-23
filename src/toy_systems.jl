@@ -1,3 +1,6 @@
+using DocStringExtensions
+using StaticArrays
+
 """
 $(TYPEDEF)
 
@@ -16,7 +19,6 @@ function dx(cs::Lorenz3D, x::SVector{3}, u::SVector{2}, t::Real)
 
     return @SVector[dx1, dx2, dx3]
 end
-
 
 """
 $(TYPEDEF)

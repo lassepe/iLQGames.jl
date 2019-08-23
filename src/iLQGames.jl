@@ -3,13 +3,15 @@ module iLQGames
     using ForwardDiff
     using StaticArrays
 
-    export
-        ControlSystem
-    include("control_system.jl")
+    include("control_system_interface.jl")
+    include("linear_system.jl")
+    include("control_system_convenience.jl")
 
-    # some toy systems to play with
-    include("toy_systems.jl")
-
-    # the basic solver for linear quadratic games
+    include("quadratic_cost.jl")
+    include("finite_horizon_lq_game.jl")
     include("solve_lq_game.jl")
+
+    include("toy_systems.jl")
+    include("utils.jl")
+
 end # module

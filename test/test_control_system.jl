@@ -4,6 +4,7 @@ include("utils.jl")
 
 using StaticArrays
 using iLQGames:
+    ControlSystem,
     Lorenz3D,
     dx,
     linearize
