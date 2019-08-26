@@ -14,14 +14,16 @@ abstract type ControlSystem{nx, nu} end
 
 Returns the number of states of the control system.
 """
-n_states(cs::ControlSystem{nx, nu}) where {nx, nu} = nx
+n_states(::Type{<:ControlSystem{nx, nu}}) where {nx, nu} = nx
+n_states(cs::ControlSystem) = n_states(typeof(cs))
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem)
 
 Returns the number of controls of the control system.
 """
-n_controls(cs::ControlSystem{nx, nu}) where {nx, nu} = nu
+n_controls(::Type{<:ControlSystem{nx, nu}}) where {nx, nu} = nu
+n_controls(cs::ControlSystem) = n_states(typeof(cs))
 
 """ $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::Real)
 Returns the time derivative of the state `dx` at a given state `x`, control

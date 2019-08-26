@@ -34,8 +34,8 @@ struct FiniteHorizonLQGame{uids, h, TD<:StaticVector{h}, TP<:StaticVector{h}}
     end
 end
 
-n_states(g::FiniteHorizonLQGame{uids, h, TD}) where {uids, h, nx, nu, TA, TB, TD<:StaticVector{h, LinearSystem{nx, nu, TA, TB}}} = nx
-n_controls(g::FiniteHorizonLQGame{uids, h, TD}) where {uids, h, nx, nu, TA, TB, TD<:StaticVector{h, LinearSystem{nx, nu, TA, TB}}} = nu
+n_states(g::FiniteHorizonLQGame{uids, h, TD}) where {uids, h, TD} = n_states(eltype(TD))
+n_controls(g::FiniteHorizonLQGame{uids, h, TD}) where {uids, h, TD} = n_controls(eltype(TD))
 n_players(g::FiniteHorizonLQGame{uids}) where {uids} = length(uids)
 u_idx_ranges(g::FiniteHorizonLQGame{uids}) where {uids} = uids
 horizon(g::FiniteHorizonLQGame{uids, h}) where {uids, h} = h
