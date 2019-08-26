@@ -39,8 +39,8 @@ function generate_toy_game()
     costs = @SVector [c1, c2]
     # the lq game (player one has control input 1 and 2; player 2 has control input 3
     N_STEPS = 100
-    ltv_dyn = SVector{N_STEPS}(repeat([dyn], N_STEPS))
-    qtv_costs = SVector{N_STEPS}(repeat([costs], N_STEPS))
+    ltv_dyn = Size(N_STEPS)(repeat([dyn], N_STEPS))
+    qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
     lqGame = FiniteHorizonLQGame{((@SVector [1]), (@SVector [2]))}(ltv_dyn, qtv_costs)
 
     # test all the function calls:
