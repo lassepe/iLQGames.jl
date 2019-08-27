@@ -8,6 +8,7 @@ n_controls(g::FiniteHorizonGame{uids, h, nx, nu}) where {uids, h, nx, nu} = nu
 n_players(g::FiniteHorizonGame{uids}) where {uids} = length(uids)
 u_idx_ranges(g::FiniteHorizonGame{uids}) where {uids} = uids
 horizon(g::FiniteHorizonGame{uids, h}) where {uids, h} = h
+function strategy_type end
 
 """
 $(TYPEDEF)
@@ -44,3 +45,6 @@ struct FiniteHorizonLQGame{uids, h, nx, nu, TD<:StaticVector{h}, TP<:StaticVecto
         new{uids, h, nx, nu, TD, TP}(dyn, player_costs)
     end
 end
+
+strategy_type(g::FiniteHorizonLQGame) = Tuple{SMatrix{n_controls(g), n_controls(g), Float64, n_controls(g)*n_states(g)},
+                                              SVector{n_controls(g), Float64}}
