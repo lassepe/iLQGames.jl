@@ -1,6 +1,14 @@
 using DocStringExtensions
 using StaticArrays
 
+abstract type FiniteHorizonGame{uids, h, nx, nu} end
+
+n_states(g::FiniteHorizonGame{uids, h, nx}) where {uids, h, nx} = nx
+n_controls(g::FiniteHorizonGame{uids, h, nx, nu}) where {uids, h, nx, nu} = nu
+n_players(g::FiniteHorizonGame{uids}) where {uids} = length(uids)
+u_idx_ranges(g::FiniteHorizonGame{uids}) where {uids} = uids
+horizon(g::FiniteHorizonGame{uids, h}) where {uids, h} = h
+
 """
 $(TYPEDEF)
 
@@ -10,16 +18,17 @@ range of inputs.
 # Parameters
 
 - `uids`: the indices of the control inputs for every player
-- `np`:   the number of players
+- `h`:    the horizon of the game (number of steps, Int)
 - `nx`    the number of states
 - `nu`:   the number of controls
-- `h`:    the horizon of the game (number of steps, Int)
+- `TD`:   the type of the dynamics
+- `TP`:   the type of the player costs
 
 # Fields
 
 $(TYPEDFIELDS)
 """
-struct FiniteHorizonLQGame{uids, h, TD<:StaticVector{h}, TP<:StaticVector{h}}
+struct FiniteHorizonLQGame{uids, h, nx, nu, TD<:StaticVector{h}, TP<:StaticVector{h}} <: FiniteHorizonGame{uids, h, nx, nu}
     "The full linear system dynamics. A vector (time) over `LinearSystem`s."
     dyn::TD
     "The cost representation. A vector (time) over vector (player) over
@@ -30,12 +39,8 @@ struct FiniteHorizonLQGame{uids, h, TD<:StaticVector{h}, TP<:StaticVector{h}}
         @assert isempty(intersect(uids...)) "Invalid uids: Two players can not control the same input"
         @assert all(isbits(uir) for uir in uids) "Invalid uids: all ranges should be isbits to make things fast."
         @assert all(eltype(uir) == Int for uir in uids) "Invalid uids: the elements of the u_idx_range should be integers."
-        new{uids, h, TD, TP}(dyn, player_costs)
+        nx = n_states(eltype(TD))
+        nu = n_controls(eltype(TD))
+        new{uids, h, nx, nu, TD, TP}(dyn, player_costs)
     end
 end
-
-n_states(g::FiniteHorizonLQGame{uids, h, TD}) where {uids, h, TD} = n_states(eltype(TD))
-n_controls(g::FiniteHorizonLQGame{uids, h, TD}) where {uids, h, TD} = n_controls(eltype(TD))
-n_players(g::FiniteHorizonLQGame{uids}) where {uids} = length(uids)
-u_idx_ranges(g::FiniteHorizonLQGame{uids}) where {uids} = uids
-horizon(g::FiniteHorizonLQGame{uids, h}) where {uids, h} = h
