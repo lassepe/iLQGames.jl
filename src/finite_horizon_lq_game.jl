@@ -1,6 +1,3 @@
-using DocStringExtensions
-using StaticArrays
-
 abstract type FiniteHorizonGame{uids, h, nx, nu} end
 
 n_states(g::FiniteHorizonGame{uids, h, nx}) where {uids, h, nx} = nx

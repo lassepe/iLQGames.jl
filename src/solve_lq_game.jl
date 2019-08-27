@@ -1,7 +1,3 @@
-using DocStringExtensions
-using LinearAlgebra
-using StaticArrays
-
 """
 $(TYPEDSIGNATURES)
 

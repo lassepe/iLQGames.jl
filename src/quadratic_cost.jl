@@ -1,6 +1,3 @@
-using DocStringExtensions
-using StaticArrays
-
 """
 $(TYPEDEF)
 
