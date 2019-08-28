@@ -130,13 +130,8 @@ function test_lyapunov(g::FiniteHorizonLQGame)
     end;
 end
 
-function test_global_nash()
-    # TODO: implement
-end
-
-@testset "solve_lq_games.jl" begin
+@testset "solve_lq_game" begin
     lqGame = generate_toy_game()
     test_lyapunov(lqGame)
     benchmark_solve_lq_game(lqGame)
-    # test_global_nash()
 end;

@@ -17,4 +17,4 @@ l3 = Lorenz3D(10., 28., 8//3)
     @test @inferred_with_info integrate(l3, @SVector([0., 0., 0.]), @SVector([0., 1.]), 0, 0.1)
     @test @inferred_with_info dx(l3, @SVector([2, 1, 7]), @SVector([0, 1]), 0)
     @test @inferred_with_info linearize(l3, @SVector([2, 1, 7]), @SVector([0, 1]), 0)
-end
+end;

@@ -19,7 +19,7 @@ struct LinearSystem{nx, nu, TA<:SMatrix{nx, nx}, TB<:SMatrix{nx, nu}} <: Control
     B::TB
 end
 
-dx(ls::LinearSystem{nx, nu}, x::SVector{nx}, u::SVector{nu}, t::Real) where {nx, nu} = cs.A*x + B*u
+dx(ls::LinearSystem{nx, nu}, x::SVector{nx}, u::SVector{nu}, t::Real) where {nx, nu} = ls.A*x + ls.B*u
 
 """
     $(FUNCTIONNAME)(ls::LinearSystem, ΔT::Real)
