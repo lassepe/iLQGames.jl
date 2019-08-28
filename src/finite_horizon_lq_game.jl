@@ -26,14 +26,14 @@ range of inputs.
 
 $(TYPEDFIELDS)
 """
-struct FiniteHorizonLQGame{uids, h, nx, nu, TD<:StaticVector{h}, TP<:StaticVector{h}} <: FiniteHorizonGame{uids, h, nx, nu}
+struct FiniteHorizonLQGame{uids, h, nx, nu, TD<:SizedVector{h}, TP<:SizedVector{h}} <: FiniteHorizonGame{uids, h, nx, nu}
     "The full linear system dynamics. A vector (time) over `LinearSystem`s."
     dyn::TD
     "The cost representation. A vector (time) over vector (player) over
     `QuadraticPlayerCost`"
     player_costs::TP
 
-    FiniteHorizonLQGame{uids}(dyn::TD, player_costs::TP) where {uids, h, TD<:StaticVector{h}, TP<:StaticVector{h}} = begin
+    FiniteHorizonLQGame{uids}(dyn::TD, player_costs::TP) where {uids, h, TD<:SizedVector{h}, TP<:SizedVector{h}} = begin
         @assert isempty(intersect(uids...)) "Invalid uids: Two players can not control the same input"
         @assert all(isbits(uir) for uir in uids) "Invalid uids: all ranges should be isbits to make things fast."
         @assert all(eltype(uir) == Int for uir in uids) "Invalid uids: the elements of the u_idx_range should be integers."
@@ -43,5 +43,8 @@ struct FiniteHorizonLQGame{uids, h, nx, nu, TD<:StaticVector{h}, TP<:StaticVecto
     end
 end
 
-strategy_type(g::FiniteHorizonLQGame) = Tuple{SMatrix{n_controls(g), n_controls(g), Float64, n_controls(g)*n_states(g)},
-                                              SVector{n_controls(g), Float64}}
+# TODO: I would really prefer if we did not have to use this!
+strategy_type(g::FiniteHorizonLQGame) = AffineStrategy{n_states(g), n_controls(g),
+                                                       SMatrix{n_controls(g), n_controls(g),
+                                                               Float64, n_controls(g)*n_states(g)},
+                                                       SVector{n_controls(g), Float64}}

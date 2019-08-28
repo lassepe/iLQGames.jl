@@ -59,7 +59,7 @@ function solve_lq_game(g::FiniteHorizonLQGame)
             Z[ii] = (F' * Z[ii] * F + cost[ii].Q) + PRᵢ * P
         end
 
-        strategies[kk] = (P, α)
+        strategies[kk] = AffineStrategy(P, α)
     end
 
     return strategies

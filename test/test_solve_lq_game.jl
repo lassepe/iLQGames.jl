@@ -117,10 +117,10 @@ function test_lyapunov(g::FiniteHorizonLQGame)
 
     # 2. LQ game solution
     strategies = solve_lq_game(g)
-    P_lqg, _ = first(strategies)
+    γ0 = first(strategies)
+    P_lqg = γ0.P
 
     @info """
-
     P_lyap: $(P_lyap)
     P_lqg:  $(P_lqg)
     """
