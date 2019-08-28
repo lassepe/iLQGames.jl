@@ -4,10 +4,10 @@ module iLQGames
     using StaticArrays
     using LinearAlgebra
 
-    include("control_system_interface.jl")
+    include("control_system.jl")
     include("linear_system.jl")
-    include("control_system_convenience.jl")
-    include("quadratic_cost.jl")
+    include("player_cost.jl")
+    include("quadratic_player_cost.jl")
     include("affine_strategy.jl")
     include("finite_horizon_lq_game.jl")
     include("solve_lq_game.jl")
