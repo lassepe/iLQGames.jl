@@ -13,6 +13,18 @@ end
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::Real, ΔT::Real)
 
+A convencience implementaiton of `linearize_discrete`. For better performance,
+this may be overloaded with some explicit (analytic) expressions (that may even
+avoid calling `linearize`).
+"""
+linearize_discrete(cs::ControlSystem,
+                   x0::SVector,
+                   u::SVector,
+                   t0::Real, ΔT::Real) = discretize(linearize(cs, x, u, t))
+
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::Real, ΔT::Real)
+
 A convencience implementaiton of `integrate` using RungeKutta of order 4 as
 convencience default. You may impelement your own integrator here. Consider
 using `DifferentialEquations.jl.

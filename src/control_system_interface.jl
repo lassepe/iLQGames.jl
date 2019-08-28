@@ -32,13 +32,24 @@ function dx end
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::Real)
 
-Returns the linearization of the dynamics defined in `dx` at a given state `x`,
-control `u` and time point `t` in terms of a `LinearSystem`.
-(such that ẋ = A*x + B*u)
+Returns the contiuous time Jacobian linearization of the dynamics defined in
+`dx` at a given state `x`, control `u` and time point `t` in terms of a
+`LinearSystem` (A, B).  (such that Δẋ ≈ A*Δx + B*Δu)
 
 We provide a convencience default in `control_system_convenience.jl`.
 """
 function linearize end
+
+""""
+    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::Real)
+
+Returns the discrete time (ZoH) Jacobian linearization. Input arguments
+have the same meaning as for `linearization`; with additional input
+argument `ΔT`, the time step for discretization.
+
+We provide a convencience default in `control_system_convenience.jl`.
+"""
+function linearize_discrete end
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::Real, ΔT::Real)

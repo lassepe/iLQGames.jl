@@ -2,6 +2,7 @@ module iLQGames
     using DocStringExtensions
     using ForwardDiff
     using StaticArrays
+    using LinearAlgebra
 
     include("control_system_interface.jl")
     include("linear_system.jl")
