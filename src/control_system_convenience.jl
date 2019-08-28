@@ -18,8 +18,9 @@ convencience default. You may impelement your own integrator here. Consider
 using `DifferentialEquations.jl.
 """
 function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::Real, ΔT::Real, k::Int=2)
+    @assert iszero(t0) "currently there are parts of the code that don't handle
+                       t0!=0 correctly so this shoudl not be used"
     Δt = ΔT/k
-
     x = x0
     for t in range(t0, stop=t0+ΔT, length=k+1)[1:end-1]
         k1 = Δt * dx(cs, x, u, t);
@@ -28,6 +29,5 @@ function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::Real, ΔT::Re
         k4 = Δt * dx(cs, x + k3      , u, t + Δt);
         x += (k1 + 2.0 * (k2 + k3) + k4) / 6.0;
     end
-
     return x
 end

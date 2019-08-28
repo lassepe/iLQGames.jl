@@ -7,6 +7,8 @@ macro inferred_with_info(expr)
     quote
         try
             # TODO: maybe remove because doing interpolation here is hard.
+            $expr
+            @show $(expr.args[1])
             b = @benchmark $expr
             show(stdout, "text/plain", b)
             println("\n")
