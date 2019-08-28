@@ -1,50 +1,76 @@
-using DocStringExtensions
-
-include("finite_horizon_lq_game.jl")
-
-
+struct iLQSolver
+    "The scaling of the feed-forward term."
+    α_scaling::Float64
+    "The maximum number of iterations. Iteration is aborted if this number is
+    exceeded."
+    max_n_iter::Int
+    "The maximum elementwise difference bewteen the current and the last
+    operating state trajectory to consider the probem converged."
+    max_elwise_diff::Float64
+    "The time step for conversion of the problem from contiuous to discrete
+    time."
+    ΔT::Float64
+end
 
 # TODO tidy up and maybe extracts constants into solver
-function has_converged(last_op::StaticVector{h}, current_op::StaticVector{h},
+function has_converged(solver::iLQSolver, last_op::StaticVector{h}, current_op::StaticVector{h},
                        n_iter::Int) where {h}
-    max_n_iter = 100
-    max_elwise_diff = 0.01
-
     if n_iter == 0
         return false
-    elseif n_iter >= max_n_iter
+    elseif n_iter >= solver.max_n_iter
         return true
     end
 
     # TODO: this might be very slow, depending on what this is lowered to
-    return any(norm(p1.x - p2.x, Inf) > max_elwise_diff
+    return any(norm(p1.x - p2.x, Inf) > solver.max_elwise_diff
                for (p1, p2) in zip(current_op, last_op))
 end
 
-# TODO implement
-# # TODO maybe the game g shoudl hold the operating point (to manage memory
-# allocation)
-# updates the operating point
-function update_op!(current_op, g::FiniteHorizonGame, last_op, current_strategy)
-    # integrate through full dynamics of the game by applying the current
-    # strategy at the last_op. New state trajectory compreses the new operating
-    # point
-    @error "not implemented"
+# # TODO maybe the game g or a solver should hold the operating point (to
+# manage memory allocation) updates the operating point
+
+# Integrate through full dynamics of the game by applying the current strategy
+# at the last operating point. From this, we obtain a new state and control
+# trajectory (vector (over time) of tuples (x, u))
+function update_op!(current_op::SizedVector{h,<:Tuple}, g::FiniteHorizonGame,
+                    solver::iLQSolver, last_op::SizedVector{h,<:Tuple},
+                    current_strategy::SizedVector{h,<:AffineStrategy}) where {h}
+    xₖ,_ = first(last_op)
+    for k in 1:h
+        # the quantities on the old operating point
+        x̃ₖ, ũₖ = last_op[k]
+        # the current strategy
+        γₖ = current_strategy[k]
+        # the deviation from the last operating point
+        Δxₖ = x - x̃ₖ
+
+        # record the new operating point:
+        x_opₖ = x
+        u_opₖ = control_input(γₖ, Δxₖ, ũₖ)
+        current_op = (x_opₖ, u_opₖ)
+
+        # integrate x forward in time for the next iteration.
+        x = integrate(dynamics(g), x_opₖ, u_opₖ, 0, solver.ΔT)
+    end
     return current_op
 end
 
-# TODO: implement
 # TODO: there must be a better name for this
 # modifies the current strategy to stabilize the update
-function modify_strategy!(current_strategy, current_op)
-    @error "not implemented"
-    return current_strategy
+function stabilize!(current_strategy, solver::iLQSolver, current_op::SizedVector{<:Tuple})
+    # TODO: implement this backtracking search
+    map!(current_strategy) do elₖ
+        Pₖ, αₖ = elₖ
+        return (Pₖ, αₖ * solver.α_scaling)
+    end
+    return true
 end
 
 """
 
-    $(FUNCTIONNAME)(p::FiniteHorizonGame, initial_operating_point::StaticVector,
-                   initial_strategy::StaticVector, max_runtime_seconds::Real)
+    $(FUNCTIONNAME)(p::FiniteHorizonGame,
+                    initial_operating_point::StaticVector,
+                    initial_strategy::StaticVector, max_runtime_seconds::Real)
 
 Computes a solution solution to a (potentially non-linear and non-quadratic)
 finite horizon game g.
@@ -52,7 +78,8 @@ finite horizon game g.
 TODO: refine once implemented
 """
 # TODO: maybe x0 should be part of the problem (of a nonlinear problem struct)
-function solve(g::FiniteHorizonGame, x0:: initial_operating_point::StaticVector,
+function solve(g::FiniteHorizonGame, solver::iLQSolver, x0::SVector
+               initial_operating_point::StaticVector,
                initial_strategy::StaticVector, max_runtime_seconds::Real)
 
 
@@ -73,7 +100,7 @@ function solve(g::FiniteHorizonGame, x0:: initial_operating_point::StaticVector,
         # 1. cache the current operating point ...
         last_op = current_op
         # ... and upate the current by integrating the non-linear dynamics
-        update_op!(current_op, g, last_op, current_strategy)
+        update_op!(current_op, g, solver, last_op, current_strategy)
 
         # 2. linearize dynamics and quadratisize costs to obtain an lq game
         # TODO: implement
@@ -84,7 +111,9 @@ function solve(g::FiniteHorizonGame, x0:: initial_operating_point::StaticVector,
         current_strategy = solve_lq_game(lqg_approx)
 
         # 4. do line search to stabilize the strategy selection
-        modify_strategy!(current_strategy, current_op)
+        if(!stabilize!(current_strategy, solver, current_op))
+            @error "Did not find a solution!"
+        end
     end
 
     return current_op, current_strategy
