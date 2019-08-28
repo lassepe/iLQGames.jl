@@ -26,3 +26,11 @@ macro inferred_with_info(expr)
     end
 end
 
+macro testset_include(filename)
+    @assert filename isa AbstractString
+    quote
+        @testset $filename begin
+            include($filename)
+        end;
+    end
+end
