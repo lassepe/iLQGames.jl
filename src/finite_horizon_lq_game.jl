@@ -34,11 +34,12 @@ struct FiniteHorizonLQGame{uids, h, nx, nu, TD<:SizedVector{h}, TP<:SizedVector{
     player_costs::TP
 
     FiniteHorizonLQGame{uids}(dyn::TD, player_costs::TP) where {uids, h, TD<:SizedVector{h}, TP<:SizedVector{h}} = begin
-        @assert isempty(intersect(uids...)) "Invalid uids: Two players can not control the same input"
-        @assert all(isbits(uir) for uir in uids) "Invalid uids: all ranges should be isbits to make things fast."
-        @assert all(eltype(uir) == Int for uir in uids) "Invalid uids: the elements of the u_idx_range should be integers."
         nx = n_states(eltype(TD))
         nu = n_controls(eltype(TD))
+        @assert isempty(intersect(uids...)) "Invalid uids: Two players can not control the same input"
+        @assert sum(length(uis) for uis in uids) == nu "Not all inputs have been assigned to players."
+        @assert all(isbits(uir) for uir in uids) "Invalid uids: all ranges should be isbits to make things fast."
+        @assert all(eltype(uir) == Int for uir in uids) "Invalid uids: the elements of the u_idx_range should be integers."
         new{uids, h, nx, nu, TD, TP}(dyn, player_costs)
     end
 end
