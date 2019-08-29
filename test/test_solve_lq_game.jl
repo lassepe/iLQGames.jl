@@ -1,5 +1,6 @@
 using Test
 using StaticArrays
+using LinearAlgebra
 
 using iLQGames:
     LinearSystem,
@@ -16,7 +17,7 @@ using Profile
 using ProfileView
 using BenchmarkTools
 
-function generate_toy_game()
+function generate_1D_pointmass_game()
     # Testing the solver at a simple example: A two-player point mass 1D system.
     # The state composes of position and oritation. Therefore, the system dynamics
     # are a pure integrator.
@@ -38,7 +39,6 @@ function generate_toy_game()
 
     costs = @SVector [c1, c2]
     # the lq game (player one has control input 1 and 2; player 2 has control input 3
-    N_STEPS = 100
     ltv_dyn = Size(N_STEPS)(repeat([dyn], N_STEPS))
     qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
     lqGame = FiniteHorizonLQGame{((@SVector [1]), (@SVector [2]))}(ltv_dyn, qtv_costs)
@@ -49,6 +49,51 @@ function generate_toy_game()
     @test n_players(lqGame) == length(costs)
     @test horizon(lqGame) == N_STEPS
     u_idx_ranges(lqGame)
+
+    return lqGame
+end
+
+function generate_2D_pointmass_game()
+    ΔT = 0.1
+    HORIZON = 10.0
+    N_STEPS = Int(HORIZON / ΔT)
+
+    # dynamical system
+    # state layout: x = (x, y, vx, vy)
+    A = I + ΔT * @SMatrix [0. 0. 1. 0.;
+                           0. 0. 0. 1.;
+                           0. 0. 0. 0.;
+                           0. 0. 0. 0.]
+    B = ΔT * @SMatrix [0. 0. 1. 0.
+                       0. 0. 0. 1.
+                       1. 0. 0. 0.
+                       0. 1. 0. 0.]
+    dyn = LinearSystem(A, B)
+
+    # cost
+    # player 1 want's the position to be zero
+    c1 = QuadraticPlayerCost((@SMatrix [1. 0. 0. 0.;
+                                        0. 2. 0. 0.;
+                                        0. 0. 0. 0.;
+                                        0. 0. 0. 0.]), # Q
+                             (@SVector zeros(4)),      # l
+                             (@SMatrix [1. 0. 0. 0.;
+                                        0. 1. 0. 0.;
+                                        0. 0. 0. 0.;
+                                        0. 0. 0. 0.]))# R)
+    # cost
+    # player 2 is adversarial
+    c2 = QuadraticPlayerCost(-c1.Q,                   # Q
+                             -c1.l ,                  # l
+                             (@SMatrix [0. 0. 0. 0.;
+                                        0. 0. 0. 0.;
+                                        0. 0. 1. 0.;
+                                        0. 0. 0. 1.]))# R)
+    costs = @SVector [c1, c2]
+
+    ltv_dyn = Size(N_STEPS)(repeat([dyn], N_STEPS))
+    qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
+    lqGame = FiniteHorizonLQGame{((@SVector [1, 2]), (@SVector [3, 4]))}(ltv_dyn, qtv_costs)
 
     return lqGame
 end
@@ -120,18 +165,24 @@ function test_lyapunov(g::FiniteHorizonLQGame)
     γ0 = first(strategies)
     P_lqg = γ0.P
 
-    @info """
-    P_lyap: $(P_lyap)
-    P_lqg:  $(P_lqg)
-    """
+    print("""
+          P_lyap: $(round.(P_lyap; digits=2))
+          P_lqg:  $(round.(P_lqg; digits=2))
+          """)
 
     @testset "lyapunov" begin
-        @test isapprox(P_lyap, P_lqg)
+        @test isapprox(P_lyap, P_lqg; norm=v->norm(v, Inf), atol=1e-4)
     end;
+
+    return P_lyap, P_lqg
 end
 
 @testset "solve_lq_game" begin
-    lqGame = generate_toy_game()
-    test_lyapunov(lqGame)
-    benchmark_solve_lq_game(lqGame)
+    g_1D = generate_1D_pointmass_game()
+    test_lyapunov(g_1D)
+    benchmark_solve_lq_game(g_1D)
+
+    g_2D = generate_2D_pointmass_game()
+    test_lyapunov(g_2D)
+    benchmark_solve_lq_game(g_2D)
 end;

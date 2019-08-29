@@ -2,6 +2,11 @@
 $(TYPEDEF)
 
 The abstract representation of the cost for a player in a game.
+
+# Parameters
+
+- `nx`    the number of states
+- `nu`:   the number of controls
 """
 abstract type PlayerCost{nx, nu} end
 
