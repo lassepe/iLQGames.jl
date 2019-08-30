@@ -70,7 +70,7 @@ end
 
     $(FUNCTIONNAME)(p::FiniteHorizonGame,
                     initial_operating_point::StaticVector,
-                    initial_strategy::StaticVector, max_runtime_seconds::Real)
+                    initial_strategy::StaticVector, max_runtime_seconds::AbstractFloat)
 
 Computes a solution solution to a (potentially non-linear and non-quadratic)
 finite horizon game g.
@@ -80,7 +80,7 @@ TODO: refine once implemented
 # TODO: maybe x0 should be part of the problem (of a nonlinear problem struct)
 function solve(g::FiniteHorizonGame, solver::iLQSolver, x0::SVector
                initial_operating_point::StaticVector,
-               initial_strategy::StaticVector, max_runtime_seconds::Real)
+               initial_strategy::StaticVector, max_runtime_seconds::AbstractFloat)
 
 
     # safe the start time of our computation

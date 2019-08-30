@@ -11,14 +11,14 @@ The abstract representation of the cost for a player in a game.
 abstract type PlayerCost{nx, nu} end
 
 """
-    $(FUNCTIONNAME)(x::SVector{nx}, u::SVector{nu}, t::Real)
+    $(FUNCTIONNAME)(x::SVector{nx}, u::SVector{nu}, t::AbstractFloat)
 
 A functor to evaluate the cost representation.
 """
 function (pc::PlayerCost) end
 
 """
-    $FUNCTIONNAME(pc::PlayerCost, x::SVector{nx}, u::SVector{nu}, t::Real)
+    $FUNCTIONNAME(pc::PlayerCost, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat)
 
 Computes the quadratic approximation of the cost.
 
@@ -31,11 +31,11 @@ function quadraticize end
 
 
 """
-    $FUNCTIONNAME(pc::PlayerCost, x::SVector{nx}, u::SVector{nu}, t::Real)
+    $FUNCTIONNAME(pc::PlayerCost, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat)
 
 A convencience implementaiton of the cost quadraticization.
 """
-function quadraticize(pc::PlayerCost{nx, nu}, x::SVector{nx}, u::SVector{nu}, t::Real) where {nx, nu}
+function quadraticize(pc::PlayerCost{nx, nu}, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat) where {nx, nu}
     # the linear state component of the cost is the gradient in x
     l = ForwardDiff.gradient(x->pc(x, u, t), x)
     # the quadratic state component of the cost is the hessian in x

@@ -23,14 +23,14 @@ Returns the number of controls of the control system.
 n_controls(::Type{<:ControlSystem{nx, nu}}) where {nx, nu} = nu
 n_controls(cs::ControlSystem) = n_states(typeof(cs))
 
-""" $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::Real)
+""" $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
 Returns the time derivative of the state `dx` at a given state `x`, control
 input `u` and time `t`
 """
 function dx end
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::Real)
+    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
 
 Returns the contiuous time Jacobian linearization of the dynamics defined in
 `dx` at a given state `x`, control `u` and time point `t` in terms of a
@@ -41,7 +41,7 @@ We provide a convencience default below.
 function linearize end
 
 """"
-    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::Real)
+    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
 
 Returns the discrete time (ZoH) Jacobian linearization. Input arguments
 have the same meaning as for `linearization`; with additional input
@@ -52,7 +52,7 @@ We provide a convencience default below.
 function linearize_discrete end
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::Real, ΔT::Real)
+    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat, ΔT::AbstractFloat)
 
 Integrate propagate the state `x0` given the control `u` and the current time
 `t0` until `t0+ΔT`. Here, `k` is the number of steps that is used between `t0` and
@@ -67,19 +67,19 @@ function integrate end
 
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::Real)
+    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
 
 A convencience implementaiton of `linearize` using `ForwardDiff.jl`. Overload
 this with an explicit version to get better performance.
 """
-function linearize(cs::ControlSystem, x::SVector, u::SVector, t::Real)
+function linearize(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
     A = ForwardDiff.jacobian(x->dx(cs, x, u, t), x)
     B = ForwardDiff.jacobian(u->dx(cs, x, u, t), u)
     return LinearSystem(A, B)
 end
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u0::SVector, t0::Real, ΔT::Real)
+    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u0::SVector, t0::AbstractFloat, ΔT::AbstractFloat)
 
 A convencience implementaiton of `linearize_discrete`. For better performance,
 this may be overloaded with some explicit (analytic) expressions (that may even
@@ -88,16 +88,16 @@ avoid calling `linearize`).
 linearize_discrete(cs::ControlSystem,
                    x0::SVector,
                    u0::SVector,
-                   t0::Real, ΔT::Real) = discretize(linearize(cs, x0, u0, t0), ΔT)
+                   t0::AbstractFloat, ΔT::AbstractFloat) = discretize(linearize(cs, x0, u0, t0), ΔT)
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::Real, ΔT::Real)
+    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat, ΔT::AbstractFloat)
 
 A convencience implementaiton of `integrate` using RungeKutta of order 4 as
 convencience default. You may impelement your own integrator here. Consider
 using `DifferentialEquations.jl.
 """
-function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::Real, ΔT::Real, k::Int=2)
+function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat, ΔT::AbstractFloat, k::Int=2)
     @assert iszero(t0) "currently there are parts of the code that don't handle
                        t0!=0 correctly so this shoudl not be used"
     Δt = ΔT/k

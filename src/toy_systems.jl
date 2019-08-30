@@ -9,7 +9,7 @@ struct Lorenz3D{T1, T2, T3} <: ControlSystem{3, 2}
     β::T3;
 end
 
-function dx(cs::Lorenz3D, x::SVector{3}, u::SVector{2}, t::Real)
+function dx(cs::Lorenz3D, x::SVector{3}, u::SVector{2}, t::AbstractFloat)
     dx1 = cs.σ*(x[2] - x[1])
     dx2 = x[1]*(cs.ρ - x[3]) - x[2] + u[2]
     dx3 = x[1]*x[2] - cs.β*x[3] + u[1]
@@ -31,7 +31,7 @@ struct Car5D <: ControlSystem{5, 2}
     l::Float64
 end
 
-function dx(cs::Car5D, x::SVector{5}, u::SVector{2}, t::Real)
+function dx(cs::Car5D, x::SVector{5}, u::SVector{2}, t::AbstractFloat)
     # position: x
     dx1 = x[5] * cos(x[3])
     # position: y

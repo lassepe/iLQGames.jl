@@ -19,15 +19,15 @@ struct LinearSystem{nx, nu, TA<:SMatrix{nx, nx}, TB<:SMatrix{nx, nu}} <: Control
     B::TB
 end
 
-dx(ls::LinearSystem{nx, nu}, x::SVector{nx}, u::SVector{nu}, t::Real) where {nx, nu} = ls.A*x + ls.B*u
+dx(ls::LinearSystem{nx, nu}, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat) where {nx, nu} = ls.A*x + ls.B*u
 
 """
-    $(FUNCTIONNAME)(ls::LinearSystem, ΔT::Real)
+    $(FUNCTIONNAME)(ls::LinearSystem, ΔT::AbstractFloat)
 
 Computes the zero-order-hold discretization of the linear system ls with time
 discretization step ΔT.
 """
-function discretize(ls::LinearSystem, ΔT::Real)
+function discretize(ls::LinearSystem, ΔT::AbstractFloat)
     # the discrete time system matrix
     Φ = exp(ls.A*ΔT)
     # the discrete time input matrix

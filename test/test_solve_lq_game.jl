@@ -4,6 +4,7 @@ using LinearAlgebra
 
 using iLQGames:
     LinearSystem,
+    AffineStrategy,
     QuadraticPlayerCost,
     FiniteHorizonLQGame,
     solve_lq_game,
