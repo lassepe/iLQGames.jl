@@ -1,11 +1,37 @@
+"""
+$(TYPEDEF)
+
+Abstract representation of a finite horizon game.
+"""
 abstract type FiniteHorizonGame{uids, h, nx, nu} end
+
+
+"""
+    $(FUNCTIONNAME)(g::FiniteHorizonGame)
+
+Returns the dynamics of the game, a `ControlSystem`.
+"""
+function dynamics end
+
+"""
+    $(FUNCTIONNAME)(g::FiniteHorizonGame)
+
+Returns the type of the strategy that is a solution to this game.
+"""
+function strategy_type end
+
+"""
+    $(FUNCTIONNAME)(g::FiniteHorizonGame)
+
+Returns the lq approximation of the game.
+"""
+function lq_approximation end
 
 n_states(g::FiniteHorizonGame{uids, h, nx}) where {uids, h, nx} = nx
 n_controls(g::FiniteHorizonGame{uids, h, nx, nu}) where {uids, h, nx, nu} = nu
 n_players(g::FiniteHorizonGame{uids}) where {uids} = length(uids)
 u_idx_ranges(g::FiniteHorizonGame{uids}) where {uids} = uids
 horizon(g::FiniteHorizonGame{uids, h}) where {uids, h} = h
-function strategy_type end
 
 """
 $(TYPEDEF)
@@ -49,3 +75,4 @@ strategy_type(g::FiniteHorizonLQGame) = AffineStrategy{n_states(g), n_controls(g
                                                        SMatrix{n_controls(g), n_controls(g),
                                                                Float64, n_controls(g)*n_states(g)},
                                                        SVector{n_controls(g), Float64}}
+lq_approximation(g::FiniteHorizonLQGame) = g

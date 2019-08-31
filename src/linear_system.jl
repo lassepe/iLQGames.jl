@@ -19,7 +19,8 @@ struct LinearSystem{nx, nu, TA<:SMatrix{nx, nx}, TB<:SMatrix{nx, nu}} <: Control
     B::TB
 end
 
-dx(ls::LinearSystem{nx, nu}, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat) where {nx, nu} = ls.A*x + ls.B*u
+dx(ls::LinearSystem, x::SVector, u::SVector, t::AbstractFloat) = ls.A*x + ls.B*u
+linearize(ls::LinearSystem, x::SVector, u::SVector, t::AbstractFloat) = ls
 
 """
     $(FUNCTIONNAME)(ls::LinearSystem, ΔT::AbstractFloat)
