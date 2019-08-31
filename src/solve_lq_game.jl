@@ -15,7 +15,7 @@ function solve_lq_game(g::FiniteHorizonLQGame)
     Z = [pc.Q for pc in last(g.player_costs)]
     ζ = [pc.l for pc in last(g.player_costs)]
 
-    strategies = Vector{strategy_type(g)}(undef, horizon(g))
+    strategies = SizedVector{horizon(g), strategy_type(g)}(undef)
 
     # Setup the S and Y matrix of the S * X = Y matrix equation
     S = @MMatrix zeros(n_controls(g), n_controls(g))
