@@ -20,12 +20,12 @@ u0 = @SVector [2.]
 t0 = .11
 
 d1 = discretize(ls, ΔT)
-d2 = discretize_exp(ls, ΔT)
-
-@testset "discretize vs. discretize_exp" begin
-    @test isapprox(d1.A, d2.A)
-    @test isapprox(d1.B, d2.B)
-end;
+#  d2 = discretize_exp(ls, ΔT)
+#
+#  @testset "discretize vs. discretize_exp" begin
+#      @test isapprox(d1.A, d2.A)
+#      @test isapprox(d1.B, d2.B)
+#  end;
 
 @testset "linearize" begin
     # linearizing a linear system should not make a difference

@@ -181,15 +181,15 @@ function test_lyapunov(g::FiniteHorizonLQGame)
     return P_lyap, P_lqg
 end
 
-#@testset "solve_lq_game" begin
-#    g_1D = generate_1D_pointmass_game()
-#    test_lyapunov(g_1D)
-#    benchmark_solve_lq_game(g_1D)
-#
-#    g_2D = generate_2D_pointmass_game()
-#    test_lyapunov(g_2D)
-#    benchmark_solve_lq_game(g_2D)
-#end;
+@testset "solve_lq_game" begin
+    g_1D = generate_1D_pointmass_game()
+    test_lyapunov(g_1D)
+    benchmark_solve_lq_game(g_1D)
+
+    g_2D = generate_2D_pointmass_game()
+    test_lyapunov(g_2D)
+    benchmark_solve_lq_game(g_2D)
+end;
 
 function benchmark_solve_lq_game(g::FiniteHorizonLQGame)
     b = @benchmark solve_lq_game($g::FiniteHorizonLQGame)
