@@ -13,7 +13,9 @@ struct iLQSolver
 end
 
 # TODO tidy up and maybe extracts constants into solver
-function has_converged(solver::iLQSolver, last_op::StaticVector{h}, current_op::StaticVector{h},
+function has_converged(solver::iLQSolver,
+                       last_op::SystemTrajectory{h},
+                       current_op::SystemTrajectory{h},
                        n_iter::Int) where {h}
     if n_iter == 0
         return false
@@ -32,22 +34,22 @@ end
 # Integrate through full dynamics of the game by applying the current strategy
 # at the last operating point. From this, we obtain a new state and control
 # trajectory (vector (over time) of tuples (x, u))
-function update_op!(current_op::SizedVector{h,<:Tuple}, g::FiniteHorizonGame,
-                    solver::iLQSolver, last_op::SizedVector{h,<:Tuple},
+function update_op!(current_op::SystemTrajectory{h}, g::FiniteHorizonGame,
+                    solver::iLQSolver, last_op::SystemTrajectory{h},
                     current_strategy::SizedVector{h,<:AffineStrategy}) where {h}
     xₖ,_ = first(last_op)
     for k in 1:h
         # the quantities on the old operating point
-        x̃ₖ, ũₖ = last_op[k]
+        x̃ₖ = last_op.x[k]
+        ũₖ = last_op.u[k]
         # the current strategy
         γₖ = current_strategy[k]
         # the deviation from the last operating point
         Δxₖ = x - x̃ₖ
 
         # record the new operating point:
-        x_opₖ = x
-        u_opₖ = control_input(γₖ, Δxₖ, ũₖ)
-        current_op = (x_opₖ, u_opₖ)
+        x_opₖ = current_op.x[k] = x
+        u_opₖ = current_op.u[k] = control_input(γₖ, Δxₖ, ũₖ)
 
         # integrate x forward in time for the next iteration.
         x = integrate(dynamics(g), x_opₖ, u_opₖ, 0, solver.ΔT)
@@ -57,7 +59,7 @@ end
 
 # TODO: there must be a better name for this
 # modifies the current strategy to stabilize the update
-function stabilize!(current_strategy, solver::iLQSolver, current_op::SizedVector{<:Tuple})
+function stabilize!(current_strategy, solver::iLQSolver, current_op::SystemTrajectory{h})
     # TODO: implement this backtracking search
     map!(current_strategy) do elₖ
         Pₖ, αₖ = elₖ
@@ -69,7 +71,7 @@ end
 """
 
     $(FUNCTIONNAME)(p::FiniteHorizonGame,
-                    initial_operating_point::StaticVector,
+                    initial_operating_point::SystemTrajectory,
                     initial_strategy::StaticVector, max_runtime_seconds::AbstractFloat)
 
 Computes a solution solution to a (potentially non-linear and non-quadratic)
@@ -79,19 +81,20 @@ TODO: refine once implemented
 """
 # TODO: maybe x0 should be part of the problem (of a nonlinear problem struct)
 function solve(g::FiniteHorizonGame, solver::iLQSolver, x0::SVector
-               initial_operating_point::StaticVector,
+               initial_operating_point::SystemTrajectory,
                initial_strategy::StaticVector, max_runtime_seconds::AbstractFloat)
 
 
     # safe the start time of our computation
     start_time = time()
+    # TODO: magic number (the guessed duration of one iteration)
     has_time_remaining() = time() - start_time + 0.02 < max_runtime_seconds
 
     # TODO: depending on what will happen, we need to explicitly copy or use
     # `similar` here
     num_iterations = 0
     # allocate memory for the last and the current operating point
-    last_op = similar(initial_operating_point)
+    last_op = copy(initial_operating_point)
     current_op = initial_operating_point
     current_strategy = initial_strategy
 

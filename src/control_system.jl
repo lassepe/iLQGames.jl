@@ -65,6 +65,15 @@ function integrate end
 
 "--------------------- Convencience Impelemtnations ---------------------"
 
+struct SystemTrajectory{h, TX<:SizedVector{h,<:SVector},
+                        TU<:SizedVector{h,<:SVector}, TF<:AbstractFloat}
+    "The sequence of states."
+    x::TX
+    "The sequence of controls."
+    u::TU
+    "The time step."
+    ΔT::TF
+end
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
