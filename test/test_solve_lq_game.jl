@@ -169,22 +169,25 @@ function test_lyapunov(g::FiniteHorizonLQGame)
     return P_lyap, P_lqg
 end
 
-# @testset "solve_lq_game" begin
-#     g1D = generate_1D_pointmass_game()
-#     test_lyapunov(g1D)
-#     benchmark_show(solve_lq_game, g1D)
-# 
-#     g2D = generate_2D_pointmass_game()
-#     test_lyapunov(g2D)
-#     benchmark_show(solve_lq_game, g2D)
-# end;
+@testset "solve_lq_game" begin
+    g1D = generate_1D_pointmass_game()
+    test_lyapunov(g1D)
+    benchmark_show(solve_lq_game, g1D)
 
-function plot()
+    g2D = generate_2D_pointmass_game()
+    test_lyapunov(g2D)
+    benchmark_show(solve_lq_game, g2D)
+end;
+
+"--------------- manual test to run and check for sanity ---------------"
+
+function sim()
     g = generate_2D_pointmass_game()
     strategy = solve_lq_game(g)
 
     # dummy operating point
     last_op = zero(SystemTrajectory{horizon(g), sampling_time(g), n_states(g), n_controls(g)})
     traj = deepcopy(last_op)
-    trajectory!(traj, dynamics(g), strategy, last_op)
+    @show x0 = @SVector randn(n_states(g))
+    trajectory!(traj, dynamics(g), strategy, last_op, x0)
 end
