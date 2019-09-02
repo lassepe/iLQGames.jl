@@ -34,7 +34,7 @@ end
 # Integrate through full dynamics of the game by applying the current strategy
 # at the last operating point. From this, we obtain a new state and control
 # trajectory (vector (over time) of tuples (x, u))
-function update_op!(current_op::SystemTrajectory{h}, g::FiniteHorizonGame,
+function update_op!(current_op::SystemTrajectory{h}, g::AbstractGame,
                     solver::iLQSolver, last_op::SystemTrajectory{h},
                     current_strategy::SizedVector{h,<:AffineStrategy}) where {h}
      # TODO replace with `trajectory` call
@@ -53,7 +53,7 @@ end
 
 """
 
-    $(FUNCTIONNAME)(p::FiniteHorizonGame,
+    $(FUNCTIONNAME)(p::AbstractGame,
                     initial_operating_point::SystemTrajectory,
                     initial_strategy::StaticVector, max_runtime_seconds::AbstractFloat)
 
@@ -63,7 +63,7 @@ finite horizon game g.
 TODO: refine once implemented
 """
 # TODO: maybe x0 should be part of the problem (of a nonlinear problem struct)
-function solve(g::FiniteHorizonGame, solver::iLQSolver, x0::SVector
+function solve(g::AbstractGame, solver::iLQSolver, x0::SVector
                initial_operating_point::SystemTrajectory,
                initial_strategy::StaticVector, max_runtime_seconds::AbstractFloat)
 

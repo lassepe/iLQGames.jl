@@ -100,6 +100,7 @@ struct DiscreteTimeVaryingSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:ControlSys
         new{h, ΔT, nx, nu, TD}(dyn)
     end
 end
+Base.eltype(::Type{<:DiscreteTimeVaryingSystem{h, ΔT, nx, nu, TD}}) where {h, ΔT, nx, nu, TD} = eltype(TD)
 Base.getindex(ds::DiscreteTimeVaryingSystem, i) = getindex(ds.dyn, i)
 next_x(cs::DiscreteTimeVaryingSystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.dyn[k], xₖ, uₖ, (k-1)*sampling_time(cs))
 

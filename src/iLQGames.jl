@@ -11,7 +11,7 @@ module iLQGames
     gr()
 
 
-    include("affine_strategy.jl")
+    include("strategy.jl")
     include("control_system.jl")
     include("linear_system.jl")
     include("player_cost.jl")

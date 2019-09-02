@@ -7,7 +7,7 @@ using iLQGames:
     AffineStrategy,
     QuadraticPlayerCost,
     DiscreteTimeVaryingSystem,
-    FiniteHorizonLQGame,
+    LQGame,
     SystemTrajectory,
     solve_lq_game,
     n_states,
@@ -43,7 +43,7 @@ function generate_1D_pointmass_game()
     # the lq game (player one has control input 1 and 2; player 2 has control input 3
     ltv_dyn = DiscreteTimeVaryingSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
     qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
-    lqGame = FiniteHorizonLQGame{((@SVector [1]), (@SVector [2]))}(ltv_dyn, qtv_costs)
+    lqGame = LQGame{((@SVector [1]), (@SVector [2]))}(ltv_dyn, qtv_costs)
 
     # test all the function calls:
     @test n_states(lqGame) == size(A)[1]
@@ -95,7 +95,7 @@ function generate_2D_pointmass_game()
 
     ltv_dyn = DiscreteTimeVaryingSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
     qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
-    lqGame = FiniteHorizonLQGame{((@SVector [1, 2]), (@SVector [3, 4]))}(ltv_dyn, qtv_costs)
+    lqGame = LQGame{((@SVector [1, 2]), (@SVector [3, 4]))}(ltv_dyn, qtv_costs)
 
     return lqGame
 end
@@ -137,7 +137,7 @@ function solve_lyapunov_iterations(dyn::LinearSystem, c1::QuadraticPlayerCost, c
     return (P1, P2)
 end
 
-function test_lyapunov(g::FiniteHorizonLQGame)
+function test_lyapunov(g::LQGame)
 
     # 1. Lyapunov solution for the inifnite horizion problem
     P1_lyap, P2_lyap = solve_lyapunov_iterations(g.dyn[1],

@@ -7,7 +7,7 @@ strategies for both players.
 Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖⁱ`.
 
 """
-function solve_lq_game(g::FiniteHorizonLQGame)
+function solve_lq_game(g::LQGame)
     total_u_idx_range = SVector{n_controls(g)}(1:n_controls(g))
 
     # initializting the optimal cost to go representation for DP
