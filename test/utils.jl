@@ -34,3 +34,17 @@ macro testset_include(filename)
         end;
     end
 end
+
+function benchmark_show(f::Function, args...; kwargs...)
+    b = @benchmark $f($args..., $kwargs...)
+    show(stdout, "text/plain", b)
+    println()
+end
+
+function profile_show(f::Function, n_samples::Int=1000, args...; kwargs...)
+    Profile.clear()
+    @profile begin for i in 1:n_samples
+            f(args...; kwargs...)
+    end end
+    ProfileView.view()
+end
