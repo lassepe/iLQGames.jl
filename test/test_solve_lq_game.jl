@@ -14,10 +14,6 @@ using iLQGames:
     u_idx_ranges,
     horizon
 
-using Profile
-using ProfileView
-using BenchmarkTools
-
 using Plots
 gr()
 

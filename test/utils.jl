@@ -1,5 +1,8 @@
 using Test
+
 using BenchmarkTools
+using Profile
+using ProfileView
 using InteractiveUtils
 
 # TODO: maybe move this in some other package
