@@ -6,6 +6,7 @@ using iLQGames:
     LinearSystem,
     AffineStrategy,
     QuadraticPlayerCost,
+    DiscreteTimeVaryingSystem,
     FiniteHorizonLQGame,
     solve_lq_game,
     n_states,
@@ -28,7 +29,7 @@ function generate_1D_pointmass_game()
     # dynamical system
     A = SMatrix{2, 2}([1. ΔT; 0. 1.])
     B = SMatrix{2, 2}([0.5*ΔT^2 ΔT; 0.32*ΔT^2 0.11*ΔT]')
-    dyn = LinearSystem(A, B)
+    dyn = LinearSystem{ΔT}(A, B)
     # costs for each player
     c1 = QuadraticPlayerCost((@SMatrix [1. 0.; 0. 1.]), # Q
                              (@SVector [0., 0.]),       # l
@@ -39,7 +40,7 @@ function generate_1D_pointmass_game()
 
     costs = @SVector [c1, c2]
     # the lq game (player one has control input 1 and 2; player 2 has control input 3
-    ltv_dyn = Size(N_STEPS)(repeat([dyn], N_STEPS))
+    ltv_dyn = DiscreteTimeVaryingSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
     qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
     lqGame = FiniteHorizonLQGame{((@SVector [1]), (@SVector [2]))}(ltv_dyn, qtv_costs)
 
@@ -68,7 +69,7 @@ function generate_2D_pointmass_game()
                        0. 0. 0. 1.
                        1. 0. 0. 0.
                        0. 1. 0. 0.]
-    dyn = LinearSystem(A, B)
+    dyn = LinearSystem{ΔT}(A, B)
 
     # cost
     # player 1 want's the position to be zero
@@ -91,7 +92,7 @@ function generate_2D_pointmass_game()
                                         0. 0. 0. 1.]))# R)
     costs = @SVector [c1, c2]
 
-    ltv_dyn = Size(N_STEPS)(repeat([dyn], N_STEPS))
+    ltv_dyn = DiscreteTimeVaryingSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
     qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
     lqGame = FiniteHorizonLQGame{((@SVector [1, 2]), (@SVector [3, 4]))}(ltv_dyn, qtv_costs)
 
@@ -172,3 +173,9 @@ end
     benchmark_show(solve_lq_game, g2D)
 end;
 
+#function plot()
+#    g2D = generate_2D_pointmass_game()
+#    strategy = solve_lq_game(g2D)
+#    x0 = @SVector rand(4)
+#    traj = trajectory(dynamics(g2D), x0, strategy)
+#end

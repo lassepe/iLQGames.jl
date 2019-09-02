@@ -37,24 +37,7 @@ end
 function update_op!(current_op::SystemTrajectory{h}, g::FiniteHorizonGame,
                     solver::iLQSolver, last_op::SystemTrajectory{h},
                     current_strategy::SizedVector{h,<:AffineStrategy}) where {h}
-    xₖ,_ = first(last_op)
-    for k in 1:h
-        # the quantities on the old operating point
-        x̃ₖ = last_op.x[k]
-        ũₖ = last_op.u[k]
-        # the current strategy
-        γₖ = current_strategy[k]
-        # the deviation from the last operating point
-        Δxₖ = x - x̃ₖ
-
-        # record the new operating point:
-        x_opₖ = current_op.x[k] = x
-        u_opₖ = current_op.u[k] = control_input(γₖ, Δxₖ, ũₖ)
-
-        # integrate x forward in time for the next iteration.
-        x = integrate(dynamics(g), x_opₖ, u_opₖ, 0, solver.ΔT)
-    end
-    return current_op
+     # TODO replace with `trajectory` call
 end
 
 # TODO: there must be a better name for this

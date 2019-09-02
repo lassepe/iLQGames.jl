@@ -3,7 +3,7 @@ using Test
 using iLQGames:
     LinearSystem,
     discretize,
-    discretize_exp,
+#    discretize_exp,
     linearize,
     linearize_discrete
 
@@ -11,7 +11,7 @@ using StaticArrays
 
 A = @SMatrix [1 2; 3 4]
 B = @SMatrix [1; 3]
-ls = LinearSystem(A, B)
+ls = LinearSystem{0}(A, B)
 ΔT = 0.1241241
 
 # some test point

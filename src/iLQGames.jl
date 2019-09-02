@@ -3,6 +3,7 @@ module iLQGames
     using ForwardDiff
     using StaticArrays
     using LinearAlgebra
+    using Base: getindex
 
     include("control_system.jl")
     include("linear_system.jl")

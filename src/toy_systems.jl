@@ -3,7 +3,7 @@ $(TYPEDEF)
 
 A lorenz attractor with with two inputs and parameters `σ`, `ρ` and `β`.
 """
-struct Lorenz3D{T1, T2, T3} <: ControlSystem{3, 2}
+struct Lorenz3D{T1, T2, T3} <: ControlSystem{0, 3, 2}
     σ::T1;
     ρ::T2;
     β::T3;
@@ -26,7 +26,7 @@ A simple dubins car model.
 
 $(TYPEDFIELDS)
 """
-struct Car5D <: ControlSystem{5, 2}
+struct Car5D <: ControlSystem{0, 5, 2}
     "inter-axle length (m)"
     l::Float64
 end

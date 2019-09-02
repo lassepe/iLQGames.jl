@@ -1,18 +1,34 @@
 """
 $(TYPEDEF)
 
-The abstract type describing a control system. With state-space dimension `nx`
-and control dimension `nu`.
+The abstract type describing a control system. With state-space dimension `nx`,
+control dimension `nu` and sampling time ΔT. By convention, for `ΔT == 0` the
+system is continuous.
+
 """
 # TODO: maybe we don't even need the type parametrization
-abstract type ControlSystem{nx, nu} end
+abstract type ControlSystem{ΔT, nx, nu} end
+
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem)
+
+Returns the sampling time ΔT of the system.
+"""
+sampling_time(cs::ControlSystem{ΔT}) where {ΔT} = ΔT
+
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem)
+
+Returns true if the system is has a non-zero sampling rate (e.g. discrete or sampled contiuous system.
+"""
+issampled(cs::ControlSystem) = !iszero(sampling_time(cs))
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem)
 
 Returns the number of states of the control system.
 """
-n_states(::Type{<:ControlSystem{nx, nu}}) where {nx, nu} = nx
+n_states(::Type{<:ControlSystem{ΔT, nx}}) where {ΔT, nx} = nx
 n_states(cs::ControlSystem) = n_states(typeof(cs))
 
 """
@@ -20,19 +36,29 @@ n_states(cs::ControlSystem) = n_states(typeof(cs))
 
 Returns the number of controls of the control system.
 """
-n_controls(::Type{<:ControlSystem{nx, nu}}) where {nx, nu} = nu
+n_controls(::Type{<:ControlSystem{ΔT, nx, nu}}) where {ΔT, nx, nu} = nu
 n_controls(cs::ControlSystem) = n_states(typeof(cs))
 
-""" $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
+
 Returns the time derivative of the state `dx` at a given state `x`, control
 input `u` and time `t`
 """
 function dx end
 
+""""
+    $(FUNCTIONNAME)(CS::ControlSystem, xₖ::SVector, uₖ::SVector)
+
+Returns the next state (`xₖ₊₁`) for a control system with non-zero `ΔT` when
+applying input `uₖ` at state `xₖ`.
+"""
+function next_x end
+
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
 
-Returns the contiuous time Jacobian linearization of the dynamics defined in
+Returns the continuous time Jacobian linearization of the dynamics defined in
 `dx` at a given state `x`, control `u` and time point `t` in terms of a
 `LinearSystem` (A, B).  (such that Δẋ ≈ A*Δx + B*Δu)
 
@@ -65,14 +91,23 @@ function integrate end
 
 "--------------------- Convencience Impelemtnations ---------------------"
 
-struct SystemTrajectory{h, TX<:SizedVector{h,<:SVector},
+struct DiscreteTimeVaryingSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:ControlSystem{ΔT, nx, nu}}} <: ControlSystem{ΔT, nx, nu}
+    "The discrete time series of linear systems."
+    dyn::TD
+
+    DiscreteTimeVaryingSystem(dyn::TD) where {h, ΔT, nx, nu, TD<:SizedVector{h, <:ControlSystem{ΔT, nx, nu}}} = begin
+        @assert ΔT > 0 "DiscreteTimeVaryingSystem require finite discretization steps."
+        new{h, ΔT, nx, nu, TD}(dyn)
+    end
+end
+Base.getindex(ds::DiscreteTimeVaryingSystem, i) = getindex(ds.dyn, i)
+
+struct SystemTrajectory{h, ΔT, TX<:SizedVector{h,<:SVector},
                         TU<:SizedVector{h,<:SVector}, TF<:AbstractFloat}
     "The sequence of states."
     x::TX
     "The sequence of controls."
     u::TU
-    "The time step."
-    ΔT::TF
 end
 
 """
@@ -84,7 +119,7 @@ this with an explicit version to get better performance.
 function linearize(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
     A = ForwardDiff.jacobian(x->dx(cs, x, u, t), x)
     B = ForwardDiff.jacobian(u->dx(cs, x, u, t), u)
-    return LinearSystem(A, B)
+    return LinearSystem{0}(A, B)
 end
 
 """
@@ -120,3 +155,25 @@ function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat
     end
     return x
 end
+
+#function trajectory!(traj::SystemTrajectory, cs::ControlSystem, γ::Strategy, las_op::SystemTrajectory, ΔT)
+#    xₖ,_ = first(last_op)
+#    for k in 1:h
+#        # the quantities on the old operating point
+#        x̃ₖ = last_op.x[k]
+#        ũₖ = last_op.u[k]
+#        # the current strategy
+#        γₖ = current_strategy[k]
+#        # the deviation from the last operating point
+#        Δxₖ = x - x̃ₖ
+#
+#        # record the new operating point:
+#        x_opₖ = traj.x[k] = x
+#        u_opₖ = traj.u[k] = control_input(γₖ, Δxₖ, ũₖ)
+#
+#        # integrate x forward in time for the next iteration.
+#        x = integrate(dynamics(g), x_opₖ, u_opₖ, 0, ΔT)
+#    end
+#    return current_op
+#end
+

@@ -52,17 +52,18 @@ range of inputs.
 
 $(TYPEDFIELDS)
 """
-struct FiniteHorizonLQGame{uids, h, nx, nu, TD<:SizedVector{h}, TP<:SizedVector{h}} <: FiniteHorizonGame{uids, h, nx, nu}
+struct FiniteHorizonLQGame{uids, h, nx, nu, TD<:DiscreteTimeVaryingSystem{h}, TP<:SizedVector{h}} <: FiniteHorizonGame{uids, h, nx, nu}
     "The full linear system dynamics. A vector (time) over `LinearSystem`s."
     dyn::TD
     "The cost representation. A vector (time) over vector (player) over
     `QuadraticPlayerCost`"
     player_costs::TP
 
-    FiniteHorizonLQGame{uids}(dyn::TD, player_costs::TP) where {uids, h, TD<:SizedVector{h}, TP<:SizedVector{h}} = begin
-        nx = n_states(eltype(TD))
-        nu = n_controls(eltype(TD))
+    FiniteHorizonLQGame{uids}(dyn::TD, player_costs::TP) where {uids, h, TD<:DiscreteTimeVaryingSystem{h}, TP<:SizedVector{h}} = begin
+        nx = n_states(TD)
+        nu = n_controls(TD)
         @assert isempty(intersect(uids...)) "Invalid uids: Two players can not control the same input"
+
         @assert sum(length(uis) for uis in uids) == nu "Not all inputs have been assigned to players."
         @assert all(isbits(uir) for uir in uids) "Invalid uids: all ranges should be isbits to make things fast."
         @assert all(eltype(uir) == Int for uir in uids) "Invalid uids: the elements of the u_idx_range should be integers."
