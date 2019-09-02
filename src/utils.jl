@@ -1,3 +1,4 @@
+
 function gen_fake_data()
     # fake data:
     nx = 5;
@@ -29,15 +30,23 @@ function gen_fake_data()
 end
 
 
-function plot_systraj(xs, us)
-    nx = length(first(xs))
-    nu = length(first(us))
+function plot_systraj(traj::SystemTrajectory; xy_index::Union{Tuple{Int, Int}, Nothing}=nothing)
+    nx = length(eltype(traj.x))
+    nu = length(eltype(traj.u))
 
     # states
-    px = plot(hcat(xs...)'; layout=(nx, 1))
-
+    px = plot(hcat(traj.x...)'; layout=(nx, 1))
     # inputs
-    pu = plot(hcat(us...)'; layout=(nu, 1))
+    pu = plot(hcat(traj.u...)'; layout=(nu, 1))
 
-    plot(px, pu, layout=2)
+    if isnothing(xy_index)
+        plot(px, pu; layout=2)
+    else
+        x = collect(x[first(xy_index)] for x in traj.x)
+        y = collect(x[last(xy_index)] for x in traj.x)
+
+        pxy = plot(x, y; marker=1)
+        lay = @layout [a b; c]
+        plot(px, pu, pxy; layout=lay)
+    end
 end

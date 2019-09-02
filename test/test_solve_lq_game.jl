@@ -19,11 +19,6 @@ using iLQGames:
     dynamics,
     trajectory!
 
-include("utils.jl")
-
-using Plots
-gr()
-
 function generate_1D_pointmass_game()
     # Testing the solver at a simple example: A two-player point mass 1D system.
     # The state composes of position and oritation. Therefore, the system dynamics

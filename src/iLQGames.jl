@@ -7,6 +7,10 @@ module iLQGames
         getindex,
         zero
 
+    using Plots
+    gr()
+
+
     include("affine_strategy.jl")
     include("control_system.jl")
     include("linear_system.jl")
