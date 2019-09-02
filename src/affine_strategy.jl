@@ -11,4 +11,4 @@ end
 Computes the control input for a given affine strategy γ, for a state reference
 deviation of Δx and a control reference of ũ.
 """
-control_input(γ::AffineStrategy, Δx::SizedVector, ũ::SVector) = ũ - γ.P*Δx -γ.α
+control_input(γ::AffineStrategy, Δx::SVector, ũ::SVector) = ũ - γ.P*Δx -γ.α

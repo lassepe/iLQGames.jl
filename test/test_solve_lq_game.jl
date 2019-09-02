@@ -8,12 +8,18 @@ using iLQGames:
     QuadraticPlayerCost,
     DiscreteTimeVaryingSystem,
     FiniteHorizonLQGame,
+    SystemTrajectory,
     solve_lq_game,
     n_states,
     n_controls,
     n_players,
     u_idx_ranges,
-    horizon
+    horizon,
+    sampling_time,
+    dynamics,
+    trajectory!
+
+include("utils.jl")
 
 using Plots
 gr()
@@ -163,19 +169,22 @@ function test_lyapunov(g::FiniteHorizonLQGame)
     return P_lyap, P_lqg
 end
 
-@testset "solve_lq_game" begin
-    g1D = generate_1D_pointmass_game()
-    test_lyapunov(g1D)
-    benchmark_show(solve_lq_game, g1D)
+# @testset "solve_lq_game" begin
+#     g1D = generate_1D_pointmass_game()
+#     test_lyapunov(g1D)
+#     benchmark_show(solve_lq_game, g1D)
+# 
+#     g2D = generate_2D_pointmass_game()
+#     test_lyapunov(g2D)
+#     benchmark_show(solve_lq_game, g2D)
+# end;
 
-    g2D = generate_2D_pointmass_game()
-    test_lyapunov(g2D)
-    benchmark_show(solve_lq_game, g2D)
-end;
+function plot()
+    g = generate_2D_pointmass_game()
+    strategy = solve_lq_game(g)
 
-#function plot()
-#    g2D = generate_2D_pointmass_game()
-#    strategy = solve_lq_game(g2D)
-#    x0 = @SVector rand(4)
-#    traj = trajectory(dynamics(g2D), x0, strategy)
-#end
+    # dummy operating point
+    last_op = zero(SystemTrajectory{horizon(g), sampling_time(g), n_states(g), n_controls(g)})
+    traj = deepcopy(last_op)
+    trajectory!(traj, dynamics(g), strategy, last_op)
+end

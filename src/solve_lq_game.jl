@@ -23,7 +23,7 @@ function solve_lq_game(g::FiniteHorizonLQGame)
 
     # working backwards in time to solve the dynamic program
     for kk in horizon(g):-1:1
-        dyn = g.dyn[kk]
+        dyn = dynamics(g)[kk]
         cost = g.player_costs[kk]
         # convenience shorthands for the relevant quantities
         A = dyn.A

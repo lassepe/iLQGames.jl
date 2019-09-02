@@ -48,10 +48,10 @@ input `u` and time `t`
 function dx end
 
 """"
-    $(FUNCTIONNAME)(CS::ControlSystem, xₖ::SVector, uₖ::SVector)
+    $(FUNCTIONNAME)(cs::ControlSystem, xₖ::SVector, uₖ::SVector, k::Int)
 
 Returns the next state (`xₖ₊₁`) for a control system with non-zero `ΔT` when
-applying input `uₖ` at state `xₖ`.
+applying input `uₖ` at state `xₖ` and time step k
 """
 function next_x end
 
@@ -101,14 +101,21 @@ struct DiscreteTimeVaryingSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:ControlSys
     end
 end
 Base.getindex(ds::DiscreteTimeVaryingSystem, i) = getindex(ds.dyn, i)
+next_x(cs::DiscreteTimeVaryingSystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.dyn[k], xₖ, uₖ, (k-1)*sampling_time(cs))
 
-struct SystemTrajectory{h, ΔT, TX<:SizedVector{h,<:SVector},
-                        TU<:SizedVector{h,<:SVector}, TF<:AbstractFloat}
+struct SystemTrajectory{h, ΔT, nx, nu, TX<:SizedVector{h,<:SVector{nx}},
+                        TU<:SizedVector{h,<:SVector{nu}}}
     "The sequence of states."
     x::TX
     "The sequence of controls."
     u::TU
 end
+SystemTrajectory{ΔT}(x::TX, u::TU) where {h, ΔT, nx, nu,
+                                          TX<:SizedVector{h,<:SVector{nx}},
+                                          TU<:SizedVector{h,<:SVector{nu}}} = SystemTrajectory{h, ΔT, nx, nu, TX, TU}(x, u)
+sampling_time(t::SystemTrajectory{h, ΔT}) where {h, ΔT} = ΔT
+Base.zero(::Type{<:SystemTrajectory{h, ΔT, nx, nu}}) where{h, ΔT, nx, nu} = SystemTrajectory{ΔT}(zero(SizedVector{h, SVector{nx, Float64}}),
+                         zero(SizedVector{h, SVector{nu, Float64}}))
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
@@ -156,24 +163,28 @@ function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat
     return x
 end
 
-#function trajectory!(traj::SystemTrajectory, cs::ControlSystem, γ::Strategy, las_op::SystemTrajectory, ΔT)
-#    xₖ,_ = first(last_op)
-#    for k in 1:h
-#        # the quantities on the old operating point
-#        x̃ₖ = last_op.x[k]
-#        ũₖ = last_op.u[k]
-#        # the current strategy
-#        γₖ = current_strategy[k]
-#        # the deviation from the last operating point
-#        Δxₖ = x - x̃ₖ
-#
-#        # record the new operating point:
-#        x_opₖ = traj.x[k] = x
-#        u_opₖ = traj.u[k] = control_input(γₖ, Δxₖ, ũₖ)
-#
-#        # integrate x forward in time for the next iteration.
-#        x = integrate(dynamics(g), x_opₖ, u_opₖ, 0, ΔT)
-#    end
-#    return current_op
-#end
+function trajectory!(traj::SystemTrajectory{h}, cs::ControlSystem,
+                     γ::SizedVector{h, <:AffineStrategy},
+                     last_op::SystemTrajectory{h}) where {h}
 
+    @assert sampling_time(traj) == sampling_time(last_op) == sampling_time(cs)
+
+    xₖ = first(last_op.x)
+    for k in 1:h
+        # the quantities on the old operating point
+        x̃ₖ = last_op.x[k]
+        ũₖ = last_op.u[k]
+        # the current strategy
+        γₖ = γ[k]
+        # the deviation from the last operating point
+        Δxₖ = xₖ - x̃ₖ
+
+        # record the new operating point:
+        x_opₖ = traj.x[k] = xₖ
+        u_opₖ = traj.u[k] = control_input(γₖ, Δxₖ, ũₖ)
+
+        # integrate x forward in time for the next iteration.
+        x = next_x(cs, x_opₖ, u_opₖ, k)
+    end
+    return traj
+end

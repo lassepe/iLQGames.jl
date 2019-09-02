@@ -32,6 +32,7 @@ n_controls(g::FiniteHorizonGame{uids, h, nx, nu}) where {uids, h, nx, nu} = nu
 n_players(g::FiniteHorizonGame{uids}) where {uids} = length(uids)
 u_idx_ranges(g::FiniteHorizonGame{uids}) where {uids} = uids
 horizon(g::FiniteHorizonGame{uids, h}) where {uids, h} = h
+sampling_time(g::FiniteHorizonGame) = sampling_time(dynamics(g))
 
 """
 $(TYPEDEF)
@@ -76,4 +77,5 @@ strategy_type(g::FiniteHorizonLQGame) = AffineStrategy{n_states(g), n_controls(g
                                                        SMatrix{n_controls(g), n_controls(g),
                                                                Float64, n_controls(g)*n_states(g)},
                                                        SVector{n_controls(g), Float64}}
+dynamics(g::FiniteHorizonLQGame) = g.dyn
 lq_approximation(g::FiniteHorizonLQGame) = g
