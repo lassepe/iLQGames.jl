@@ -37,7 +37,7 @@ n_states(cs::ControlSystem) = n_states(typeof(cs))
 Returns the number of controls of the control system.
 """
 n_controls(::Type{<:ControlSystem{ΔT, nx, nu}}) where {ΔT, nx, nu} = nu
-n_controls(cs::ControlSystem) = n_states(typeof(cs))
+n_controls(cs::ControlSystem) = n_controls(typeof(cs))
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)

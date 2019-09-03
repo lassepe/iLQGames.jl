@@ -17,10 +17,9 @@ module iLQGames
 
     # dynamics abstraction
     include("control_system.jl")
+    include("toy_systems.jl")
     include("linear_system.jl")
     include("product_system.jl")
-    # example systems
-    include("toy_systems.jl")
 
     # game abstraction
     include("game.jl")
