@@ -6,7 +6,7 @@ using iLQGames:
     LinearSystem,
     AffineStrategy,
     QuadraticPlayerCost,
-    DiscreteTimeVaryingSystem,
+    LTVSystem,
     LQGame,
     SystemTrajectory,
     solve_lq_game,
@@ -41,7 +41,7 @@ function generate_1D_pointmass_game()
 
     costs = @SVector [c1, c2]
     # the lq game (player one has control input 1 and 2; player 2 has control input 3
-    ltv_dyn = DiscreteTimeVaryingSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
+    ltv_dyn = LTVSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
     qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
     lqGame = LQGame{((@SVector [1]), (@SVector [2]))}(ltv_dyn, qtv_costs)
 
@@ -93,7 +93,7 @@ function generate_2D_pointmass_game()
                                         0. 0. 0. 1.]))# R)
     costs = @SVector [c1, c2]
 
-    ltv_dyn = DiscreteTimeVaryingSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
+    ltv_dyn = LTVSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
     qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
     lqGame = LQGame{((@SVector [1, 2]), (@SVector [3, 4]))}(ltv_dyn, qtv_costs)
 

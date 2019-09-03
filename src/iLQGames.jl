@@ -11,13 +11,23 @@ module iLQGames
     gr()
 
 
+    # game utils
     include("strategy.jl")
+    include("player_cost.jl")
+
+    # dynamics abstraction
     include("control_system.jl")
     include("linear_system.jl")
-    include("player_cost.jl")
-    include("quadratic_player_cost.jl")
-    include("finite_horizon_lq_game.jl")
-    include("solve_lq_game.jl")
+    include("product_system.jl")
+    # example systems
     include("toy_systems.jl")
+
+    # game abstraction
+    include("game.jl")
+
+    # the solver implementation
+    include("solve_lq_game.jl")
+
+    # some utils
     include("utils.jl")
 end # module

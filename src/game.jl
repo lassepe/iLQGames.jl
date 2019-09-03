@@ -53,14 +53,14 @@ range of inputs.
 
 $(TYPEDFIELDS)
 """
-struct LQGame{uids, h, nx, nu, TD<:DiscreteTimeVaryingSystem{h}, TP<:SizedVector{h}} <: AbstractGame{uids, h, nx, nu}
+struct LQGame{uids, h, nx, nu, TD<:LTVSystem{h}, TP<:SizedVector{h}} <: AbstractGame{uids, h, nx, nu}
     "The full linear system dynamics. A vector (time) over `LinearSystem`s."
     dyn::TD
     "The cost representation. A vector (time) over vector (player) over
     `QuadraticPlayerCost`"
     player_costs::TP
 
-    LQGame{uids}(dyn::TD, player_costs::TP) where {uids, h, TD<:DiscreteTimeVaryingSystem{h}, TP<:SizedVector{h}} = begin
+    LQGame{uids}(dyn::TD, player_costs::TP) where {uids, h, TD<:LTVSystem{h}, TP<:SizedVector{h}} = begin
         nx = n_states(TD)
         nu = n_controls(TD)
         @assert eltype(TD) <: LinearSystem "LQGames require linear (time varying) dynamics."

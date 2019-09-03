@@ -52,6 +52,8 @@ function dx end
 
 Returns the next state (`xₖ₊₁`) for a control system with non-zero `ΔT` when
 applying input `uₖ` at state `xₖ` and time step k
+
+We provide a convencience default below.
 """
 function next_x end
 
@@ -91,37 +93,11 @@ function integrate end
 
 "--------------------- Convencience Impelemtnations ---------------------"
 
-struct DiscreteTimeVaryingSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:ControlSystem{ΔT, nx, nu}}} <: ControlSystem{ΔT, nx, nu}
-    "The discrete time series of linear systems."
-    dyn::TD
-
-    DiscreteTimeVaryingSystem(dyn::TD) where {h, ΔT, nx, nu, TD<:SizedVector{h, <:ControlSystem{ΔT, nx, nu}}} = begin
-        @assert ΔT > 0 "DiscreteTimeVaryingSystem require finite discretization steps."
-        new{h, ΔT, nx, nu, TD}(dyn)
-    end
-end
-Base.eltype(::Type{<:DiscreteTimeVaryingSystem{h, ΔT, nx, nu, TD}}) where {h, ΔT, nx, nu, TD} = eltype(TD)
-Base.getindex(ds::DiscreteTimeVaryingSystem, i) = getindex(ds.dyn, i)
-next_x(cs::DiscreteTimeVaryingSystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.dyn[k], xₖ, uₖ, (k-1)*sampling_time(cs))
-
-struct SystemTrajectory{h, ΔT, nx, nu, TX<:SizedVector{h,<:SVector{nx}},
-                        TU<:SizedVector{h,<:SVector{nu}}}
-    "The sequence of states."
-    x::TX
-    "The sequence of controls."
-    u::TU
-end
-SystemTrajectory{ΔT}(x::TX, u::TU) where {h, ΔT, nx, nu,
-                                          TX<:SizedVector{h,<:SVector{nx}},
-                                          TU<:SizedVector{h,<:SVector{nu}}} = SystemTrajectory{h, ΔT, nx, nu, TX, TU}(x, u)
-sampling_time(t::SystemTrajectory{h, ΔT}) where {h, ΔT} = ΔT
-Base.zero(::Type{<:SystemTrajectory{h, ΔT, nx, nu}}) where{h, ΔT, nx, nu} = SystemTrajectory{ΔT}(zero(SizedVector{h, SVector{nx, Float64}}),
-                         zero(SizedVector{h, SVector{nu, Float64}}))
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
 
-A convencience implementaiton of `linearize` using `ForwardDiff.jl`. Overload
+A convencience implementation of `linearize` using `ForwardDiff.jl`. Overload
 this with an explicit version to get better performance.
 """
 function linearize(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
@@ -133,7 +109,7 @@ end
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u0::SVector, t0::AbstractFloat, ΔT::AbstractFloat)
 
-A convencience implementaiton of `linearize_discrete`. For better performance,
+A convencience implementation of `linearize_discrete`. For better performance,
 this may be overloaded with some explicit (analytic) expressions (that may even
 avoid calling `linearize`).
 """
@@ -145,7 +121,7 @@ linearize_discrete(cs::ControlSystem,
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat, ΔT::AbstractFloat)
 
-A convencience implementaiton of `integrate` using RungeKutta of order 4 as
+A convencience implementation of `integrate` using RungeKutta of order 4 as
 convencience default. You may impelement your own integrator here. Consider
 using `DifferentialEquations.jl.
 """
@@ -164,31 +140,12 @@ function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat
     return x
 end
 
-function trajectory!(traj::SystemTrajectory{h}, cs::DiscreteTimeVaryingSystem{h},
-                     γ::SizedVector{h, <:AffineStrategy},
-                     last_op::SystemTrajectory{h}, x0::SVector) where {h}
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, k::Int)
 
-    @assert sampling_time(traj) == sampling_time(last_op) == sampling_time(cs)
-
-    # TODO: think about in which cases this can be first(last_op.x)
-    xₖ = x0
-    # xₖ = first(last_op.x)
-
-    for k in 1:h
-        # the quantities on the old operating point
-        x̃ₖ = last_op.x[k]
-        ũₖ = last_op.u[k]
-        # the current strategy
-        γₖ = γ[k]
-        # the deviation from the last operating point
-        Δxₖ = xₖ - x̃ₖ
-
-        # record the new operating point:
-        x_opₖ = traj.x[k] = xₖ
-        u_opₖ = traj.u[k] = control_input(γₖ, Δxₖ, ũₖ)
-
-        # integrate x forward in time for the next iteration.
-        xₖ = next_x(cs, x_opₖ, u_opₖ, k)
-    end
-    return traj
+Integrate to xₖ₊₁ starting from x, applying u.
+"""
+function next_x(cs::ControlSystem, x::SVector, u::SVector, k::Int)
+    @assert issampled(cs) "next_x requires `ControlSystem` with ΔT > 0."
+    return integrate(cs, x, u, 0, sampling_time(cs))
 end
