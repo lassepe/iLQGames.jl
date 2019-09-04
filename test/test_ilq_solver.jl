@@ -4,7 +4,8 @@ using iLQGames:
     ProductSystem,
     Car5D,
     PlayerCost,
-    GeneralGame
+    GeneralGame,
+    @S
 
 using StaticArrays
 using LinearAlgebra
@@ -83,5 +84,5 @@ function generate_2player_car_game()
     costs = @SVector [c1, c2]
 
     # construct the game
-    g = GeneralGame(dyn, costs)
+    g = GeneralGame{((@S 1:2), (@S 3:4))}(dyn, costs)
 end

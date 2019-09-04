@@ -46,7 +46,6 @@ u_idx_ranges(g::AbstractGame{uids}) where {uids} = uids
 @inline function game_sanity_checks(uids, TD, TC)
     @assert n_states(TD) == n_states(eltype(TC)) "Cost and dynamics need the same state dimensions."
     @assert n_controls(TD) == n_controls(eltype(TC)) "Cost and dynamics need the same input dimensions"
-    @assert eltype(TD) <: LinearSystem "LQGames require linear (time varying) dynamics."
     @assert isempty(intersect(uids...)) "Invalid uids: Two players can not control the same input"
     @assert sum(length(uis) for uis in uids) == n_controls(TD) "Not all inputs have been assigned to players."
     @assert all(isbits(uir) for uir in uids) "Invalid uids: all ranges should be isbits to make things fast."
@@ -60,14 +59,16 @@ $(TYPEDEF)
 A representation of a general game with potentially non-linear dynamics and
 non-quadratic costs.
 """
-struct GeneralGame{uids, TD<:ControlSystem, TC<:StaticVector{<:Any, PlayerCost}} <: AbstractGame{uids}
+struct GeneralGame{uids, TD<:ControlSystem, TC<:StaticVector} <: AbstractGame{uids}
     dyn::TD
     cost::TC
 
     GeneralGame{uids}(dyn::TD, cost::TC) where {uids, TD<:ControlSystem,
-                                                TC<:StaticVector{<:Any, PlayerCost}} = begin
+                                                TC<:StaticVector} = begin
         game_sanity_checks(uids, TD, TC)
-        new{uids, h, TD, TC}(dyn, player_costs)
+        @assert TD <: ControlSystem
+        @assert eltype(TC) <: PlayerCost
+        new{uids, TD, TC}(dyn, cost)
     end
 
 end
@@ -105,6 +106,8 @@ struct LQGame{uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} <: AbstractGame{uid
 
     LQGame{uids}(dyn::TD, player_costs::TC) where {uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} = begin
         game_sanity_checks(uids, TD, eltype(TC))
+        @assert eltype(TD) <: LinearSystem "LQGames require linear (time varying) dynamics."
+        @assert eltype(eltype(TC)) <: QuadraticPlayerCost "LQGames require quadratic cots."
         new{uids, h, TD, TC}(dyn, player_costs)
     end
 end
