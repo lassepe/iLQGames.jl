@@ -30,6 +30,22 @@ function quadraticize end
 "--------------------- Convencience Impelemtnations ---------------------"
 
 """
+    $FUNCTIONNAME(pc::PlayerCost, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat)
+
+A convencience implementation of the cost quadraticization.
+"""
+function quadraticize(pc::PlayerCost{nx, nu}, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat) where {nx, nu}
+    # the linear state component of the cost is the gradient in x
+    l = ForwardDiff.gradient(x->pc(x, u, t), x)
+    # the quadratic state component of the cost is the hessian in x
+    Q = ForwardDiff.hessian(x->pc(x, u, t), x)
+    # the quadratic control component o the cost is the hessian in u
+    R = ForwardDiff.hessian(u->pc(x, u, t), u)
+
+    return QuadraticPlayerCost(Q, l, R)
+end
+
+"""
 $(TYPEDEF)
 
 Represents the quadratic players costs for a singel player in a game.
@@ -54,20 +70,3 @@ end
 n_states(qpc::QuadraticPlayerCost{nx}) where {nx} = nx
 n_controls(qpc::QuadraticPlayerCost{nx, nu}) where {nx, nu} = nu
 (pc::QuadraticPlayerCost)(x::SVector, u::SVector) = x'*pc.Q*x + l'*pc.x + u'*pc.R*u
-
-
-"""
-    $FUNCTIONNAME(pc::PlayerCost, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat)
-
-A convencience implementation of the cost quadraticization.
-"""
-function quadraticize(pc::PlayerCost{nx, nu}, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat) where {nx, nu}
-    # the linear state component of the cost is the gradient in x
-    l = ForwardDiff.gradient(x->pc(x, u, t), x)
-    # the quadratic state component of the cost is the hessian in x
-    Q = ForwardDiff.hessian(x->pc(x, u, t), x)
-    # the quadratic control component o the cost is the hessian in u
-    R = ForwardDiff.hessian(u->pc(x, u, t), u)
-
-    return QuadraticPlayerCost(Q, l, R)
-end
