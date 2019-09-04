@@ -178,9 +178,14 @@ function sim()
     g = generate_2D_pointmass_game()
     strategy = solve_lq_game(g)
 
+    nx = n_states(dynamics(g))
+    nu = n_controls(dynamics(g))
+    ΔT = sampling_time(dynamics(g))
+    h = horizon(g)
+
     # dummy operating point
-    last_op = zero(SystemTrajectory{horizon(g), sampling_time(g), n_states(g), n_controls(g)})
+    last_op = zero(SystemTrajectory{h, ΔT, nx, nu})
     traj = deepcopy(last_op)
-    @show x0 = @SVector randn(n_states(g))
+    x0 = @SVector randn(nx)
     trajectory!(traj, dynamics(g), strategy, last_op, x0)
 end

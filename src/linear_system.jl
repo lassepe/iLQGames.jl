@@ -87,7 +87,7 @@ Base.zero(::Type{<:SystemTrajectory{h, ΔT, nx, nu}}) where{h, ΔT, nx, nu} = Sy
                          zero(SizedVector{h, SVector{nu, Float64}}))
 
 
-function trajectory!(traj::SystemTrajectory{h}, cs::LTVSystem{h},
+function trajectory!(traj::SystemTrajectory{h}, cs::ControlSystem,
                      γ::SizedVector{h, <:AffineStrategy},
                      last_op::SystemTrajectory{h}, x0::SVector) where {h}
 
