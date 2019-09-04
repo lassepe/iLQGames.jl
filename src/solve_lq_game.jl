@@ -8,7 +8,11 @@ Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖ�
 
 """
 function solve_lq_game(g::LQGame)
-    total_u_idx_range = SVector{n_controls(g)}(1:n_controls(g))
+    # extract control and input dimensions
+    nx = n_states(dynamics(g))
+    nu = n_controls(dynamics(g))
+
+    total_u_idx_range = SVector{nu}(1:nu)
 
     # initializting the optimal cost to go representation for DP
     # quadratic cost to go
@@ -18,8 +22,9 @@ function solve_lq_game(g::LQGame)
     strategies = SizedVector{horizon(g), strategy_type(g)}(undef)
 
     # Setup the S and Y matrix of the S * X = Y matrix equation
-    S = @MMatrix zeros(n_controls(g), n_controls(g))
-    Y = @MMatrix zeros(n_controls(g), n_states(g) + 1)
+
+    S = @MMatrix zeros(nu, nu)
+    Y = @MMatrix zeros(nu, nx + 1)
 
     # working backwards in time to solve the dynamic program
     for kk in horizon(g):-1:1

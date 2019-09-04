@@ -4,8 +4,7 @@ using iLQGames:
     ProductSystem,
     Car5D,
     PlayerCost,
-    ControlSystem,
-    AbstractGame
+    GeneralGame
 
 using StaticArrays
 using LinearAlgebra
@@ -81,7 +80,8 @@ function generate_2player_car_game()
 
     c1 = TwoPlayerCarCost{1}(R, Qg, g1, qc)
     c2 = TwoPlayerCarCost{2}(R, Qg, g2, qc)
+    costs = @SVector [c1, c2]
 
     # construct the game
-    # TODO
+    g = GeneralGame(dyn, costs)
 end

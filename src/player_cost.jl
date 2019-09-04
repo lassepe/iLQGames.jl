@@ -26,6 +26,11 @@ We provide a convencience default below.
 """
 function quadraticize end
 
+n_states(::Type{<:PlayerCost{nx}}) where {nx} = nx
+n_states(p::PlayerCost) = n_states(typeof(p))
+n_controls(::Type{<:PlayerCost{nx, nu}}) where {nx, nu} = nu
+n_controls(p::PlayerCost) = n_controls(typeof(p))
+
 
 "--------------------- Convencience Implementations ---------------------"
 
@@ -59,7 +64,7 @@ Represents the quadratic players costs for a singel player in a game.
 
 $(TYPEDFIELDS)
 """
-struct QuadraticPlayerCost{nx, nu, TQ<:SMatrix{nx, nx}, TL<:SVector{nx}, TR<:SMatrix{nu, nu}}
+struct QuadraticPlayerCost{nx, nu, TQ<:SMatrix{nx, nx}, TL<:SVector{nx}, TR<:SMatrix{nu, nu}} <: PlayerCost{nx, nu}
     "The qudratic state cost matrix"
     Q::TQ
     "The linear state cost"
@@ -67,6 +72,4 @@ struct QuadraticPlayerCost{nx, nu, TQ<:SMatrix{nx, nx}, TL<:SVector{nx}, TR<:SMa
     "A square matrix to represent the quadratic control cost for this player"
     R::TR
 end
-n_states(qpc::QuadraticPlayerCost{nx}) where {nx} = nx
-n_controls(qpc::QuadraticPlayerCost{nx, nu}) where {nx, nu} = nu
 (pc::QuadraticPlayerCost)(x::SVector, u::SVector) = x'*pc.Q*x + l'*pc.x + u'*pc.R*u

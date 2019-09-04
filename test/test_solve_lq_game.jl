@@ -46,8 +46,6 @@ function generate_1D_pointmass_game()
     lqGame = LQGame{((@SVector [1]), (@SVector [2]))}(ltv_dyn, qtv_costs)
 
     # test all the function calls:
-    @test n_states(lqGame) == size(A)[1]
-    @test n_controls(lqGame) == size(B)[2]
     @test n_players(lqGame) == length(costs)
     @test horizon(lqGame) == N_STEPS
     u_idx_ranges(lqGame)
