@@ -12,8 +12,8 @@ function solve_lq_game(g::LQGame)
 
     # initializting the optimal cost to go representation for DP
     # quadratic cost to go
-    Z = [pc.Q for pc in last(g.player_costs)]
-    ζ = [pc.l for pc in last(g.player_costs)]
+    Z = [pc.Q for pc in last(player_costs(g))]
+    ζ = [pc.l for pc in last(player_costs(g))]
 
     strategies = SizedVector{horizon(g), strategy_type(g)}(undef)
 
@@ -24,7 +24,7 @@ function solve_lq_game(g::LQGame)
     # working backwards in time to solve the dynamic program
     for kk in horizon(g):-1:1
         dyn = dynamics(g)[kk]
-        cost = g.player_costs[kk]
+        cost = player_costs(g)[kk]
         # convenience shorthands for the relevant quantities
         A = dyn.A
         B = dyn.B

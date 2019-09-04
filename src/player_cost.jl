@@ -27,7 +27,7 @@ We provide a convencience default below.
 function quadraticize end
 
 
-"--------------------- Convencience Impelemtnations ---------------------"
+"--------------------- Convencience Implementations ---------------------"
 
 """
     $FUNCTIONNAME(pc::PlayerCost, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat)

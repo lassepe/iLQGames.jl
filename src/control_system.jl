@@ -91,7 +91,7 @@ We provide a convencience default below.
 function integrate end
 
 
-"--------------------- Convencience Impelemtnations ---------------------"
+"--------------------- Convencience Implementations ---------------------"
 
 
 """

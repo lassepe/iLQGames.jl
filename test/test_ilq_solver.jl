@@ -3,7 +3,9 @@ using Test
 using iLQGames:
     ProductSystem,
     Car5D,
-    PlayerCost
+    PlayerCost,
+    ControlSystem,
+    AbstractGame
 
 using StaticArrays
 using LinearAlgebra
@@ -22,7 +24,7 @@ struct TwoPlayerCarCost{player_id, TR<:SMatrix{2,2}, TQg<:SMatrix{5,5}, TG<:SVec
 end
 
 function TwoPlayerCarCost{player_id}(R::TR, Qg::TQg, xg::TG, qc::Float64) where {player_id, TR, TQg, TG}
-    TwoPlayerCarCost{player_id, TR, TQg, TG}(R, Qg, xg, qc)
+    return TwoPlayerCarCost{player_id, TR, TQg, TG}(R, Qg, xg, qc)
 end
 
 function (pc::TwoPlayerCarCost{player_id})(x::SVector{10}, u::SVector{4}, t::Float64) where {player_id}
