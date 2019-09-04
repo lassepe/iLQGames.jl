@@ -10,6 +10,8 @@ module iLQGames
     using Plots
     gr()
 
+    # some utils
+    include("utils.jl")
 
     # game utils
     include("strategy.jl")
@@ -27,6 +29,7 @@ module iLQGames
     # the solver implementation
     include("solve_lq_game.jl")
 
-    # some utils
-    include("utils.jl")
+    # some tools for plotting
+    include("plot_utils.jl")
+
 end # module
