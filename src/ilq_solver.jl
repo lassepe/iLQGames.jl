@@ -14,16 +14,17 @@ end
 function has_converged(solver::iLQSolver,
                        last_op::SystemTrajectory{h},
                        current_op::SystemTrajectory{h},
-                       n_iter::Int) where {h}
-    if n_iter == 0
+                       i_iter::Int) where {h}
+    if i_iter == 0
         return false
-    elseif n_iter >= solver.max_n_iter
+    elseif i_iter >= solver.max_n_iter
+        @warn "Iteration aborted because max interations exceeded."
         return true
     end
 
     # TODO: this might be very slow, depending on what this is lowered to
-    return any(norm(p1.x - p2.x, Inf) > solver.max_elwise_diff
-               for (p1, p2) in zip(current_op, last_op))
+    return all(norm(current_op.x[k] - last_op.x[k], Inf) <
+               solver.max_elwise_diff for k in eachindex(last_op.x))
 end
 
 # # TODO maybe the game g or a solver should hold the operating point (to
@@ -40,11 +41,10 @@ end
 
 # TODO: there must be a better name for this
 # modifies the current strategy to stabilize the update
-function stabilize!(current_strategy, solver::iLQSolver, current_op::SystemTrajectory)
+function stabilize!(current_strategy::SizedVector, solver::iLQSolver, current_op::SystemTrajectory)
     # TODO: implement this backtracking search
-    map!(current_strategy) do elₖ
-        Pₖ, αₖ = elₖ
-        return (Pₖ, αₖ * solver.α_scaling)
+    map!(current_strategy, current_strategy) do el
+        return AffineStrategy(el.P, el.α * solver.α_scaling)
     end
     return true
 end
@@ -73,14 +73,15 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
 
     # TODO: depending on what will happen, we need to explicitly copy or use
     # `similar` here
-    num_iterations = 0
+    i_iter = 0
     # allocate memory for the last and the current operating point
-    last_op = copy(initial_op)
+    # TODO: try not to copy!
+    last_op = deepcopy(initial_op)
     current_op = initial_op
     current_strategy = initial_strategy
 
-    while (has_time_remaining() && !has_converged())
-        num_iterations += 1
+    while !has_converged(solver, last_op, current_op, i_iter)
+        i_iter += 1
         # 1. cache the current operating point ...
         last_op = current_op
         # ... and upate the current by integrating the non-linear dynamics
