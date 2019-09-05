@@ -28,8 +28,9 @@ module iLQGames
     # game abstraction
     include("game.jl")
 
-    # the solver implementation
+    # the solver implementations
     include("solve_lq_game.jl")
+    include("ilq_solver.jl")
 
     # some tools for plotting
     include("plot_utils.jl")

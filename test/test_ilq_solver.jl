@@ -14,7 +14,8 @@ using iLQGames:
     player_costs,
     SystemTrajectory,
     lq_approximation,
-    sampling_time
+    sampling_time,
+    iLQSolver
 
 using StaticArrays
 using LinearAlgebra

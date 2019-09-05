@@ -38,7 +38,7 @@ end
 
 # TODO: there must be a better name for this
 # modifies the current strategy to stabilize the update
-function stabilize!(current_strategy, solver::iLQSolver, current_op::SystemTrajectory{h})
+function stabilize!(current_strategy, solver::iLQSolver, current_op::SystemTrajectory)
     # TODO: implement this backtracking search
     map!(current_strategy) do elₖ
         Pₖ, αₖ = elₖ
@@ -59,7 +59,7 @@ finite horizon game g.
 TODO: refine once implemented
 """
 # TODO: maybe x0 should be part of the problem (of a nonlinear problem struct)
-function solve(g::AbstractGame, solver::iLQSolver, x0::SVector
+function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
                initial_operating_point::SystemTrajectory,
                initial_strategy::StaticVector, max_runtime_seconds::AbstractFloat)
 
