@@ -72,4 +72,4 @@ struct QuadraticPlayerCost{nx, nu, TQ<:SMatrix{nx, nx}, TL<:SVector{nx}, TR<:SMa
     "A square matrix to represent the quadratic control cost for this player"
     R::TR
 end
-(pc::QuadraticPlayerCost)(x::SVector, u::SVector) = x'*pc.Q*x + l'*pc.x + u'*pc.R*u
+(pc::QuadraticPlayerCost)(x::SVector, u::SVector) = 1//2 * x'*pc.Q*x + pc.l'*x + 1//2 * u'*pc.R*u

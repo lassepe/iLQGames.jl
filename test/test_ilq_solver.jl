@@ -11,7 +11,10 @@ using iLQGames:
     n_states,
     n_controls,
     dynamics,
-    player_costs
+    player_costs,
+    SystemTrajectory,
+    lq_approximation,
+    sampling_time
 
 using StaticArrays
 using LinearAlgebra
@@ -55,7 +58,7 @@ function (pc::TwoPlayerCarCost{player_id})(x::SVector{10}, u::SVector{4}, t::Flo
     xp_other = x[SVector{2}(player_id == 2 ? (1:2) : (6:7))]
     Δxp_other = xp_other - xᵢ[SVector{2}(1:2)]
     # asymptotically bad to approach other player
-    cost += 1/(norm(Δxp_other) + 0.01) * pc.qcᵢ
+    cost += 1/(Δxp_other'*Δxp_other + 0.01) * pc.qcᵢ
 
     return cost
 end
@@ -115,4 +118,17 @@ end
     # test linearization of the dynamics
     # TODO: currently, this put's a lot of stress on the compiler.
     linearize_discrete(dyn, x, u, t)
+
+    # test the lq approximation:
+    # generate an operating point
+    h = 10
+    nx = n_states(dynamics(g))
+    nu = n_controls(dynamics(g))
+    ΔT = sampling_time(dynamics(g))
+    zero_op = zero(SystemTrajectory{h, ΔT, nx, nu})
+    lqg = lq_approximation(g, zero_op)
+
+
+    # solve the lq game
+    solver = iLQSolver()
 end;

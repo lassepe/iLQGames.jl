@@ -1,10 +1,12 @@
 module iLQGames
     using DocStringExtensions
+    using Parameters
     using ForwardDiff
     using StaticArrays
     using LinearAlgebra
     import Base:
         getindex,
+        setindex!,
         zero
 
     using Plots

@@ -73,8 +73,10 @@ struct LTVSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:LinearSystem{ΔT, nx, nu}}
 end
 Base.eltype(::Type{<:LTVSystem{h, ΔT, nx, nu, TD}}) where {h, ΔT, nx, nu, TD} = eltype(TD)
 Base.getindex(ds::LTVSystem, i) = getindex(ds.dyn, i)
+Base.setindex!(ds::LTVSystem, v, i) = setindex!(ds.dyn, v, i)
 next_x(cs::LTVSystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.dyn[k], xₖ, uₖ)
 
+# Maybe this should know about t0 as well.
 struct SystemTrajectory{h, ΔT, nx, nu, TX<:SizedVector{h,<:SVector{nx}},
                         TU<:SizedVector{h,<:SVector{nu}}}
     "The sequence of states."
