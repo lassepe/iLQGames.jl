@@ -32,7 +32,7 @@ linearize(ls::LinearSystem, x::SVector, u::SVector, t::AbstractFloat) = ls
 Computes the zero-order-hold discretization of the linear system ls with time
 discretization step ΔT.
 """
-function discretize_inv(ls::LinearSystem, ΔT::AbstractFloat)
+function discretize_inv(ls::LinearSystem, ::Val{ΔT}) where {ΔT}
     @assert !issampled(ls) "Can't discretize a discrete system."
 
     # the discrete time system matrix
