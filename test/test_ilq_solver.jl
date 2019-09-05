@@ -5,7 +5,13 @@ using iLQGames:
     Car5D,
     PlayerCost,
     GeneralGame,
-    @S
+    @S,
+    quadraticize,
+    linearize_discrete,
+    n_states,
+    n_controls,
+    dynamics,
+    player_costs
 
 using StaticArrays
 using LinearAlgebra
@@ -49,7 +55,7 @@ function (pc::TwoPlayerCarCost{player_id})(x::SVector{10}, u::SVector{4}, t::Flo
     xp_other = x[SVector{2}(player_id == 2 ? (1:2) : (6:7))]
     Δxp_other = xp_other - xᵢ[SVector{2}(1:2)]
     # asymptotically bad to approach other player
-    cost += 1/(norm(Δxp_other) + 0.01) * Qcᵢ
+    cost += 1/(norm(Δxp_other) + 0.01) * pc.qcᵢ
 
     return cost
 end
@@ -68,8 +74,8 @@ function generate_2player_car_game()
     g2 = @SVector [5., 0., pi, 0., 0.]
 
     # setup the dynamics
-    car1 = Car5D(1.0)
-    car2 = Car5D(1.0)
+    car1 = Car5D{ΔT}(1.0)
+    car2 = Car5D{ΔT}(1.0)
     dyn = ProductSystem((car1, car2))
 
     # cost
@@ -85,4 +91,28 @@ function generate_2player_car_game()
 
     # construct the game
     g = GeneralGame{((@S 1:2), (@S 3:4))}(dyn, costs)
+
+    return g
 end
+
+@testset "ilq_solver" begin
+    # generate a game
+    g = generate_2player_car_game()
+
+
+    # unpack for testing
+    dyn = dynamics(g)
+    c1, c2 = player_costs(g)
+
+    # test quadratization of the cost
+    x = @SVector rand(n_states(dyn))
+    u = @SVector rand(n_controls(dyn))
+    t = 0.
+
+    # TODO: figure out why I can't use my `@inferred_with_info` macro here.
+    quadraticize(c1, x, u, t)
+    quadraticize(c2, x, u, t)
+    # test linearization of the dynamics
+    # TODO: currently, this put's a lot of stress on the compiler.
+    linearize_discrete(dyn, x, u, t)
+end;
