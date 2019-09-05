@@ -32,7 +32,7 @@ linearize(ls::LinearSystem, x::SVector, u::SVector, t::AbstractFloat) = ls
 Computes the zero-order-hold discretization of the linear system ls with time
 discretization step ΔT.
 """
-function discretize(ls::LinearSystem, ΔT::AbstractFloat)
+function discretize_inv(ls::LinearSystem, ΔT::AbstractFloat)
     @assert !issampled(ls) "Can't discretize a discrete system."
 
     # the discrete time system matrix
@@ -44,21 +44,24 @@ function discretize(ls::LinearSystem, ΔT::AbstractFloat)
     return LinearSystem{ΔT}(Φ, Γ)
 end
 
-#function discretize_exp(ls::LinearSystem{nx, nu}, ΔT::Float64) where {nx, nu}
-#    @assert !issampled(ls) "Can't discretize a discrete system."
-#
-#    M = vcat([ls.A ls.B], @SMatrix(zeros(nu, nu+nx)))
-#    #M = vcat([A B], SMatrix{nu, nx+nu, Float64, nu*(nx+nu)}(zeros(nu, nx+nu)))
-#
-#    eMT = exp(M*ΔT)
-#    rx = SVector{nx}(1:nx)
-#    ru = SVector{nu}((nx+1):(nx+nu))
-#
-#    Φ = eMT[rx, rx]
-#    Γ = eMT[rx, ru]
-#
-#    return LinearSystem{ΔT}(Φ, Γ)
-#end
+function discretize(ls::LinearSystem, ::Val{ΔT}) where {ΔT}
+    @assert !issampled(ls) "Can't discretize a discrete system."
+    @assert ΔT > 0 "Discrtization requires finite sampling time ΔT."
+    nx = n_states(ls)
+    nu = n_controls(ls)
+
+    M = vcat([ls.A ls.B], @SMatrix(zeros(nu, nu+nx)))
+    #M = vcat([A B], SMatrix{nu, nx+nu, Float64, nu*(nx+nu)}(zeros(nu, nx+nu)))
+
+    eMT = exp(M*ΔT)
+    rx = SVector{nx}(1:nx)
+    ru = SVector{nu}((nx+1):(nx+nu))
+
+    Φ = eMT[rx, rx]
+    Γ = eMT[rx, ru]
+
+    return LinearSystem{ΔT}(Φ, Γ)
+end
 
 struct LTVSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:LinearSystem{ΔT, nx, nu}}} <: ControlSystem{ΔT, nx, nu} "The discrete time series of linear systems."
     dyn::TD

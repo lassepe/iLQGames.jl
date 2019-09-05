@@ -71,9 +71,9 @@ function linearize end
 """"
     $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
 
-Returns the discrete time (ZoH) Jacobian linearization. Input arguments
-have the same meaning as for `linearization`; with additional input
-argument `ΔT`, the time step for discretization.
+Returns the discrete time (ZoH) Jacobian linearization for a system with
+non-zero sampling time ΔT. Input arguments have the same meaning as for
+`linearization`.
 
 We provide a convencience default below.
 """
@@ -107,7 +107,7 @@ function linearize(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
 end
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u0::SVector, t0::AbstractFloat, ΔT::AbstractFloat)
+    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u0::SVector, t0::AbstractFloat)
 
 A convencience implementation of `linearize_discrete`. For better performance,
 this may be overloaded with some explicit (analytic) expressions (that may even
@@ -116,7 +116,7 @@ avoid calling `linearize`).
 linearize_discrete(cs::ControlSystem,
                    x0::SVector,
                    u0::SVector,
-                   t0::AbstractFloat, ΔT::AbstractFloat) = discretize(linearize(cs, x0, u0, t0), ΔT)
+                   t0::AbstractFloat) = discretize(linearize(cs, x0, u0, t0), Val{sampling_time(cs)}())
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat, ΔT::AbstractFloat)

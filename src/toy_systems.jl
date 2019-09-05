@@ -3,10 +3,10 @@ $(TYPEDEF)
 
 A lorenz attractor with with two inputs and parameters `σ`, `ρ` and `β`.
 """
-struct Lorenz3D{T1, T2, T3} <: ControlSystem{0, 3, 2}
-    σ::T1;
-    ρ::T2;
-    β::T3;
+struct Lorenz3D{ΔT} <: ControlSystem{ΔT, 3, 2}
+    σ::Float64;
+    ρ::Float64;
+    β::Float64;
 end
 
 function dx(cs::Lorenz3D, x::SVector{3}, u::SVector{2}, t::AbstractFloat)
@@ -26,7 +26,7 @@ A simple dubins car model.
 
 $(TYPEDFIELDS)
 """
-struct Car5D <: ControlSystem{0, 5, 2}
+struct Car5D{ΔT} <: ControlSystem{ΔT, 5, 2}
     "inter-axle length (m)"
     l::Float64
 end

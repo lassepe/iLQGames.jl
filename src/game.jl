@@ -33,6 +33,7 @@ function strategy_type end
 
 Returns the lq approximation of the game.
 """
+# TODO: which inputs does thes need in general?
 function lq_approximation end
 
 n_players(g::AbstractGame{uids}) where {uids} = length(uids)

@@ -10,7 +10,7 @@ using iLQGames:
     integrate,
     linearize
 
-l3 = Lorenz3D(10., 28., 8//3)
+l3 = Lorenz3D{0.1}(10., 28., 8//3)
 
 # test some linearization
 @testset "control_system.jl" begin
