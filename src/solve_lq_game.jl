@@ -12,7 +12,8 @@ function solve_lq_game(g::LQGame)
     nx = n_states(dynamics(g))
     nu = n_controls(dynamics(g))
 
-    total_u_idx_range = SVector{nu}(1:nu)
+    full_urange = SVector{nu}(1:nu)
+    full_xrange = SVector{nx}(1:nx)
 
     # initializting the optimal cost to go representation for DP
     # quadratic cost to go
@@ -41,14 +42,14 @@ function solve_lq_game(g::LQGame)
         for (ii, udxᵢ) in enumerate(uindex(g))
             BᵢZᵢ = B[:, udxᵢ]' * Z[ii]
             # the current set of rows that we construct for player ii
-            S[udxᵢ, :] = cost[ii].R[udxᵢ, total_u_idx_range] + BᵢZᵢ*B
+            S[udxᵢ, :] = cost[ii].R[udxᵢ, full_urange] + BᵢZᵢ*B
             # append the fully constructed row to the full S-Matrix
             Y[udxᵢ, :] = [(BᵢZᵢ*A) (B[:, udxᵢ]'*ζ[ii])]
         end
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
         P_and_α = (S \ Y)
-        P = SMatrix(P_and_α[:, total_u_idx_range])
+        P = SMatrix(P_and_α[:, full_xrange])
         α = SVector(P_and_α[:, end])
 
         # compute F and β as intermediate result for estimating the cost to go

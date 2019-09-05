@@ -154,7 +154,7 @@ horizon(g::LQGame{uids, h}) where {uids, h} = h
 strategy_type(g::LQGame) = AffineStrategy{n_states(dynamics(g)),
                                           n_controls(dynamics(g)),
                                           SMatrix{n_controls(dynamics(g)),
-                                                  n_controls(dynamics(g)),
+                                                  n_states(dynamics(g)),
                                                   Float64,
                                                   n_controls(dynamics(g))*n_states(dynamics(g))},
                                           SVector{n_controls(dynamics(g)),
