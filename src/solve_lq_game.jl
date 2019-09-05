@@ -38,7 +38,7 @@ function solve_lq_game(g::LQGame)
         # Refer to equation 6.17a in Basar and Olsder.
         # This will involve solving a system of matrix linear equations of the
         # form [S1s; S2s; ...] * [P1; P2; ...] = [Y1; Y2; ...].
-        for (ii, udxᵢ) in enumerate(u_idx_ranges(g))
+        for (ii, udxᵢ) in enumerate(uindex(g))
             BᵢZᵢ = B[:, udxᵢ]' * Z[ii]
             # the current set of rows that we construct for player ii
             S[udxᵢ, :] = cost[ii].R[udxᵢ, total_u_idx_range] + BᵢZᵢ*B

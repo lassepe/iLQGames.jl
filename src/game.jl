@@ -37,7 +37,7 @@ Returns the lq approximation of the game.
 function lq_approximation end
 
 n_players(g::AbstractGame{uids}) where {uids} = length(uids)
-u_idx_ranges(g::AbstractGame{uids}) where {uids} = uids
+uindex(g::AbstractGame{uids}) where {uids} = uids
 
 
 "--------------------------- Implementations ---------------------------"

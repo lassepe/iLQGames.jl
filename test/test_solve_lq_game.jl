@@ -13,7 +13,7 @@ using iLQGames:
     n_states,
     n_controls,
     n_players,
-    u_idx_ranges,
+    uindex,
     horizon,
     sampling_time,
     dynamics,
@@ -50,7 +50,7 @@ function generate_1D_pointmass_game()
     # test all the function calls:
     @test n_players(lqGame) == length(costs)
     @test horizon(lqGame) == N_STEPS
-    u_idx_ranges(lqGame)
+    uindex(lqGame)
 
     return lqGame
 end
@@ -143,8 +143,8 @@ function test_lyapunov(g::LQGame)
     P1_lyap, P2_lyap = solve_lyapunov_iterations(dynamics(g)[1],
                                                  player_costs(g)[1][1],
                                                  player_costs(g)[1][2],
-                                                 u_idx_ranges(g)[1],
-                                                 u_idx_ranges(g)[2])
+                                                 uindex(g)[1],
+                                                 uindex(g)[2])
     P_lyap = [P1_lyap; P2_lyap]
 
     # 2. LQ game solution
