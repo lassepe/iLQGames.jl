@@ -1,15 +1,11 @@
-struct iLQSolver
+@with_kw struct iLQSolver
     "The scaling of the feed-forward term."
-    α_scaling::Float64
-    "The maximum number of iterations. Iteration is aborted if this number is
-    exceeded."
-    max_n_iter::Int
+    α_scaling::Float64 = 0.001
+    "Iteration is aborted if this number is exceeded."
+    max_n_iter::Int = 100
     "The maximum elementwise difference bewteen the current and the last
     operating state trajectory to consider the probem converged."
-    max_elwise_diff::Float64
-    "The time step for conversion of the problem from contiuous to discrete
-    time."
-    ΔT::Float64
+    max_elwise_diff::Float64 = 0.1
 end
 
 # TODO tidy up and maybe extracts constants into solver
