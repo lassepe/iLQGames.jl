@@ -6,6 +6,8 @@
     "The maximum elementwise difference bewteen the current and the last
     operating state trajectory to consider the probem converged."
     max_elwise_diff::Float64 = 0.1
+    "The maximum runtime after which iteration is aborted."
+    max_runtime_seconds::Float64 = 1.
 end
 
 # TODO tidy up and maybe extracts constants into solver
@@ -50,8 +52,8 @@ end
 """
 
     $(FUNCTIONNAME)(p::AbstractGame,
-                    initial_operating_point::SystemTrajectory,
-                    initial_strategy::StaticVector, max_runtime_seconds::AbstractFloat)
+                    initial_op::SystemTrajectory,
+                    initial_strategy::StaticVector)
 
 Computes a solution solution to a (potentially non-linear and non-quadratic)
 finite horizon game g.
@@ -60,21 +62,21 @@ TODO: refine once implemented
 """
 # TODO: maybe x0 should be part of the problem (of a nonlinear problem struct)
 function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
-               initial_operating_point::SystemTrajectory,
-               initial_strategy::StaticVector, max_runtime_seconds::AbstractFloat)
+               initial_op::SystemTrajectory,
+               initial_strategy::StaticVector)
 
 
     # safe the start time of our computation
     start_time = time()
     # TODO: magic number (the guessed duration of one iteration)
-    has_time_remaining() = time() - start_time + 0.02 < max_runtime_seconds
+    has_time_remaining() = time() - start_time + 0.02 < solver.max_runtime_seconds
 
     # TODO: depending on what will happen, we need to explicitly copy or use
     # `similar` here
     num_iterations = 0
     # allocate memory for the last and the current operating point
-    last_op = copy(initial_operating_point)
-    current_op = initial_operating_point
+    last_op = copy(initial_op)
+    current_op = initial_op
     current_strategy = initial_strategy
 
     while (has_time_remaining() && !has_converged())

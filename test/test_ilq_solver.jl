@@ -15,7 +15,9 @@ using iLQGames:
     SystemTrajectory,
     lq_approximation,
     sampling_time,
-    iLQSolver
+    iLQSolver,
+    solve,
+    AffineStrategy
 
 using StaticArrays
 using LinearAlgebra
@@ -73,6 +75,7 @@ function generate_2player_car_game()
     # x = (x, y, phi, β, v)
     x01 = @SVector [-5., 0., 0., 0., 0.]
     x02 = @SVector [5., 0., pi, 0., 0.]
+    x0 = vcat(x01, x02)
     # goal states (goal position of other player with opposite orientation)
     g1 = @SVector [5., 0., 0., 0., 0.]
     g2 = @SVector [5., 0., pi, 0., 0.]
@@ -96,12 +99,12 @@ function generate_2player_car_game()
     # construct the game
     g = GeneralGame{((@S 1:2), (@S 3:4))}(dyn, costs)
 
-    return g
+    return g, x0
 end
 
 @testset "ilq_solver" begin
     # generate a game
-    g = generate_2player_car_game()
+    g, x0 = generate_2player_car_game()
 
 
     # unpack for testing
@@ -132,4 +135,11 @@ end
 
     # solve the lq game
     solver = iLQSolver()
+
+    # TODO
+    # - setup initial_strategy
+    straight_γ = AffineStrategy((@SMatrix zeros(nu, nx)), @SVector [0., 1., 0., 1.])
+    initial_strategy = Size(h)(repeat([straight_γ], h))
+    # - generate initial operating point from simulating initial strategy
+    solve(g, solver, x0, zero_op, initial_strategy)
 end;
