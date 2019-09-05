@@ -103,13 +103,13 @@ struct LQGame{uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} <: AbstractGame{uid
     dyn::TD
     "The cost representation. A vector (time) over vector (player) over
     `QuadraticPlayerCost`"
-    player_costs::TC
+    pcost::TC
 
-    LQGame{uids}(dyn::TD, player_costs::TC) where {uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} = begin
+    LQGame{uids}(dyn::TD, pcost::TC) where {uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} = begin
         game_sanity_checks(uids, TD, eltype(TC))
         @assert eltype(TD) <: LinearSystem "LQGames require linear (time varying) dynamics."
         @assert eltype(eltype(TC)) <: QuadraticPlayerCost "LQGames require quadratic cots."
-        new{uids, h, TD, TC}(dyn, player_costs)
+        new{uids, h, TD, TC}(dyn, pcost)
     end
 end
 
@@ -124,5 +124,6 @@ strategy_type(g::LQGame) = AffineStrategy{n_states(dynamics(g)),
                                           SVector{n_controls(dynamics(g)),
                                                   Float64}}
 dynamics(g::LQGame) = g.dyn
-player_costs(g::LQGame) = g.player_costs
+player_costs(g::LQGame) = g.pcost
+# TODO this is probably not correct because the zero might still be somewhere else
 lq_approximation(g::LQGame) = g

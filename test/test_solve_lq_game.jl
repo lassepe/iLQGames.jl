@@ -17,7 +17,9 @@ using iLQGames:
     horizon,
     sampling_time,
     dynamics,
+    player_costs,
     trajectory!
+
 
 function generate_1D_pointmass_game()
     # Testing the solver at a simple example: A two-player point mass 1D system.
@@ -138,9 +140,9 @@ end
 function test_lyapunov(g::LQGame)
 
     # 1. Lyapunov solution for the inifnite horizion problem
-    P1_lyap, P2_lyap = solve_lyapunov_iterations(g.dyn[1],
-                                                 g.player_costs[1][1],
-                                                 g.player_costs[1][2],
+    P1_lyap, P2_lyap = solve_lyapunov_iterations(dynamics(g)[1],
+                                                 player_costs(g)[1][1],
+                                                 player_costs(g)[1][2],
                                                  u_idx_ranges(g)[1],
                                                  u_idx_ranges(g)[2])
     P_lyap = [P1_lyap; P2_lyap]
