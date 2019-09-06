@@ -147,5 +147,5 @@ Integrate to xₖ₊₁ starting from x, applying u.
 """
 function next_x(cs::ControlSystem, x::SVector, u::SVector, k::Int)
     @assert issampled(cs) "next_x requires `ControlSystem` with ΔT > 0."
-    return integrate(cs, x, u, 0, sampling_time(cs))
+    return integrate(cs, x, u, 0., sampling_time(cs))
 end

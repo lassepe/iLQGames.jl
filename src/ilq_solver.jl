@@ -23,20 +23,9 @@ function has_converged(solver::iLQSolver,
     end
 
     # TODO: this might be very slow, depending on what this is lowered to
-    return all(norm(current_op.x[k] - last_op.x[k], Inf) <
-               solver.max_elwise_diff for k in eachindex(last_op.x))
-end
-
-# # TODO maybe the game g or a solver should hold the operating point (to
-# manage memory allocation) updates the operating point
-
-# Integrate through full dynamics of the game by applying the current strategy
-# at the last operating point. From this, we obtain a new state and control
-# trajectory (vector (over time) of tuples (x, u))
-function update_op!(current_op::SystemTrajectory{h}, g::AbstractGame,
-                    solver::iLQSolver, last_op::SystemTrajectory{h},
-                    current_strategy::SizedVector{h,<:AffineStrategy}) where {h}
-     # TODO replace with `trajectory` call
+    println(length(last_op.x))
+    @show maximum(norm(current_op.x[k] - last_op.x[k], Inf) for k in eachindex(last_op.x))
+    return all(norm(current_op.x[k] - last_op.x[k], Inf) < solver.max_elwise_diff for k in eachindex(last_op.x))
 end
 
 # TODO: there must be a better name for this
@@ -76,16 +65,18 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
     i_iter = 0
     # allocate memory for the last and the current operating point
     # TODO: try not to copy!
-    last_op = deepcopy(initial_op)
+    last_op = initial_op
     current_op = initial_op
     current_strategy = initial_strategy
 
     while !has_converged(solver, last_op, current_op, i_iter)
         i_iter += 1
         # 1. cache the current operating point ...
-        last_op = current_op
+        # # TODO: this is really annoying -- avoid deepcopy
+        # at least overload the copy! interface
+        last_op = deepcopy(current_op)
         # ... and upate the current by integrating the non-linear dynamics
-        update_op!(current_op, g, solver, last_op, current_strategy)
+        trajectory!(current_op, dynamics(g), current_strategy, last_op, x0)
 
         # 2. linearize dynamics and quadratisize costs to obtain an lq game
         # TODO: implement
@@ -97,9 +88,11 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
 
         # 4. do line search to stabilize the strategy selection
         if(!stabilize!(current_strategy, solver, current_op))
-            @error "Did not find a solution!"
+            @error "Could not stabilize solution."
         end
     end
+
+    @info "Finished after $i_iter interations."
 
     return current_op, current_strategy
 end
