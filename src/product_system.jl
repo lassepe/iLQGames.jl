@@ -26,7 +26,6 @@ function dx(cs::ProductSystem{ΔT, nx, nu, xids, uids}, x::SVector{nx},
         dx_val[xidᵢ] = dx(subᵢ, x[xidᵢ], u[uidᵢ], t)
     end
 
-    # TODO: this isprobably really slow -- use a generated function here
     return SVector{nx}(dx_val)
 end
 # TODO: maybe also overload `linearize` and `integrate` to exploit sparsity

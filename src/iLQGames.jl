@@ -10,7 +10,7 @@ module iLQGames
         zero
 
     using Plots
-    gr()
+    pyplot()
 
     # some utils
     include("utils.jl")
