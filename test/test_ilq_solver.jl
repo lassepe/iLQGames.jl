@@ -91,8 +91,8 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
     # initial conditions:
     # x = (x, y, phi, β, v)
     ΔΘ = deg2rad(0)
-    x01 = @SVector [-2., 0.3, 0., ΔΘ, 0.]
-    x02 = @SVector [2., -0.3, pi, ΔΘ, 0.]
+    x01 = @SVector [-2., 0.0, 0., ΔΘ, 0.]
+    x02 = @SVector [2.,  0.0, pi, ΔΘ, 0.]
     x0 = vcat(x01, x02)
     # goal states (goal position of other player with opposite orientation)
     g1 = @SVector [2., 0., 0., 0., 0.]
@@ -109,9 +109,9 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
     # state cost: cost for steering angle
     Qs = SMatrix{5,5}(diagm([0, 0, 0, 20., 0]))
     # goal cost that applies only at the end of the horizon
-    Qg = SMatrix{5,5}(diagm([1,1,1,0.1,1])) * 20
+    Qg = SMatrix{5,5}(diagm([1,1,1,0.1,1])) * 10
     # collision avoidance cost
-    qc = 10.
+    qc = 100.
     r_avoid = 1.
 
     c1 = TwoPlayerCarCost{1}(R, Qs, Qg, g1, qc, r_avoid, t_final)
@@ -129,8 +129,8 @@ pyplot()
 
 #@testset "ilq_solver" begin
     # generate a game
-    T_horizon = 10.
-    ΔT = 0.1
+    T_horizon = 4.
+    ΔT = 0.04
     g, x0 = generate_2player_car_game(T_horizon, ΔT)
 
 
