@@ -102,8 +102,8 @@ function lq_approximation(g::GeneralGame, op::SystemTrajectory)
 
     for (k, (xₖ, uₖ)) in enumerate(zip(op.x, op.u))
         # discrete linearization along the operating point
-        # TODO fix later, maybe...
-        t = 0.;
+        # TODO fix later to also consider t₀ != 0
+        t = 0 + sampling_time(op)*(k-1);
         lin_dyn[k] = linearize_discrete(dynamics(g), xₖ, uₖ, t)
         # quadratiation of the cost along the operating point
         quad_cost[k] = map(player_costs(g)) do pcₖⁱ

@@ -48,7 +48,18 @@ function solve_lq_game(g::LQGame)
         end
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
-        P_and_α = (S \ Y)
+        P_and_α = try
+            SMatrix{nu, nx+1}(pinv(S) * Y)
+        catch e
+            @show Z
+            @show ζ
+            @show cost
+            @show A
+            @show B
+            @show S
+            @show Y
+            rethrow(e)
+        end
         P = SMatrix(P_and_α[:, full_xrange])
         α = SVector(P_and_α[:, end])
 

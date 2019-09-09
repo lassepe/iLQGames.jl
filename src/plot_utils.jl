@@ -43,7 +43,7 @@ function plot_systraj(trajs::Vararg{SystemTrajectory}; xy_ids)
         for xy_i in xy_ids
             x = collect(x[first(xy_i)] for x in traj.x)
             y = collect(x[last(xy_i)] for x in traj.x)
-            plot!(pxy, x, y; marker=1, xlims=(-3, 3), ylims=(-3, 3))
+            plot!(pxy, x, y; marker=0, xlims=(-5, 5), ylims=(-2.5, 2.5))
         end
 
         push!(traj_plots, plot(pu, pxy))

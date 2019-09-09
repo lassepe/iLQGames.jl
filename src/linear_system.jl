@@ -83,6 +83,7 @@ struct SystemTrajectory{h, ΔT, nx, nu, TX<:SizedVector{h,<:SVector{nx}},
     x::TX
     "The sequence of controls."
     u::TU
+    # TODO: also add t0 (initial time)
 end
 SystemTrajectory{ΔT}(x::TX, u::TU) where {h, ΔT, nx, nu,
                                           TX<:SizedVector{h,<:SVector{nx}},
