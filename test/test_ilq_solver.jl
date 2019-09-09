@@ -185,6 +185,7 @@ function plot_cost(g::GeneralGame, op::SystemTrajectory, dims, i::Int=1, k::Int=
     lqg = lq_approximation(g, op)
     nx = n_states(dynamics(g))
     nu = n_controls(dynamics(g))
+    t = k * sampling_time(dynamics(g))
 
     offset2vec(Δd1, Δd2) = begin
         Δx = zeros(nx)
@@ -197,12 +198,12 @@ function plot_cost(g::GeneralGame, op::SystemTrajectory, dims, i::Int=1, k::Int=
 
     projected_cost(Δd1, Δd2=0) = begin
         Δx = offset2vec(Δd1, Δd2)
-        return player_costs(g)[i](op.x[k]+Δx, op.u[k], 0.)
+        return player_costs(g)[i](op.x[k]+Δx, op.u[k], t)
     end
 
     projected_cost_approx(Δd1, Δd2=0) = begin
         Δx = offset2vec(Δd1, Δd2)
-        c0 = player_costs(g)[i](op.x[k], op.u[k], 0.)
+        c0 = player_costs(g)[i](op.x[k], op.u[k], t)
         return player_costs(lqg)[k][i](Δx, (@SVector zeros(nu))) + c0
     end
 
