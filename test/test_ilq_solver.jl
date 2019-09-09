@@ -177,11 +177,11 @@ pyplot()
     op, γ_op = @time solve(g, solver, x0, deepcopy(op_init), γ_init)
 
     # TODO automate posiiton coordinate extraction
-    display(plot_systraj(op_init, op; xy_ids=[(1,2), (6,7)]))
+    display(plot_systraj(op; xy_ids=[(1,2), (6,7)]))
 #end;
 
 # cost plots
-function plot_cost(g::GeneralGame, op::SystemTrajectory, dims, i::Int=1, k::Int=1; st::Symbol=:contourf)
+function plot_cost(g::GeneralGame, op::SystemTrajectory, dims, i::Int=1, k::Int=1; st::Symbol=:contour)
     lqg = lq_approximation(g, op)
     nx = n_states(dynamics(g))
     nu = n_controls(dynamics(g))
@@ -218,4 +218,11 @@ function plot_cost(g::GeneralGame, op::SystemTrajectory, dims, i::Int=1, k::Int=
     end
 
     @assert false "Can only visualize one or two dimensions"
+end
+
+function animate_cost(filename::String, op::SystemTrajectory, k_range::UnitRange, dims=(1:2), i::Int=1; st::Symbol=:contour, frame_sampling::Int=2, fps=10)
+    anim = @animate for k in k_range
+        plot_cost(g, op, dims, i, k, st=st)
+    end every frame_sampling
+    gif(anim, filename, fps=fps)
 end
