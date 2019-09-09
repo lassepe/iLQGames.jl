@@ -220,7 +220,8 @@ function plot_cost(g::GeneralGame, op::SystemTrajectory, dims, i::Int=1, k::Int=
     @assert false "Can only visualize one or two dimensions"
 end
 
-function animate_cost(op::SystemTrajectory, k_range::UnitRange, dims=(1:2), i::Int=1; st::Symbol=:contour, frame_sampling::Int=2, fps=10, filename::String="$(@__DIR__)/../debug_out/test.gif")
+function animate_cost(g::GeneralGame, op::SystemTrajectory, k_range::Union{UnitRange, Nothing}=nothing, dims=(1:2), i::Int=1; st::Symbol=:contour, frame_sampling::Int=2, fps=10, filename::String="$(@__DIR__)/../debug_out/test.gif")
+    k_range = isnothing(k_range) ? (1:length(op.x)) : k_range
     anim = @animate for k in k_range
         plot_cost(g, op, dims, i, k, st=st)
     end every frame_sampling
