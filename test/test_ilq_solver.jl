@@ -105,11 +105,11 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
 
     # cost
     # control cost
-    R = @SMatrix [1. 0.; 0. 1.]
+    R = @SMatrix [1. 0.; 0. 2.]
     # state cost: cost for steering angle
-    Qs = SMatrix{5,5}(diagm([0, 0, 0, 20., 0]))
+    Qs = SMatrix{5,5}(diagm([0, 0, 0, 20., 0.1]))
     # goal cost that applies only at the end of the horizon
-    Qg = SMatrix{5,5}(diagm([1,1,1,0.1,1])) * 10
+    Qg = SMatrix{5,5}(diagm([1.,1.,0.,0.,1.]))
     # collision avoidance cost
     qc = 100.
     r_avoid = 1.
@@ -129,7 +129,7 @@ pyplot()
 
 #@testset "ilq_solver" begin
     # generate a game
-    T_horizon = 4.
+    T_horizon = 6.
     ΔT = 0.04
     g, x0 = generate_2player_car_game(T_horizon, ΔT)
 
