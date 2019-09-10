@@ -99,21 +99,17 @@ function (pc::TwoPlayerCarCost{player_id})(x::SVector{10}, u::SVector{4},
     # speed constraints
     cost += soft_constraint(xᵢ[5], des_v_min, des_v_max, w)
 
+    # proxiimity constraint
+    xp_other = x[SVector{2}(player_id == 1 ? (6:7) : (1:2))]
+    Δxp = xp_other - xᵢ[SVector{2}(1:2)]
+    cost += soft_constraint(Δxp'*Δxp, pc.r_avoid, Inf, w)
+
     # goal state cost cost:
     if t > pc.t_final
         # we want to be near the goal ...
         Δxgᵢ = xᵢ - pc.xgᵢ
         cost += Δxgᵢ' * pc.Qgᵢ * Δxgᵢ
     end
-    # ... but we don't want to collide (the coupling term)
-    #      xp_other = x[SVector{2}(player_id == 1 ? (6:7) : (1:2))]
-    #      Δxp = xp_other - xᵢ[SVector{2}(1:2)]
-    # asymptotically bad to approach other player
-    # cost += 1/(Δxp'*Δxp + 1) * pc.qcᵢ
-    #normalized_gap = Δxp' * Δxp / (2 * pc.r_avoid)
-    #if normalized_gap < 1.
-    #    cost += 1//2 * (cos(normalized_gap*pi) + 1) * pc.qcᵢ
-    #end
 
     return cost
 end
@@ -142,7 +138,7 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
     # state cost: cost for steering angle
     Qs = SMatrix{5,5}(diagm([0, 0, 0, 1., 1.])) * 0.1
     # goal cost that applies only at the end of the horizon
-    Qg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*10
+    Qg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*100
     # collision avoidance cost
     qc = 0.
     r_avoid = 1.
@@ -175,7 +171,7 @@ pyplot()
 #@testset "ilq_solver" begin
     # generate a game
     T_horizon = 10.
-    ΔT = 0.04
+    ΔT = 0.05
     g, x0 = generate_2player_car_game(T_horizon, ΔT)
 
 
@@ -209,8 +205,8 @@ pyplot()
     solver = iLQSolver()
     # TODO
     # - setup initial_strategy
-    steer_init(k::Int) = cos(k/h*pi) * deg2rad(-5)
-    acc_init(k::Int) = -cos(k/h*pi)*0.1
+    steer_init(k::Int) = cos(k/h*pi) * deg2rad(-2)
+    acc_init(k::Int) = -cos(k/h*pi)*0.2
     γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
 
                                      (@SVector [steer_init(k), acc_init(k),
