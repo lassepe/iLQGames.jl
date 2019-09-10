@@ -19,7 +19,9 @@ using iLQGames:
     solve,
     AffineStrategy,
     trajectory!,
-    plot_systraj
+    plot_systraj,
+    cost,
+    next_x
 
 using StaticArrays
 using LinearAlgebra
@@ -144,6 +146,18 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
     return g, x0
 end
 
+function flip_steering(op::SystemTrajectory)
+    op_flip = zero(typeof(op))
+    xₖ = op.x[1]
+    for k in eachindex(op_flip.x)
+        op_flip.x[k] = xₖ
+        op_flip.u[k] = SMatrix{4,4}(diagm([-1, 1, -1, 1]))*op.u[k]
+        xₖ = next_x(dynamics(g), xₖ, op_flip.u[k], k)
+    end
+    return op_flip
+end
+
+
 using Plots
 pyplot()
 
@@ -197,7 +211,12 @@ pyplot()
     op, γ_op = @time solve(g, solver, x0, deepcopy(op_init), γ_init)
 
     # TODO automate posiiton coordinate extraction
-    display(plot_systraj(op; xy_ids=[(1,2), (6,7)]))
+    op_init
+    print("""
+          Top -- init: $(cost(g, op_init))
+          Bottom -- normal: $(cost(g, op))
+          """)
+    display(plot_systraj(op_init, op; xy_ids=[(1,2), (6,7)]))
 #end;
 
 # cost plots
