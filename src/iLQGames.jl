@@ -25,7 +25,6 @@ module iLQGames
     include("toy_systems.jl")
     include("linear_system.jl")
     include("product_system.jl")
-    include("sim.jl")
 
     # game abstraction
     include("game.jl")
@@ -33,6 +32,9 @@ module iLQGames
     # the solver implementations
     include("solve_lq_game.jl")
     include("ilq_solver.jl")
+
+    # simulation
+    include("sim.jl")
 
     # some tools for plotting
     include("plot_utils.jl")

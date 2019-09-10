@@ -38,6 +38,7 @@ function lq_approximation end
 
 n_players(g::AbstractGame{uids}) where {uids} = length(uids)
 uindex(g::AbstractGame{uids}) where {uids} = uids
+player_index(g::AbstractGame) = SVector{n_players(g)}(1:n_players(g))
 
 
 "--------------------------- Implementations ---------------------------"
