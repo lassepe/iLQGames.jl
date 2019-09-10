@@ -17,6 +17,7 @@ module iLQGames
 
     # game utils
     include("strategy.jl")
+    include("system_trajectory.jl")
     include("player_cost.jl")
 
     # dynamics abstraction
@@ -24,6 +25,7 @@ module iLQGames
     include("toy_systems.jl")
     include("linear_system.jl")
     include("product_system.jl")
+    include("sim.jl")
 
     # game abstraction
     include("game.jl")
