@@ -216,9 +216,9 @@ version = "0.6.0"
 
 [[HTTP]]
 deps = ["Base64", "Dates", "IniFile", "MbedTLS", "Sockets"]
-git-tree-sha1 = "c4a527dba1d26add0e85946e1a53f42a1b343acc"
+git-tree-sha1 = "f1e1b417a34cf73a70cbed919915bf8f8bad1806"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "0.8.5"
+version = "0.8.6"
 
 [[HTTPClient]]
 deps = ["Compat", "LibCURL"]
@@ -553,10 +553,10 @@ deps = ["LinearAlgebra", "Random"]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[SpecialFunctions]]
-deps = ["BinDeps", "BinaryProvider", "Libdl"]
-git-tree-sha1 = "3bdd374b6fd78faf0119b8c5d538788dbf910c6e"
+deps = ["BinDeps", "BinaryProvider", "Libdl", "Test"]
+git-tree-sha1 = "0b45dc2e45ed77f445617b99ff2adf0f5b0f23ea"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "0.8.0"
+version = "0.7.2"
 
 [[StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
