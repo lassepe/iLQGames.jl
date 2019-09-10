@@ -69,40 +69,41 @@ function (pc::TwoPlayerCarCost{player_id})(x::SVector{10}, u::SVector{4},
     # running cost for states (e.g. large steering)
     cost += xᵢ' * pc.Qs * xᵢ
 
-    # soft constraints
-    des_v_min = 0;
-    des_v_max = 1;
-    des_steering_max = deg2rad(8)
-    w_constraint = 1000.
-    # penalize speed
-    if xᵢ[5] < des_v_min
-        gap = des_v_min - xᵢ[5]
-        cost += gap^4 * w_constraint
-    end
-    if xᵢ[5] > des_v_max
-        gap = xᵢ[5] - des_v_max
-        cost += gap^4 * w_constraint
-    end
-    # penalize large steering angles
-    if abs(xᵢ[4]) > des_steering_max
-        cost += (xᵢ[4] - des_steering_max)^4 * w_constraint
-    end
+#    # soft constraints
+#    des_v_min = -0.2;
+#    des_v_max = 1.5;
+#    des_steering_max = deg2rad(8)
+#    w_constraint = 1000.
+#    # penalize speed
+#    if xᵢ[5] < des_v_min
+#        gap = des_v_min - xᵢ[5]
+#        cost += gap*gap*w_constraint
+#    end
+#    if xᵢ[5] > des_v_max
+#        gap = xᵢ[5] - des_v_max
+#        cost += gap*gap*w_constraint
+#    end
+#    # penalize large steering angles
+#    if abs(xᵢ[4]) > des_steering_max
+#        gap = xᵢ[4] - des_steering_max
+#        cost += gap*gap*w_constraint
+#    end
 
     # goal state cost cost:
-    if t > pc.t_final
+    #if t > pc.t_final
         # we want to be near the goal ...
         Δxgᵢ = xᵢ - pc.xgᵢ
         cost += Δxgᵢ' * pc.Qgᵢ * Δxgᵢ
-    end
+    #end
     # ... but we don't want to collide (the coupling term)
-    xp_other = x[SVector{2}(player_id == 1 ? (6:7) : (1:2))]
-    Δxp = xp_other - xᵢ[SVector{2}(1:2)]
+    #      xp_other = x[SVector{2}(player_id == 1 ? (6:7) : (1:2))]
+    #      Δxp = xp_other - xᵢ[SVector{2}(1:2)]
     # asymptotically bad to approach other player
     # cost += 1/(Δxp'*Δxp + 1) * pc.qcᵢ
-    normalized_gap = Δxp' * Δxp / (2 * pc.r_avoid)
-    if normalized_gap < 1.
-        cost += 1//2 * (cos(normalized_gap*pi) + 1) * pc.qcᵢ
-    end
+    #normalized_gap = Δxp' * Δxp / (2 * pc.r_avoid)
+    #if normalized_gap < 1.
+    #    cost += 1//2 * (cos(normalized_gap*pi) + 1) * pc.qcᵢ
+    #end
 
     return cost
 end
@@ -112,13 +113,13 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
 
     # initial conditions:
     # x = (x, y, phi, β, v)
-    ΔΘ = deg2rad(0)
-    x01 = @SVector [-2., -0.3, 0., ΔΘ, 0.]
-    x02 = @SVector [2.,  0.3, pi, ΔΘ, 0.]
+    x01 = @SVector [-3., -1, 0., 0., 0.]
+    x02 = @SVector [3.,  1, pi, 0., 0.]
     x0 = vcat(x01, x02)
     # goal states (goal position of other player with opposite orientation)
-    g1 = @SVector [2., 0., 0., 0., 0.]
-    g2 = @SVector [-2., 0., pi, 0., 0.]
+    ΔΘg = deg2rad(90)
+    g1 = @SVector [1., 1., (0. + ΔΘg), 0., 0.]
+    g2 = @SVector [-1., -1., (pi + ΔΘg), 0., 0.]
 
     # setup the dynamics
     car1 = Car5D{ΔT}(1.0)
@@ -127,13 +128,13 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
 
     # cost
     # control cost
-    R = @SMatrix [2. 0.; 0. 2.]
+    R = SMatrix{2,2}([1. 0.; 0. 1.]) * 0.1
     # state cost: cost for steering angle
-    Qs = SMatrix{5,5}(diagm([0, 0, 0, 1., 1.]))*0.01
+    Qs = SMatrix{5,5}(diagm([0, 0, 0, 1., 1.])) * 1.
     # goal cost that applies only at the end of the horizon
-    Qg = SMatrix{5,5}(diagm([1.,1.,0.,0.,1.]))*5
+    Qg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*10
     # collision avoidance cost
-    qc = 100.
+    qc = 0.
     r_avoid = 1.
 
     c1 = TwoPlayerCarCost{1}(R, Qs, Qg, g1, qc, r_avoid, t_final)
@@ -199,8 +200,9 @@ pyplot()
     # TODO
     # - setup initial_strategy
     steer_init(k::Int) = sin(k/h*pi) * deg2rad(0)
-    acc_init(k::Int) = -cos(k/h*pi)*0.2
+    acc_init(k::Int) = -cos(k/h*pi)*0.18
     γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
+
                                      (@SVector [steer_init(k), acc_init(k),
                                                 steer_init(k), acc_init(k)]))
                       for k in 1:h])
