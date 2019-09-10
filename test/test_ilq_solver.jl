@@ -69,32 +69,42 @@ function (pc::TwoPlayerCarCost{player_id})(x::SVector{10}, u::SVector{4},
     # running cost for states (e.g. large steering)
     cost += xᵢ' * pc.Qs * xᵢ
 
-#    # soft constraints
-#    des_v_min = -0.2;
-#    des_v_max = 1.5;
-#    des_steering_max = deg2rad(8)
-#    w_constraint = 1000.
-#    # penalize speed
-#    if xᵢ[5] < des_v_min
-#        gap = des_v_min - xᵢ[5]
-#        cost += gap*gap*w_constraint
-#    end
-#    if xᵢ[5] > des_v_max
-#        gap = xᵢ[5] - des_v_max
-#        cost += gap*gap*w_constraint
-#    end
-#    # penalize large steering angles
-#    if abs(xᵢ[4]) > des_steering_max
-#        gap = xᵢ[4] - des_steering_max
-#        cost += gap*gap*w_constraint
-#    end
+    @inline function soft_constraint(val::Real, min::Real, max::Real, w::Real)
+        @assert min < max
+        gap = 0.
+        if val < min
+            gap = min - val
+        elseif val > max
+            gap = val - max
+        end
+        return gap*gap*w
+    end
+
+    # soft constraints
+    # maximum acceleration
+    gravity = 9.81
+    des_acc_min = -4*gravity
+    des_acc_max = -2*gravity
+    des_v_min = -0.05
+    des_v_max = 8.
+    des_steer_min= -deg2rad(30)
+    des_steer_max = -des_steer_min
+    w = 100.
+
+    # steering angle constraint
+    cost += soft_constraint(uᵢ[1], des_steer_min, des_steer_max, w)
+    # acceleration constraints
+    cost += soft_constraint(uᵢ[2], des_acc_min, des_acc_max, w)
+
+    # speed constraints
+    cost += soft_constraint(xᵢ[5], des_v_min, des_v_max, w)
 
     # goal state cost cost:
-    #if t > pc.t_final
+    if t > pc.t_final
         # we want to be near the goal ...
         Δxgᵢ = xᵢ - pc.xgᵢ
         cost += Δxgᵢ' * pc.Qgᵢ * Δxgᵢ
-    #end
+    end
     # ... but we don't want to collide (the coupling term)
     #      xp_other = x[SVector{2}(player_id == 1 ? (6:7) : (1:2))]
     #      Δxp = xp_other - xᵢ[SVector{2}(1:2)]
@@ -130,7 +140,7 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
     # control cost
     R = SMatrix{2,2}([1. 0.; 0. 1.]) * 0.1
     # state cost: cost for steering angle
-    Qs = SMatrix{5,5}(diagm([0, 0, 0, 1., 1.])) * 1.
+    Qs = SMatrix{5,5}(diagm([0, 0, 0, 1., 1.])) * 0.1
     # goal cost that applies only at the end of the horizon
     Qg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*10
     # collision avoidance cost
@@ -199,8 +209,8 @@ pyplot()
     solver = iLQSolver()
     # TODO
     # - setup initial_strategy
-    steer_init(k::Int) = sin(k/h*pi) * deg2rad(0)
-    acc_init(k::Int) = -cos(k/h*pi)*0.18
+    steer_init(k::Int) = cos(k/h*pi) * deg2rad(-5)
+    acc_init(k::Int) = -cos(k/h*pi)*0.1
     γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
 
                                      (@SVector [steer_init(k), acc_init(k),

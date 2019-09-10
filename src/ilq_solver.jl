@@ -1,11 +1,11 @@
 @with_kw struct iLQSolver
     "The scaling of the feed-forward term."
-    α_scaling::Float64 = 0.01
+    α_scaling::Float64 = 0.005
     "Iteration is aborted if this number is exceeded."
     max_n_iter::Int = 1000
     "The maximum elementwise difference bewteen the current and the last
     operating state trajectory to consider the probem converged."
-    max_elwise_diff::Float64 = 0.01
+    max_elwise_diff::Float64 = 0.0025
     "The maximum runtime after which iteration is aborted."
     max_runtime_seconds::Float64 = 1.
 end
