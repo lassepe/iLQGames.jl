@@ -29,8 +29,11 @@ function gen_fake_data()
 end
 
 
-function plot_systraj(trajs::Vararg{SystemTrajectory}; xy_ids)
+function plot_systraj(trajs::Vararg{SystemTrajectory}; xy_ids, uids)
 
+    # get a color for each player
+    player_colors = distinguishable_colors(length(uids), colorant"darkgreen")
+    # buffer for all the plots
     traj_plots = []
 
     for traj in trajs
@@ -38,12 +41,18 @@ function plot_systraj(trajs::Vararg{SystemTrajectory}; xy_ids)
         pu = plot(; layout=(nu, 1))
         pxy = plot()
 
-        # inputs
-        plot!(pu, hcat(traj.u...)'; layout=(nu, 1))
-        for xy_i in xy_ids
+        # names for each input
+        input_labels = reshape(["u$i" for i in 1:nu], 1, nu)
+        # find the player color for each input
+        input_colors = reshape([player_colors[findfirst(in.(i, uids))] for i in 1:nu], 1, nu)
+        plot!(pu, hcat(traj.u...)'; layout=(nu, 1), label=input_labels, seriescolor=input_colors)
+        for (i, xy_i) in enumerate(xy_ids)
+            # the trajectory
             x = collect(x[first(xy_i)] for x in traj.x)
             y = collect(x[last(xy_i)] for x in traj.x)
-            plot!(pxy, x, y; marker=0, xlims=(-5, 5), ylims=(-2.5, 2.5))
+            plot!(pxy, x, y; marker=0, xlims=(-5, 5), ylims=(-2.5, 2.5), seriescolor=player_colors[i], label="p$i")
+            # marker for start and end
+            scatter!(pxy, [x[1]], [y[1]], seriescolor=player_colors[i], label="x0_p$i")
         end
 
         push!(traj_plots, plot(pu, pxy))
