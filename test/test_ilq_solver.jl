@@ -19,7 +19,7 @@ using iLQGames:
     solve,
     AffineStrategy,
     trajectory!,
-    plot_systraj,
+    plot_traj,
     cost,
     next_x
 
@@ -223,7 +223,7 @@ pyplot()
           Top -- init: $(cost(g, op_init))
           Bottom -- normal: $(cost(g, op))
           """)
-    display(plot_systraj(op_init, op; xy_ids=[(1,2), (6,7)], uids=uindex(g)))
+    display(plot_traj(op_init, op; xy_ids=[(1,2), (6,7)], uids=uindex(g)))
 #end;
 
 # cost plots
