@@ -29,34 +29,40 @@ function gen_fake_data()
 end
 
 
-function plot_systraj(trajs::Vararg{SystemTrajectory}; xy_ids, uids)
+function plot_traj(traj::SystemTrajectory, xy_ids::SIndex, uids::SIndex; k::Int=1)
 
     # get a color for each player
     player_colors = distinguishable_colors(length(uids), colorant"darkgreen")
     # buffer for all the plots
-    traj_plots = []
 
-    for traj in trajs
-        nu = length(eltype(traj.u))
-        pu = plot(; layout=(nu, 1))
-        pxy = plot()
+    nu = length(eltype(traj.u))
+    pu = plot(; layout=(nu, 1))
+    pxy = plot()
 
-        # names for each input
-        input_labels = reshape(["u$i" for i in 1:nu], 1, nu)
-        # find the player color for each input
-        input_colors = reshape([player_colors[findfirst(in.(i, uids))] for i in 1:nu], 1, nu)
-        plot!(pu, hcat(traj.u...)'; layout=(nu, 1), label=input_labels, seriescolor=input_colors)
-        for (i, xy_i) in enumerate(xy_ids)
-            # the trajectory
-            x = collect(x[first(xy_i)] for x in traj.x)
-            y = collect(x[last(xy_i)] for x in traj.x)
-            plot!(pxy, x, y; marker=0, xlims=(-5, 5), ylims=(-5, 5), seriescolor=player_colors[i], label="p$i")
-            # marker for start and end
-            scatter!(pxy, [x[1]], [y[1]], seriescolor=player_colors[i], label="x0_p$i")
-        end
+    # names for each input
+    input_labels = reshape(["u$i" for i in 1:nu], 1, nu)
+    # find the player color for each input
+    input_colors = reshape([player_colors[findfirst(in.(i, uids))] for i in 1:nu], 1, nu)
+    plot!(pu, hcat(traj.u...)'; layout=(nu, 1), label=input_labels, seriescolor=input_colors)
+    for (i, xy_i) in enumerate(xy_ids)
+        # the trajectory
+        x = collect(x[first(xy_i)] for x in traj.x)
+        y = collect(x[last(xy_i)] for x in traj.x)
+        plot!(pxy, x, y; marker=0, xlims=(-5, 5), ylims=(-5, 5), seriescolor=player_colors[i], label="p$i")
 
-        push!(traj_plots, plot(pu, pxy))
+        # marker at the current time step
+        scatter!(pxy, [x[k]], [y[k]], seriescolor=player_colors[i], label="x_p$i")
     end
 
-    return plot(traj_plots...; layout=(length(traj_plots), 1))
+    return plot(pu, pxy)
+end
+
+function animate_plot(plot_frame::Function, plot_args...;
+                      k_range::UnitRange, frame_sample::Int=2, fps::Int=10,
+                      filename::String="$(@__DIR__)/../debug_out/test.gif")
+    anim = @animate for k in k_range
+        plot_frame(plot_args...; k=k)
+    end every frame_sample
+
+    return gif(anim, filename; fps=fps)
 end

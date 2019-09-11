@@ -12,8 +12,11 @@ module iLQGames
     using Plots
     pyplot()
 
-    # some utils
-    include("utils.jl")
+    # some useful type shorthands
+    const SIndex{N} = Tuple{Vararg{SVector{N, Int}}} where N
+
+    # some macro sugar to make life easier
+    include("sugar.jl")
 
     # game utils
     include("strategy.jl")
