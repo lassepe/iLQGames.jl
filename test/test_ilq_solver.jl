@@ -23,7 +23,8 @@ using iLQGames:
     cost,
     next_x,
     animate_plot,
-    uindex
+    uindex,
+    @animated
 
 using StaticArrays
 using LinearAlgebra
@@ -40,8 +41,6 @@ struct TwoPlayerCarCost{player_id, TR<:SMatrix{2,2}, TQs<:SMatrix{5, 5},
     Qgᵢ::TQg
     # the desired goal state for this player
     xgᵢ::TG
-    # the weight the asymptotic cost for being close to eachother
-    qcᵢ::Float64
     # the avoidance radius
     r_avoid::Float64
     # the time after which the goal state cost is active
@@ -50,8 +49,8 @@ struct TwoPlayerCarCost{player_id, TR<:SMatrix{2,2}, TQs<:SMatrix{5, 5},
 end
 
 function TwoPlayerCarCost{player_id}(R::TR, Qs::TQs, Qg::TQg, xg::TG,
-                                     qc::Float64, r_avoid::Float64, t_final::Float64) where {player_id, TR, TQs, TQg, TG}
-    return TwoPlayerCarCost{player_id, TR, TQs, TQg, TG}(R, Qs, Qg, xg, qc, r_avoid, t_final)
+                                     r_avoid::Float64, t_final::Float64) where {player_id, TR, TQs, TQg, TG}
+    return TwoPlayerCarCost{player_id, TR, TQs, TQg, TG}(R, Qs, Qg, xg, r_avoid, t_final)
 end
 
 function (pc::TwoPlayerCarCost{player_id})(x::SVector{10}, u::SVector{4},
@@ -91,7 +90,7 @@ function (pc::TwoPlayerCarCost{player_id})(x::SVector{10}, u::SVector{4},
     des_v_max = 8.
     des_steer_min= -deg2rad(30)
     des_steer_max = -des_steer_min
-    w = 100.
+    w = 500.
 
     # steering angle constraint
     cost += soft_constraint(uᵢ[1], des_steer_min, des_steer_max, w)
@@ -135,17 +134,16 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
 
     # cost
     # control cost
-    R = SMatrix{2,2}([1. 0.; 0. 1.]) * 0.1
+    R = SMatrix{2,2}([1. 0.; 0. 0.1]) * 0.1
     # state cost: cost for steering angle
-    Qs = SMatrix{5,5}(diagm([0, 0, 0, 10., 1.])) * 0.1
+    Qs = SMatrix{5,5}(diagm([0, 0, 0, 1., 0.1])) * 0.1
     # goal cost that applies only at the end of the horizon
-    Qg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*100
+    Qg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*500
     # collision avoidance cost
-    qc = 0.
     r_avoid = 1.
 
-    c1 = TwoPlayerCarCost{1}(R, Qs, Qg, g1, qc, r_avoid, t_final)
-    c2 = TwoPlayerCarCost{2}(R, Qs, Qg, g2, qc, r_avoid, t_final)
+    c1 = TwoPlayerCarCost{1}(R, Qs, Qg, g1, r_avoid, t_final)
+    c2 = TwoPlayerCarCost{2}(R, Qs, Qg, g2, r_avoid, t_final)
     costs = @SVector [c1, c2]
 
     # construct the game
@@ -166,8 +164,10 @@ function flip_steering(op::SystemTrajectory)
 end
 
 
+# TODO move to package
 using Plots
 pyplot()
+default(size=(600, 300))
 
 #@testset "ilq_solver" begin
     # generate a game
@@ -206,18 +206,18 @@ pyplot()
     solver = iLQSolver()
     # TODO
     # - setup initial_strategy
-    steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
-    acc_init(k::Int) = -cos(k/h*pi)*0.2
+    steer_init(k::Int) = cos(k/h*pi) * deg2rad(2)
+    acc_init(k::Int) = -cos(k/h*pi)*0.05
     γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
 
                                      (@SVector [steer_init(k), acc_init(k),
-                                                steer_init(k), acc_init(k)]))
+                                                steer_init(k), 0.9*acc_init(k)]))
                       for k in 1:h])
     # generate initial operating point from simulating initial strategy
     op_init = deepcopy(zero_op)
     trajectory!(op_init, dynamics(g), γ_init, zero_op, x0)
     # solve the game
-    op, γ_op = @time solve(g, solver, x0, deepcopy(op_init), γ_init)
+    op, γ_op = @time solve(g, solver, x0, zero_op, γ_init)
 
     # TODO automate posiiton coordinate extraction
     op_init
@@ -225,11 +225,9 @@ pyplot()
           Top -- init: $(cost(g, op_init))
           Bottom -- normal: $(cost(g, op))
           """)
-    # display(plot(plot_traj(op_init, ((@S 1:2), (@S 6:7)), uindex(g)),
-    #              plot_traj(op, ((@S 1:2), (@S 6:7)), uindex(g)),
-    #              layout=(2, 1)))
-    #animate_plot(plot_traj, (op, ((@S 1:2), (@S 6:7)), uindex(g)); k_range=1:length(op.x))
-#end;
+    display(plot(plot_traj(op_init, ((@S 1:2), (@S 6:7)), uindex(g)),
+                 plot_traj(op, ((@S 1:2), (@S 6:7)), uindex(g)),
+                 layout=(2, 1)))
 #
 
 # cost plots
