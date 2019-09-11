@@ -119,13 +119,12 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
 
     # initial conditions:
     # x = (x, y, phi, β, v)
-    x01 = @SVector [-3., -1, 0., 0., 0.]
-    x02 = @SVector [3.,  1, pi, 0., 0.]
+    x01 = @SVector [-3., 0., 0., 0., 0.]
+    x02 = @SVector [0.,  3., -pi/2, 0., 0.]
     x0 = vcat(x01, x02)
     # goal states (goal position of other player with opposite orientation)
-    ΔΘg = deg2rad(90)
-    g1 = @SVector [1., 1., (0. + ΔΘg), 0., 0.]
-    g2 = @SVector [-1., -1., (pi + ΔΘg), 0., 0.]
+    g1 = @SVector [3., 0., 0., 0., 0.]
+    g2 = @SVector [0., -3., -pi/2, 0., 0.]
 
     # setup the dynamics
     car1 = Car5D{ΔT}(1.0)
@@ -136,7 +135,7 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
     # control cost
     R = SMatrix{2,2}([1. 0.; 0. 1.]) * 0.1
     # state cost: cost for steering angle
-    Qs = SMatrix{5,5}(diagm([0, 0, 0, 1., 1.])) * 0.1
+    Qs = SMatrix{5,5}(diagm([0, 0, 0, 10., 1.])) * 0.1
     # goal cost that applies only at the end of the horizon
     Qg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*100
     # collision avoidance cost
@@ -205,7 +204,7 @@ pyplot()
     solver = iLQSolver()
     # TODO
     # - setup initial_strategy
-    steer_init(k::Int) = cos(k/h*pi) * deg2rad(-2)
+    steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
     acc_init(k::Int) = -cos(k/h*pi)*0.2
     γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
 

@@ -50,7 +50,7 @@ function plot_systraj(trajs::Vararg{SystemTrajectory}; xy_ids, uids)
             # the trajectory
             x = collect(x[first(xy_i)] for x in traj.x)
             y = collect(x[last(xy_i)] for x in traj.x)
-            plot!(pxy, x, y; marker=0, xlims=(-5, 5), ylims=(-2.5, 2.5), seriescolor=player_colors[i], label="p$i")
+            plot!(pxy, x, y; marker=0, xlims=(-5, 5), ylims=(-5, 5), seriescolor=player_colors[i], label="p$i")
             # marker for start and end
             scatter!(pxy, [x[1]], [y[1]], seriescolor=player_colors[i], label="x0_p$i")
         end
