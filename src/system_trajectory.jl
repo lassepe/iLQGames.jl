@@ -11,5 +11,7 @@ SystemTrajectory{ΔT}(x::TX, u::TU) where {h, ΔT, nx, nu,
                                           TX<:SizedVector{h,<:SVector{nx}},
                                           TU<:SizedVector{h,<:SVector{nu}}} = SystemTrajectory{h, ΔT, nx, nu, TX, TU}(x, u)
 sampling_time(t::SystemTrajectory{h, ΔT}) where {h, ΔT} = ΔT
+horizon(t::SystemTrajectory{h}) where {h} = h
 Base.zero(::Type{<:SystemTrajectory{h, ΔT, nx, nu}}) where{h, ΔT, nx, nu} = SystemTrajectory{ΔT}(zero(SizedVector{h, SVector{nx, Float64}}),
                          zero(SizedVector{h, SVector{nu, Float64}}))
+Base.zero(t::SystemTrajectory) = zero(typeof(t))

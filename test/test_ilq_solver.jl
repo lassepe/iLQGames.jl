@@ -206,12 +206,12 @@ default(size=(600, 300))
     solver = iLQSolver()
     # TODO
     # - setup initial_strategy
-    steer_init(k::Int) = cos(k/h*pi) * deg2rad(2)
+    steer_init(k::Int) = cos(k/h*pi) * deg2rad(5)
     acc_init(k::Int) = -cos(k/h*pi)*0.05
     γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
 
                                      (@SVector [steer_init(k), acc_init(k),
-                                                steer_init(k), 0.9*acc_init(k)]))
+                                                steer_init(k), 0.85*acc_init(k)]))
                       for k in 1:h])
     # generate initial operating point from simulating initial strategy
     op_init = deepcopy(zero_op)

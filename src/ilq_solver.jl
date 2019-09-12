@@ -1,13 +1,19 @@
 @with_kw struct iLQSolver
-    "The scaling of the feed-forward term."
-    α_scaling::Float64 = 0.0025
+    "The initial scaling of the feed-forward term."
+    α_scale_init::Float64 = 0.02
+    "The geometric scaling of the feed-forward term per scaling step in
+    backtrack scaling."
+    α_scale_step::Float64 = 0.5
     "Iteration is aborted if this number is exceeded."
     max_n_iter::Int = 1000
-    "The maximum elementwise difference bewteen the current and the last
-    operating state trajectory to consider the probem converged."
-    max_elwise_diff::Float64 = 0.0025
-    "The maximum runtime after which iteration is aborted."
-    max_runtime_seconds::Float64 = 1.
+    "The maximum number of backtrackings per scaling step"
+    max_scale_backtrack::Int = 10
+    "The maximum elementwise difference bewteen operating points for
+    convergence."
+    max_elwise_diff_converged::Float64 = 0.01
+    "The maximum elementwise difference bewteen operating points for per
+    iteration step."
+    max_elwise_diff_step::Float64 = 1.
 end
 
 # TODO tidy up and maybe extracts constants into solver
@@ -22,20 +28,43 @@ function has_converged(solver::iLQSolver,
         return true
     end
 
-    # TODO: this might be very slow, depending on what this is lowered to
-    return all(norm(current_op.x[k] - last_op.x[k], Inf) <
-               solver.max_elwise_diff for k in eachindex(last_op.x))
+    return are_close(current_op, last_op, solver.max_elwise_diff_converged)
 end
 
-# TODO: there must be a better name for this
-# modifies the current strategy to stabilize the update
-function stabilize!(current_strategy::SizedVector, solver::iLQSolver, current_op::SystemTrajectory)
-    # TODO: implement this backtracking search
-    map!(current_strategy, current_strategy) do el
-        return AffineStrategy(el.P, el.α * solver.α_scaling)
-    end
-    return true
+function are_close(op1::SystemTrajectory, op2::SystemTrajectory,
+                   max_elwise_diff::Float64)
+    @assert horizon(op1) == horizon(op2)
+    return all(norm(op1.x[k] - op2.x[k], Inf) < max_elwise_diff for k in
+               eachindex(op2.x))
 end
+
+# modifies the current strategy to stabilize the update
+function scale!(current_strategy::SizedVector, current_op::SystemTrajectory,
+                α_scale::Float64)
+    map!(current_strategy, current_strategy) do el
+        return AffineStrategy(el.P, el.α * α_scale)
+    end
+end
+
+function backtrack_scale!(current_strategy::SizedVector,
+                          current_op::SystemTrajectory, g::AbstractGame,
+                          solver::iLQSolver)
+    next_op = zero(current_op)
+    for i in 1:solver.max_scale_backtrack
+        # initially we do a large scaling. Afterwards, always half feed forward
+        # term.
+		sf = i == 1 ? solver.α_scale_init : solver.α_scale_step
+        # TODO: potentially we could use the operating point for next round
+        scale!(current_strategy, current_op, sf)
+        trajectory!(next_op, dynamics(g), current_strategy, current_op, first(current_op.x))
+        if are_close(next_op, current_op, solver.max_elwise_diff_step)
+            @info "Finished after $i"
+            return true
+        end
+    end
+    return false
+end
+
 
 """
 
@@ -48,7 +77,6 @@ finite horizon game g.
 
 TODO: refine once implemented
 """
-# TODO: maybe x0 should be part of the problem (of a nonlinear problem struct)
 function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
                initial_op::SystemTrajectory,
                initial_strategy::StaticVector)
@@ -56,8 +84,6 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
 
     # safe the start time of our computation
     start_time = time()
-    # TODO: magic number (the guessed duration of one iteration)
-    has_time_remaining() = time() - start_time + 0.02 < solver.max_runtime_seconds
 
     # TODO: depending on what will happen, we need to explicitly copy or use
     # `similar` here
@@ -80,7 +106,6 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
         @assert !(last_op === current_op) "operating point never even changed"
 
         # 2. linearize dynamics and quadratisize costs to obtain an lq game
-        # TODO: implement
         # TODO: maybe do this in-place
         lqg_approx = lq_approximation(g, current_op)
 
@@ -88,7 +113,7 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
         current_strategy = solve_lq_game(lqg_approx)
 
         # 4. do line search to stabilize the strategy selection
-        if(!stabilize!(current_strategy, solver, current_op))
+        if(!backtrack_scale!(current_strategy, current_op, g, solver))
             @error "Could not stabilize solution."
         end
     end
