@@ -49,7 +49,7 @@ function solve_lq_game(g::LQGame)
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
         P_and_α = try
-            SMatrix{nu, nx+1}(pinv(S) * Y)
+            SMatrix{nu, nx+1}(S \ Y)
         catch e
             @show Z
             @show ζ
