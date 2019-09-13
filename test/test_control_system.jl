@@ -1,6 +1,9 @@
 using Test
 
-include("utils.jl")
+using BenchmarkTools
+using InteractiveUtils
+using ProfileTools
+
 
 using StaticArrays
 using iLQGames:

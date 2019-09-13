@@ -2,6 +2,10 @@ using Test
 using StaticArrays
 using LinearAlgebra
 
+using BenchmarkTools
+using InteractiveUtils
+using ProfileTools
+
 using iLQGames:
     LinearSystem,
     AffineStrategy,
@@ -167,11 +171,11 @@ end
 @testset "solve_lq_game" begin
     g1D = generate_1D_pointmass_game()
     test_lyapunov(g1D)
-    benchmark_show(solve_lq_game, g1D)
+    @benchmark_show solve_lq_game($g1D)
 
     g2D = generate_2D_pointmass_game()
     test_lyapunov(g2D)
-    benchmark_show(solve_lq_game, g2D)
+    @benchmark_show solve_lq_game($g2D)
 end;
 
 "--------------- manual test to run and check for sanity ---------------"
