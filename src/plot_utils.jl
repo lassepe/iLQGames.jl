@@ -107,3 +107,4 @@ function animate_plot(plot_frame::Function, plot_args...;
 
     return gif(anim, filename; fps=fps)
 end
+

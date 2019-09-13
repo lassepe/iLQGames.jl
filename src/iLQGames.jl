@@ -10,7 +10,7 @@ module iLQGames
         zero
 
     using Plots
-    pyplot()
+    gr()
 
     # some useful type shorthands
     const SIndex{N} = Tuple{Vararg{SVector{N, Int}}} where N

@@ -1,6 +1,6 @@
 @with_kw struct iLQSolver
     "The initial scaling of the feed-forward term."
-    α_scale_init::Float64 = 0.02
+    α_scale_init::Float64 = 0.015
     "The geometric scaling of the feed-forward term per scaling step in
     backtrack scaling."
     α_scale_step::Float64 = 0.5
@@ -58,7 +58,6 @@ function backtrack_scale!(current_strategy::SizedVector,
         scale!(current_strategy, current_op, sf)
         trajectory!(next_op, dynamics(g), current_strategy, current_op, first(current_op.x))
         if are_close(next_op, current_op, solver.max_elwise_diff_step)
-            @info "Finished after $i"
             return true
         end
     end

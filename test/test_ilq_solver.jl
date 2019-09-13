@@ -33,8 +33,10 @@ using LinearAlgebra
 
 # TODO: think about how to makethis more generic. For mocking this is okay.
 
-struct TwoPlayerCarCost{player_id, TR<:SMatrix{2,2}, TQs<:SMatrix{5, 5},
+struct TwoPlayerCarCost{TR<:SMatrix{2,2}, TQs<:SMatrix{5, 5},
                         TQg<:SMatrix{5,5}, TG<:SVector{5}} <: PlayerCost{10, 4}
+    # an unique identifier for this player
+    player_id::Int
     # the cost for control
     Rᵢ::TR
     # the state cost
@@ -47,19 +49,12 @@ struct TwoPlayerCarCost{player_id, TR<:SMatrix{2,2}, TQs<:SMatrix{5, 5},
     r_avoid::Float64
     # the time after which the goal state cost is active
     t_final::Float64
-
 end
 
-function TwoPlayerCarCost{player_id}(R::TR, Qs::TQs, Qg::TQg, xg::TG,
-                                     r_avoid::Float64, t_final::Float64) where {player_id, TR, TQs, TQg, TG}
-    return TwoPlayerCarCost{player_id, TR, TQs, TQg, TG}(R, Qs, Qg, xg, r_avoid, t_final)
-end
-
-function (pc::TwoPlayerCarCost{player_id})(x::SVector{10}, u::SVector{4},
-                                           t::Float64) where {player_id}
+function (pc::TwoPlayerCarCost)(x::SVector{10}, u::SVector{4}, t::Float64)
     # extract the states and inputs for this player
-    uᵢ = u[SVector{2}(player_id == 1 ? (1:2) : (3:4))]
-    xᵢ = x[SVector{5}(player_id == 1 ? (1:5) : (6:10))]
+    uᵢ = u[SVector{2}(pc.player_id == 1 ? (1:2) : (3:4))]
+    xᵢ = x[SVector{5}(pc.player_id == 1 ? (1:5) : (6:10))]
     # setup the cost: each player wan't to:
     cost = 0.
     # control:
@@ -102,8 +97,8 @@ function (pc::TwoPlayerCarCost{player_id})(x::SVector{10}, u::SVector{4},
     # speed constraints
     cost += soft_constraint(xᵢ[5], des_v_min, des_v_max, w)
 
-    # proxiimity constraint
-    xp_other = x[SVector{2}(player_id == 1 ? (6:7) : (1:2))]
+    # proximity constraint
+    xp_other = x[SVector{2}(pc.player_id == 1 ? (6:7) : (1:2))]
     Δxp = xp_other - xᵢ[SVector{2}(1:2)]
     cost += soft_constraint(Δxp'*Δxp, pc.r_avoid, Inf, w)
 
@@ -144,8 +139,8 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
     # collision avoidance cost
     r_avoid = 1.
 
-    c1 = TwoPlayerCarCost{1}(R, Qs, Qg, g1, r_avoid, t_final)
-    c2 = TwoPlayerCarCost{2}(R, Qs, Qg, g2, r_avoid, t_final)
+    c1 = TwoPlayerCarCost(1, R, Qs, Qg, g1, r_avoid, t_final)
+    c2 = TwoPlayerCarCost(2, R, Qs, Qg, g2, r_avoid, t_final)
     costs = @SVector [c1, c2]
 
     # construct the game
@@ -170,7 +165,7 @@ end
 #@testset "ilq_solver" begin
     # generate a game
     T_horizon = 10.
-    ΔT = 0.05
+    ΔT = 0.1
     g, x0 = generate_2player_car_game(T_horizon, ΔT)
 
 
@@ -204,13 +199,12 @@ end
     solver = iLQSolver()
     # TODO
     # - setup initial_strategy
-    steer_init(k::Int) = cos(k/h*pi) * deg2rad(5)
+    steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
     acc_init(k::Int) = -cos(k/h*pi)*0.05
     γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
 
-                                     (@SVector [steer_init(k), acc_init(k),
-                                                steer_init(k), 0.85*acc_init(k)]))
-                      for k in 1:h])
+                                     (@SVector [steer_init(k), 2*acc_init(k),
+                                                steer_init(k), acc_init(k)])) for k in 1:h])
     # generate initial operating point from simulating initial strategy
     op_init = deepcopy(zero_op)
     trajectory!(op_init, dynamics(g), γ_init, zero_op, x0)
