@@ -392,9 +392,9 @@ version = "1.1.0"
 
 [[Parameters]]
 deps = ["OrderedCollections"]
-git-tree-sha1 = "1dfd7cd50a8eb06ef693a4c2bbe945943cd000c5"
+git-tree-sha1 = "b62b2558efb1eef1fa44e4be5ff58a515c287e38"
 uuid = "d96e819e-fc66-5662-9728-84c9c7592b0a"
-version = "0.11.0"
+version = "0.12.0"
 
 [[Parsers]]
 deps = ["Dates", "Test"]
@@ -535,9 +535,9 @@ version = "0.3.1"
 
 [[SimpleDiffEq]]
 deps = ["DiffEqBase", "RecursiveArrayTools", "Reexport", "StaticArrays"]
-git-tree-sha1 = "dab78d468cbff62d0b94aa89dcbdd62d87030cae"
+git-tree-sha1 = "e7fc59142274f72bbe20445fd4a967e9d9765266"
 uuid = "05bca326-078c-5bf0-a5bf-ce7c7982d7fd"
-version = "0.4.0"
+version = "0.5.0"
 
 [[Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
