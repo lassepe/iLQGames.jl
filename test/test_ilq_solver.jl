@@ -24,7 +24,9 @@ using iLQGames:
     next_x,
     animate_plot,
     uindex,
-    @animated
+    @animated,
+    plot_traj
+
 
 using StaticArrays
 using LinearAlgebra
@@ -164,10 +166,6 @@ function flip_steering(op::SystemTrajectory)
 end
 
 
-# TODO move to package
-using Plots
-pyplot()
-default(size=(600, 300))
 
 #@testset "ilq_solver" begin
     # generate a game
@@ -225,48 +223,10 @@ default(size=(600, 300))
           Top -- init: $(cost(g, op_init))
           Bottom -- normal: $(cost(g, op))
           """)
-    display(plot(plot_traj(op_init, ((@S 1:2), (@S 6:7)), uindex(g)),
-                 plot_traj(op, ((@S 1:2), (@S 6:7)), uindex(g)),
-                 layout=(2, 1)))
-#
 
-# cost plots
-function plot_cost(g::GeneralGame, op::SystemTrajectory, dims, i::Int=1,
-                   st::Symbol=:contour; k::Int=1)
-    lqg = lq_approximation(g, op)
-    nx = n_states(dynamics(g))
-    nu = n_controls(dynamics(g))
-    t = k * sampling_time(dynamics(g))
-
-    offset2vec(Δd1, Δd2) = begin
-        Δx = zeros(nx)
-        Δx[dims[1]] = Δd1
-        if length(dims) == 2
-            Δx[dims[2]] = Δd2
-        end
-        return SVector{nx}(Δx)
-    end
-
-    projected_cost(Δd1, Δd2=0) = begin
-        Δx = offset2vec(Δd1, Δd2)
-        return player_costs(g)[i](op.x[k]+Δx, op.u[k], t)
-    end
-
-    projected_cost_approx(Δd1, Δd2=0) = begin
-        Δx = offset2vec(Δd1, Δd2)
-        c0 = player_costs(g)[i](op.x[k], op.u[k], t)
-        return player_costs(lqg)[k][i](Δx, (@SVector zeros(nu))) + c0
-    end
-
-    Δd1_range = Δd2_range = -10:0.1:10
-
-    if length(dims) == 1
-        p = plot(Δd1_range, projected_cost, label="g")
-        plot!(p, Δd1_range, projected_cost_approx, label="lqg")
-        return p
-    elseif length(dims) == 2
-        return plot(Δd1_range, Δd2_range, projected_cost, st=st)
-    end
-
-    @assert false "Can only visualize one or two dimensions"
-end
+#    using Plots
+#    pyplot()
+#    default(size=(600, 300))
+#    display(plot(plot_traj(op_init, ((@S 1:2), (@S 6:7)), uindex(g)),
+#                 plot_traj(op, ((@S 1:2), (@S 6:7)), uindex(g)),
+#                 layout=(2, 1)))

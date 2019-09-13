@@ -57,6 +57,47 @@ function plot_traj(traj::SystemTrajectory, xy_ids::SIndex, uids::SIndex; k::Int=
     return plot(pu, pxy)
 end
 
+# cost plots
+function plot_cost(g::AbstractGame, op::SystemTrajectory, dims, i::Int=1,
+                   st::Symbol=:contour; k::Int=1)
+    lqg = lq_approximation(g, op)
+    nx = n_states(dynamics(g))
+    nu = n_controls(dynamics(g))
+    t = k * sampling_time(dynamics(g))
+
+    offset2vec(Δd1, Δd2) = begin
+        Δx = zeros(nx)
+        Δx[dims[1]] = Δd1
+        if length(dims) == 2
+            Δx[dims[2]] = Δd2
+        end
+        return SVector{nx}(Δx)
+    end
+
+    projected_cost(Δd1, Δd2=0) = begin
+        Δx = offset2vec(Δd1, Δd2)
+        return player_costs(g)[i](op.x[k]+Δx, op.u[k], t)
+    end
+
+    projected_cost_approx(Δd1, Δd2=0) = begin
+        Δx = offset2vec(Δd1, Δd2)
+        c0 = player_costs(g)[i](op.x[k], op.u[k], t)
+        return player_costs(lqg)[k][i](Δx, (@SVector zeros(nu))) + c0
+    end
+
+    Δd1_range = Δd2_range = -10:0.1:10
+
+    if length(dims) == 1
+        p = plot(Δd1_range, projected_cost, label="g")
+        plot!(p, Δd1_range, projected_cost_approx, label="lqg")
+        return p
+    elseif length(dims) == 2
+        return plot(Δd1_range, Δd2_range, projected_cost, st=st)
+    end
+
+    @assert false "Can only visualize one or two dimensions"
+end
+
 function animate_plot(plot_frame::Function, plot_args...;
                       k_range::UnitRange, frame_sample::Int=2, fps::Int=10,
                       filename::String="$(@__DIR__)/../debug_out/test.gif")
