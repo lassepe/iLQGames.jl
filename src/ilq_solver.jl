@@ -93,6 +93,8 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
     current_op = initial_op
     current_strategy = initial_strategy
 
+    lqg_approx = LQGame(undef, g, Val(horizon(initial_op)))
+
     while !has_converged(solver, last_op, current_op, i_iter)
         i_iter += 1
         # 1. cache the current operating point ...
@@ -106,7 +108,7 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
 
         # 2. linearize dynamics and quadratisize costs to obtain an lq game
         # TODO: maybe do this in-place
-        lqg_approx = lq_approximation(g, current_op)
+        lq_approximation!(lqg_approx, g, current_op)
 
         # 3. solve the current lq version of the game
         current_strategy = solve_lq_game(lqg_approx)

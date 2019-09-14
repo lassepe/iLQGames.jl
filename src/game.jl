@@ -77,43 +77,6 @@ end
 
 dynamics(g::GeneralGame) = g.dyn
 player_costs(g::GeneralGame) = g.cost
-# TODO: maybe make a mutable! version of this
-function lq_approximation(g::GeneralGame, op::SystemTrajectory)
-    # TODO: move this to some lqapproxype(g) or something
-    nx = n_states(dynamics(g))
-    nu = n_controls(dynamics(g))
-    h = length(op.x)
-    # preallocate an empty lqgame
-    # ltv dynamics
-    TA = SMatrix{nx, nx, Float64, nx*nx}
-    TB = SMatrix{nx, nu, Float64, nx*nu}
-    TLS = LinearSystem{sampling_time(op), nx, nu, TA, TB}
-    # time varying dynamics
-    dyn = SizedVector{h, TLS}(undef)
-    lin_dyn = LTVSystem(dyn)
-
-    # costs:
-    TQ = SMatrix{nx, nx, Float64, nx*nx}
-    TL = SVector{nx, Float64}
-    TR = SMatrix{nu, nu, Float64, nu*nu}
-    TCi = QuadraticPlayerCost{nx, nu, TQ, TL, TR}
-    TC = SVector{2, TCi}
-    quad_cost = SizedVector{h, TC}(undef)
-
-
-    for (k, (xₖ, uₖ)) in enumerate(zip(op.x, op.u))
-        # discrete linearization along the operating point
-        # TODO fix later to also consider t₀ != 0
-        t = 0 + sampling_time(op)*(k-1);
-        lin_dyn[k] = linearize_discrete(dynamics(g), xₖ, uₖ, t)
-        # quadratiation of the cost along the operating point
-        quad_cost[k] = map(player_costs(g)) do pcₖⁱ
-            quadraticize(pcₖⁱ, xₖ, uₖ, t)
-        end
-    end
-
-    return LQGame{uindex(g)}(lin_dyn, quad_cost)
-end
 
 
 """
@@ -150,6 +113,30 @@ struct LQGame{uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} <: AbstractGame{uid
     end
 end
 
+# custom undef initiliazer
+function LQGame(::UndefInitializer, g::AbstractGame, ::Val{h}) where {h}
+    nx = n_states(dynamics(g))
+    nu = n_controls(dynamics(g))
+    # preallocate an empty lqgame
+    # ltv dynamics
+    TA = SMatrix{nx, nx, Float64, nx*nx}
+    TB = SMatrix{nx, nu, Float64, nx*nu}
+    TLS = LinearSystem{sampling_time(dynamics(g)), nx, nu, TA, TB}
+    # time varying dynamics
+    dyn = SizedVector{h, TLS}(undef)
+    lin_dyn = LTVSystem(dyn)
+
+    # costs:
+    TQ = SMatrix{nx, nx, Float64, nx*nx}
+    TL = SVector{nx, Float64}
+    TR = SMatrix{nu, nu, Float64, nu*nu}
+    TCi = QuadraticPlayerCost{nx, nu, TQ, TL, TR}
+    TC = SVector{2, TCi}
+    quad_cost = SizedVector{h, TC}(undef)
+
+    lqg = LQGame{uindex(g)}(lin_dyn, quad_cost)
+end
+
 horizon(g::LQGame{uids, h}) where {uids, h} = h
 # TODO: I would really prefer if we did not have to use this!
 strategy_type(g::LQGame) = AffineStrategy{n_states(dynamics(g)),
@@ -164,3 +151,26 @@ dynamics(g::LQGame) = g.dyn
 player_costs(g::LQGame) = g.pcost
 # TODO this is probably not correct because the zero might still be somewhere else
 lq_approximation(g::LQGame) = g
+
+
+# TODO: maybe make a mutable! version of this
+function lq_approximation(g::GeneralGame, op::SystemTrajectory)
+    lqg = LQGame(undef, g, Val(horizon(op)))
+    lq_approximation!(lqg, g, op)
+    return lqg
+end
+
+function lq_approximation!(lqg::LQGame, g::GeneralGame, op::SystemTrajectory)
+    # TODO check full matching type
+    @assert uindex(lqg) == uindex(g)
+    for (k, (xₖ, uₖ)) in enumerate(zip(op.x, op.u))
+        # discrete linearization along the operating point
+        # TODO fix later to also consider t₀ != 0
+        t = 0 + sampling_time(op)*(k-1);
+        dynamics(lqg)[k] = linearize_discrete(dynamics(g), xₖ, uₖ, t)
+        # quadratiation of the cost along the operating point
+        player_costs(lqg)[k] = map(player_costs(g)) do pcₖⁱ
+            quadraticize(pcₖⁱ, xₖ, uₖ, t)
+        end
+    end
+end
