@@ -103,7 +103,6 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
         last_op = deepcopy(current_op)
         # ... and upate the current by integrating the non-linear dynamics
         trajectory!(current_op, dynamics(g), current_strategy, last_op, x0)
-
         @assert !(last_op === current_op) "operating point never even changed"
 
         # 2. linearize dynamics and quadratisize costs to obtain an lq game

@@ -2,6 +2,7 @@ module iLQGames
     using DocStringExtensions
     using Parameters
     using ForwardDiff
+    using DiffResults
     using StaticArrays
     using LinearAlgebra
     import Base:
