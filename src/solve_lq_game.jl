@@ -48,20 +48,21 @@ function solve_lq_game(g::LQGame)
         end
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
-        P_and_α = try
-            SMatrix{nu, nx+1}(S \ Y)
-        catch e
-            @show Z
-            @show ζ
-            @show cost
-            @show A
-            @show B
-            @show S
-            @show Y
-            rethrow(e)
-        end
-        P = SMatrix(P_and_α[:, full_xrange])
-        α = SVector(P_and_α[:, end])
+        P_and_α = SMatrix(S)\SMatrix(Y)
+        #try
+        #    SMatrix{nu, nx+1}(S \ Y)
+        #catch e
+        #    @show Z
+        #    @show ζ
+        #    @show cost
+        #    @show A
+        #    @show B
+        #    @show S
+        #    @show Y
+        #    rethrow(e)
+        #end
+        P = P_and_α[:, full_xrange]
+        α = P_and_α[:, end]
 
         # compute F and β as intermediate result for estimating the cost to go
         F = A - B * P

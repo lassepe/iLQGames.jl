@@ -106,7 +106,6 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
         @assert !(last_op === current_op) "operating point never even changed"
 
         # 2. linearize dynamics and quadratisize costs to obtain an lq game
-        # TODO: maybe do this in-place
         lq_approximation!(lqg_approx, g, current_op)
 
         # 3. solve the current lq version of the game
@@ -118,7 +117,8 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
         end
     end
 
-    @info "Finished after $i_iter interations."
+    # @info "Finished after $i_iter interations."
+    #
 
     return current_op, current_strategy
 end
