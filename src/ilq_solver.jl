@@ -1,6 +1,6 @@
 @with_kw struct iLQSolver
     "The initial scaling of the feed-forward term."
-    α_scale_init::Float64 = 0.015
+    α_scale_init::Float64 = 0.1
     "The geometric scaling of the feed-forward term per scaling step in
     backtrack scaling."
     α_scale_step::Float64 = 0.5
@@ -10,7 +10,7 @@
     max_scale_backtrack::Int = 10
     "The maximum elementwise difference bewteen operating points for
     convergence."
-    max_elwise_diff_converged::Float64 = 0.01
+    max_elwise_diff_converged::Float64 = 0.1
     "The maximum elementwise difference bewteen operating points for per
     iteration step."
     max_elwise_diff_step::Float64 = 1.
@@ -116,9 +116,6 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
             @error "Could not stabilize solution."
         end
     end
-
-    # @info "Finished after $i_iter interations."
-    #
 
     return current_op, current_strategy
 end
