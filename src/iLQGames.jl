@@ -8,7 +8,8 @@ module iLQGames
     import Base:
         getindex,
         setindex!,
-        zero
+        zero,
+        copy
 
     using Plots
     gr()

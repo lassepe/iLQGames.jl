@@ -15,3 +15,4 @@ horizon(t::SystemTrajectory{h}) where {h} = h
 Base.zero(::Type{<:SystemTrajectory{h, ΔT, nx, nu}}) where{h, ΔT, nx, nu} = SystemTrajectory{ΔT}(zero(SizedVector{h, SVector{nx, Float64}}),
                          zero(SizedVector{h, SVector{nu, Float64}}))
 Base.zero(t::SystemTrajectory) = zero(typeof(t))
+Base.copy(t::SystemTrajectory) = SystemTrajectory{sampling_time(t)}(copy(t.x), copy(t.u))
