@@ -100,14 +100,15 @@ function integrate end
 A convencience implementation of `linearize` using `ForwardDiff.jl`. Overload
 this with an explicit version to get better performance.
 """
-function linearize(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
+function _linearize_ad(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
     @warn "You are using the fallback linearization using ForwardDiff. Consider
-    implementing a custom `linearize` or `linearize_discrete` for you
-        `ControlSystem` type." maxlog=1
+    implementing a custom `linearize` or `linearize_discrete` for your
+    `ControlSystem` type." maxlog=1
     A = ForwardDiff.jacobian(x->dx(cs, x, u, t), x)
     B = ForwardDiff.jacobian(u->dx(cs, x, u, t), u)
     return LinearSystem{0}(A, B)
 end
+linearize(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat) = _linearize_ad(cs, x, u, t)
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u0::SVector, t0::AbstractFloat)
