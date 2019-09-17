@@ -40,9 +40,9 @@ n_controls(p::PlayerCost) = n_controls(typeof(p))
 A convencience implementation of the cost quadraticization.
 """
 function quadraticize(pc::PlayerCost{nx, nu}, x::SVector{nx}, u::SVector{nu}, t::AbstractFloat) where {nx, nu}
-    @warn "You are using the fallback quadraticization using ForwardDiff. Consider
-    implementing a custom `quadraticize` for you
-        `ControlSystem` type." maxlog=1
+    @warn "You are using the fallback quadraticization using ForwardDiff.
+    Consider implementing a custom `quadraticize` for your `ControlSystem`
+    type." maxlog=1
 
     x_cost = x->pc(x, u, t)
     u_cost = u->pc(x, u, t)

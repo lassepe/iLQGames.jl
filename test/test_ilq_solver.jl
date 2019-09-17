@@ -149,19 +149,6 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
     return g, x0
 end
 
-function flip_steering(op::SystemTrajectory)
-    op_flip = zero(typeof(op))
-    xₖ = op.x[1]
-    for k in eachindex(op_flip.x)
-        op_flip.x[k] = xₖ
-        op_flip.u[k] = SMatrix{4,4}(diagm([-1, 1, -1, 1]))*op.u[k]
-        xₖ = next_x(dynamics(g), xₖ, op_flip.u[k], k)
-    end
-    return op_flip
-end
-
-
-
 #@testset "ilq_solver" begin
     # generate a game
     T_horizon = 10.

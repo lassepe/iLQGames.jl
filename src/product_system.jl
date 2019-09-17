@@ -41,7 +41,10 @@ function linearize_discrete(cs::ProductSystem, x::SVector, u::SVector, t::Abstra
     # the full matrices
     A = @MMatrix zeros(nx, nx)
     B = @MMatrix zeros(nx, nu)
-    for (xid, uid, sub) in zip(xindex(cs), uindex(cs), sub_systems(cs))
+    for (i, sub) in enumerate(sub_systems(cs))
+        xid = xindex(cs)[i]
+        uid = uindex(cs)[i]
+
         lin_sub = linearize_discrete(sub, x[xid], u[uid], t)
         A[xid, xid] = lin_sub.A
         B[xid, uid] = lin_sub.B
