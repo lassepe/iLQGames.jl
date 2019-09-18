@@ -17,5 +17,5 @@ end
     @testset_include "test_control_system.jl"
     @testset_include "test_linear_system.jl"
     @testset_include "test_solve_lq_game.jl"
-#    @testset_include "test_ilq_solver.jl"
+    @testset_include "test_ilq_solver.jl"
 end;

@@ -1,4 +1,5 @@
 using Test
+using BenchmarkTools
 
 using iLQGames:
     iLQGames,
@@ -230,23 +231,24 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64)
     return g, x0
 end
 
-#@testset "ilq_solver" begin
-    # generate a game
-    T_horizon = 10.
-    ΔT = 0.1
-    g, x0 = generate_2player_car_game(T_horizon, ΔT)
+# generate a game
+T_horizon = 10.
+ΔT = 0.1
+g, x0 = generate_2player_car_game(T_horizon, ΔT)
 
 
-    # unpack for testing
-    dyn = dynamics(g)
-    nx = n_states(dyn)
-    nu = n_controls(dyn)
-    c1, c2 = player_costs(g)
+# unpack for testing
+dyn = dynamics(g)
+nx = n_states(dyn)
+nu = n_controls(dyn)
+c1, c2 = player_costs(g)
 
-    # test quadratization of the cost and quadratization of cost
-    x = @SVector zeros(nx)
-    u = @SVector zeros(nu)
-    t = 0.
+# test quadratization of the cost and quadratization of cost
+x = @SVector zeros(nx)
+u = @SVector zeros(nu)
+t = 0.
+
+@testset "LQ Approximation Sanity Check." begin
     for i in 1:100
         global x = SVector{nx, Float64}(randn(nx))
         global u = SVector{nu, Float64}(randn(nu))
@@ -260,46 +262,28 @@ end
         end
 
         # test linearization of the dynamics
-        # TODO: currently, this put's a lot of stress on the compiler.
         linearize_discrete(dyn, x, u, t)
-
     end
+end;
 
 
-    # test the lq approximation:
-    # generate an operating point
-    h = Int(T_horizon/ΔT)
-    zero_op = zero(SystemTrajectory{h, ΔT, nx, nu})
-    lqg = lq_approximation(g, zero_op)
+# test the lq approximation:
+# generate an operating point
+h = Int(T_horizon/ΔT)
+zero_op = zero(SystemTrajectory{h, ΔT, nx, nu})
+lqg = lq_approximation(g, zero_op)
 
-    # the lqg approximation evaluated at zero should be approximate the true cost:
+# the lqg approximation evaluated at zero should be approximate the true cost:
 
-    # solve the lq game
-    solver = iLQSolver()
-    # TODO
-    # - setup initial_strategy
-    steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
-    acc_init(k::Int) = -cos(k/h*pi)*0.3
-    γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
+# solve the lq game
+solver = iLQSolver()
+# - setup initial_strategy
+steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
+acc_init(k::Int) = -cos(k/h*pi)*0.3
+γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
 
-                                     (@SVector [steer_init(k), 0.7*acc_init(k),
-                                                steer_init(k), acc_init(k)])) for k in 1:h])
-    # generate initial operating point from simulating initial strategy
-    op_init = deepcopy(zero_op)
-    trajectory!(op_init, dynamics(g), γ_init, zero_op, x0)
-    # solve the game
-    op, γ_op = @time solve(g, solver, x0, zero_op, γ_init)
-
-    # TODO automate posiiton coordinate extraction
-    op_init
-    print("""
-          Top -- init: $(cost(g, op_init))
-          Bottom -- normal: $(cost(g, op))
-          """)
-
-   using Plots
-   pyplot()
-   default(size=(600, 300))
-   display(plot(plot_traj(op_init, ((@S 1:2), (@S 6:7)), uindex(g)),
-                plot_traj(op, ((@S 1:2), (@S 6:7)), uindex(g)),
-                layout=(2, 1)))
+                                 (@SVector [steer_init(k), 0.7*acc_init(k),
+                                            steer_init(k), acc_init(k)])) for k in 1:h])
+# generate initial operating point from simulating initial strategy
+# solve the game
+display(@benchmark solve($g, $solver, $x0, $zero(zero_op), $γ_init))
