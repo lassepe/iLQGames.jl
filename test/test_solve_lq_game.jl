@@ -107,7 +107,6 @@ end
 
 # solve two-player inifinite horizion (time-invariant) LQ game by Lyapunov
 # iterations
-# TODO this could also use the struct version
 function solve_lyapunov_iterations(dyn::LinearSystem, c1::QuadraticPlayerCost, c2::QuadraticPlayerCost, ud1, ud2, n_iter=100)
     A = dyn.A
     B1 = dyn.B[:, ud1]

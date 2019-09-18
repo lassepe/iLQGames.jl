@@ -74,8 +74,6 @@ end
 
 Computes a solution solution to a (potentially non-linear and non-quadratic)
 finite horizon game g.
-
-TODO: refine once implemented
 """
 function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
                initial_op::SystemTrajectory,
@@ -85,11 +83,9 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
     # safe the start time of our computation
     start_time = time()
 
-    # TODO: depending on what will happen, we need to explicitly copy or use
-    # `similar` here
     i_iter = 0
     # allocate memory for the last and the current operating point
-    # TODO: try not to copy!
+    # TODO: can we allocate this outside this loop?
     last_op = copy(initial_op)
     current_op = initial_op
     current_strategy = initial_strategy

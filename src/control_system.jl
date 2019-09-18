@@ -6,7 +6,6 @@ control dimension `nu` and sampling time ΔT. By convention, for `ΔT == 0` the
 system is continuous.
 
 """
-# TODO: maybe we don't even need the type parametrization
 abstract type ControlSystem{ΔT, nx, nu} end
 
 """

@@ -1,6 +1,3 @@
-
-# two player car dynamics
-# TODO: maybe generalize to joint dynamics
 struct ProductSystem{ΔT, nx, nu, xids, uids, np, TS<:NTuple{np, <:ControlSystem{ΔT}}} <: ControlSystem{ΔT, nx, nu}
     sub_systems::TS
 

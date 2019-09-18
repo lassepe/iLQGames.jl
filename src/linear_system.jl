@@ -36,7 +36,6 @@ function discretize_inv(ls::LinearSystem, ::Val{ΔT}) where {ΔT}
     # the discrete time system matrix
     Φ = exp(ls.A*ΔT)
     # the discrete time input matrix
-    # TODO what to do if A is singular?
     Γ = inv(ls.A) * (Φ - I) * ls.B
 
     return LinearSystem{ΔT}(Φ, Γ)

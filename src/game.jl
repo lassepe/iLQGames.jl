@@ -33,7 +33,6 @@ function strategy_type end
 
 Returns the lq approximation of the game.
 """
-# TODO: which inputs does thes need in general?
 function lq_approximation end
 
 n_players(g::AbstractGame{uids}) where {uids} = length(uids)
@@ -149,11 +148,7 @@ strategy_type(g::LQGame) = AffineStrategy{n_states(dynamics(g)),
                                                   Float64}}
 dynamics(g::LQGame) = g.dyn
 player_costs(g::LQGame) = g.pcost
-# TODO this is probably not correct because the zero might still be somewhere else
-lq_approximation(g::LQGame) = g
 
-
-# TODO: maybe make a mutable! version of this
 function lq_approximation(g::GeneralGame, op::SystemTrajectory)
     lqg = LQGame(undef, g, Val(horizon(op)))
     lq_approximation!(lqg, g, op)

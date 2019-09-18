@@ -12,7 +12,6 @@ macro testset_include(filename)
     end
 end
 
-# TODO this could pontially do a glob on all `test_` files
 @testset "all" begin
     @testset_include "test_control_system.jl"
     @testset_include "test_linear_system.jl"
