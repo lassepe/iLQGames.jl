@@ -41,6 +41,9 @@ module iLQGames
     # simulation
     include("sim.jl")
 
+    # some handy tools for problem description
+    include("cost_design_utils.jl")
+
     # some tools for plotting
     include("plot_utils.jl")
 

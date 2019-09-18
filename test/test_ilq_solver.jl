@@ -17,19 +17,20 @@ using iLQGames:
     player_costs,
     SystemTrajectory,
     lq_approximation,
-    sampling_time,
     iLQSolver,
     solve,
     AffineStrategy,
-    trajectory!,
-    plot_traj,
-    cost,
-    next_x,
-    animate_plot,
-    uindex,
-    @animated,
-    plot_traj,
-    QuadraticPlayerCost
+    QuadraticPlayerCost,
+    softconstr,
+    softconstr_quad!,
+    proximitycost,
+    proximitycost_quad!,
+    goalstatecost,
+    goalstatecost_quad!,
+    statecost,
+    statecost_quad!,
+    inputcost,
+    inputcost_quad!
 
 import iLQGames:
     quadraticize
@@ -48,9 +49,9 @@ using Parameters
     # the time after which the goal state cost is active
     t_final::Float64
     # the cost for control
-    Rᵢ::TR = SMatrix{2,2}([.1 0.; 0. 1.]) * 5.
+    R::TR = SMatrix{2,2}([.1 0.; 0. 1.]) * 10.
     # the state cost
-    Qs::TQs = SMatrix{5,5}(diagm([0, 0, 0, 0.1, 2.])) * 10.
+    Qs::TQs = SMatrix{5,5}(diagm([0, 0, 0, 0.1, 2.])) * 20.
     # the cost for not being at the goal
     Qg::TQg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*500
     # the avoidance radius
@@ -79,91 +80,25 @@ function iLQGames.quadraticize(pc::TwoPlayerCarCost, x::SVector{10},
     R = @MMatrix zeros(4, 4)
 
     # the quadratic part of the control cost
-    R[ui, ui] += 2pc.Rᵢ
+    inputcost_quad!(R, pc.R, ui)
     # soft constraints on the control
-    # - steering rate constraint
     # - acceleration constraint
     softconstr_quad!(R, u, pc.des_acc_bounds..., pc.w, ui[2])
 
     # the quadratic part of the state cost
-    Q[xi, xi] += 2pc.Qs
-    l[xi] += 2pc.Qs*x[xi]
+    statecost_quad!(Q, l, pc.Qs, x[xi], xi)
     # soft constraints on the state
     # - steering angle
     softconstr_quad!(Q, l, x, pc.des_steer_bounds..., pc.w, xi[4])
     # - speed
     softconstr_quad!(Q, l, x, pc.des_v_bounds..., pc.w, xi[5])
     # - proximity
-    proximity_quad!(Q, l, x, pc.r_avoid, pc.w, 1, 2, 6, 7)
+    proximitycost_quad!(Q, l, x, pc.r_avoid, pc.w, 1, 2, 6, 7)
 
     # the goal cost
-    if t > pc.t_final
-        Qg = 2pc.Qg
-        Q[xi, xi] += Qg
-        l[xi] += Qg*(x[xi]-pc.xg)
-    end
+    goalstatecost_quad!(Q, l, pc.Qg, pc.xg, x[xi], xi, t, pc.t_final)
 
     return QuadraticPlayerCost(SMatrix(Q), SVector(l), SMatrix(R))
-end
-
-@inline function proximity_quad!(Q::MMatrix, l::MVector, x::SVector,
-                                 r_avoid::Real, w::Real, x1::Int, y1::Int,
-                                 x2::Int, y2::Int)
-    Δx = x[x1] - x[x2]
-    Δy = x[y1] - x[y2]
-    Δsq = Δx^2 + Δy^2
-    if Δsq < r_avoid
-        # cost model: w*(Δsq - min)^2
-        δx = 4*w*Δx*(Δsq - r_avoid)
-        δy = 4*w*Δy*(Δsq - r_avoid)
-        l[x1] += δx
-        l[y1] += δy
-        l[x2] -= δx
-        l[y2] -= δy
-
-        δxδx = 4w*(Δsq - r_avoid) + 8w*Δx^2
-        δyδy = 4w*(Δsq - r_avoid) + 8w*Δy^2
-        δxδy = 8w*Δx*Δy
-
-        Q[x1,x1] += δxδx
-        Q[x1,x2] -= δxδx; Q[x2,x1] -= δxδx
-        Q[x2,x2] += δxδx
-
-        Q[y1,y1] += δyδy
-        Q[y1,y2] -= δyδy; Q[y2,y1] -= δyδy
-        Q[y2,y2] += δyδy
-
-        Q[x1,y1] += δxδy; Q[y1,x1] += δxδy
-        Q[x1,y2] -= δxδy; Q[y2,x1] -= δxδy
-        Q[y1,x2] -= δxδy; Q[x2,y1] -= δxδy
-        Q[x2,y2] += δxδy; Q[y2,x2] += δxδy
-    end
-end
-
-@inline function softconstr_quad!(Q::MMatrix, l::MVector, x::SVector,
-                                  min::Real, max::Real, w::Real, idx::Int)
-    @assert min < max
-    if x[idx] < min
-        Q[idx, idx] += 2w
-        l[idx] += 2w*(x[idx] - min)
-    elseif x[idx] > max
-        Q[idx, idx] += 2w
-        l[idx] += 2w*(x[idx] - max)
-    end
-end
-
-@inline function softconstr_quad!(Q::MMatrix, x::SVector, min::Real, max::Real,
-                                  w::Real, idx::Int)
-    @assert min < max
-    if !(min < x[idx] < max)
-        Q[idx, idx] += 2w
-    end
-end
-
-@inline function softconstr(val::Real, min::Real, max::Real, w::Real)
-    @assert min < max
-    gap = val < min ? val - min : val > max ? val - max : zero(w)
-    return w*gap^2
 end
 
 function (pc::TwoPlayerCarCost)(x::SVector{10}, u::SVector{4}, t::Float64)
@@ -178,9 +113,9 @@ function (pc::TwoPlayerCarCost)(x::SVector{10}, u::SVector{4}, t::Float64)
     #  - avoid collisions
     #  - be close close to some target
     # control cost: only cares about own control
-    cost += uᵢ' * pc.Rᵢ * uᵢ
+    cost += inputcost(pc.R, uᵢ)
     # running cost for states (e.g. large steering)
-    cost += xᵢ' * pc.Qs * xᵢ
+    cost += statecost(pc.Qs, xᵢ)
 
     # acceleration constraints
     cost += softconstr(uᵢ[2], pc.des_acc_bounds..., pc.w)
@@ -191,15 +126,10 @@ function (pc::TwoPlayerCarCost)(x::SVector{10}, u::SVector{4}, t::Float64)
 
     # proximity constraint
     xp_other = x[SVector{2}(pc.player_id == 1 ? (6:7) : (1:2))]
-    Δxp = xp_other - xᵢ[SVector{2}(1:2)]
-    cost += softconstr(Δxp'*Δxp, pc.r_avoid, Inf, pc.w)
+    cost += proximitycost(xᵢ[(@S 1:2)], xp_other, pc.r_avoid, pc.w)
 
     # goal state cost cost:
-    if t > pc.t_final
-        # we want to be near the goal ...
-        Δxg = xᵢ - pc.xg
-        cost += Δxg' * pc.Qg * Δxg
-    end
+    cost += goalstatecost(pc.Qg, pc.xg, xᵢ, t, pc.t_final)
 
     return cost
 end
