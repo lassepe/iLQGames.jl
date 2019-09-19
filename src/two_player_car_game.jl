@@ -11,7 +11,7 @@
     # the state cost
     Qs::TQs = SMatrix{5,5}(diagm([0, 0, 0, 0.1, 2.])) * 20.
     # the cost for not being at the goal
-    Qg::TQg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*500
+    Qg::TQg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*1000
     # the avoidance radius
     r_avoid::Float64 = 1.
     # soft constraints
