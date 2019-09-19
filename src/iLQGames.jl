@@ -5,6 +5,7 @@ module iLQGames
     using DiffResults
     using StaticArrays
     using LinearAlgebra
+    using Parameters
     import Base:
         getindex,
         setindex!,
@@ -27,7 +28,6 @@ module iLQGames
 
     # dynamics abstraction
     include("control_system.jl")
-    include("toy_systems.jl")
     include("linear_system.jl")
     include("product_system.jl")
 
@@ -43,6 +43,10 @@ module iLQGames
 
     # some handy tools for problem description
     include("cost_design_utils.jl")
+
+    # some toy examples to work with
+    include("toy_systems.jl")
+    include("two_player_car_game.jl")
 
     # some tools for plotting
     include("plot_utils.jl")
