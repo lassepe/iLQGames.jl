@@ -15,8 +15,8 @@ struct ProductSystem{ΔT, nx, nu, xids, uids, np, TS<:NTuple{np, <:ControlSystem
 end
 xindex(cs::ProductSystem{ΔT, nx, nu, xids}) where {ΔT, nx, nu, xids} = xids
 uindex(cs::ProductSystem{ΔT, nx, nu, xids, uids}) where {ΔT, nx, nu, xids, uids} = uids
-
 sub_systems(cs::ProductSystem) = cs.sub_systems
+xyindex(cs::ProductSystem) = Tuple(xid[xyindex(sub)] for (xid, sub) in zip(xindex(cs), sub_systems(cs)))
 
 function dx(cs::ProductSystem{ΔT, nx, nu, xids, uids}, x::SVector{nx},
             u::SVector{nu}, t::AbstractFloat) where {ΔT, nx, nu, xids, uids}

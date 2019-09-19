@@ -89,6 +89,14 @@ We provide a convencience default below.
 """
 function integrate end
 
+"--------------------- Optional Interface Extensions ---------------------"
+
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem)
+
+Returns the indeces of the x and y coordinate of this sytem as SIndex.
+"""
+function xyindex end
 
 "--------------------- Convencience Implementations ---------------------"
 

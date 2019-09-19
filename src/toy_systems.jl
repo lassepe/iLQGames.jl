@@ -66,3 +66,5 @@ function linearize_discrete(cs::Car5D, x::SVector{5}, u::SVector{2}, t::Abstract
                   0  ΔT];
     return LinearSystem{ΔT}(A, B)
 end
+
+xyindex(cs::Car5D) = @SVector [1, 2]
