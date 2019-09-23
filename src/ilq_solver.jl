@@ -7,13 +7,13 @@
     "Iteration is aborted if this number is exceeded."
     max_n_iter::Int = 1000
     "The maximum number of backtrackings per scaling step"
-    max_scale_backtrack::Int = 10
+    max_scale_backtrack::Int = 20
     "The maximum elementwise difference bewteen operating points for
     convergence."
-    max_elwise_diff_converged::Float64 = 0.1
+    max_elwise_diff_converged::Float64 = α_scale_init/2
     "The maximum elementwise difference bewteen operating points for per
     iteration step."
-    max_elwise_diff_step::Float64 = 1.
+    max_elwise_diff_step::Float64 = 20 * max_elwise_diff_converged
 end
 
 function has_converged(solver::iLQSolver,

@@ -9,11 +9,11 @@
     # the cost for control
     R::TR = SMatrix{2,2}([.1 0.; 0. 1.]) * 10.
     # the state cost
-    Qs::TQs = SMatrix{5,5}(diagm([0, 0, 0, 0.1, 2.])) * 20.
+    Qs::TQs = SMatrix{5,5}(diagm([0, 0, 0, 0.2, 2.])) * 20.
     # the cost for not being at the goal
-    Qg::TQg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*1000
+    Qg::TQg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*500
     # the avoidance radius
-    r_avoid::Float64 = 1.
+    r_avoid::Float64 = 1.2
     # soft constraints
     # the gravidty constant
     gravity::Float64 = 9.81
@@ -69,8 +69,8 @@ function iLQGames.quadraticize(pc::TwoPlayerCarCost, x::SVector{10},
     softconstr_quad!(Q, l, x, pc.des_steer_bounds..., pc.w, xi[4])
     # - speed
     softconstr_quad!(Q, l, x, pc.des_v_bounds..., pc.w, xi[5])
-    # - proximity
-    proximitycost_quad!(Q, l, x, pc.r_avoid, pc.w, 1, 2, 6, 7)
+    # - proximity -- TODO think about this weight scaling
+    proximitycost_quad!(Q, l, x, pc.r_avoid, 0.5*pc.w, 1, 2, 6, 7)
 
     # the goal cost
     goalstatecost_quad!(Q, l, pc.Qg, pc.xg, x[xi], xi, t, pc.t_final)
