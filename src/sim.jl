@@ -1,7 +1,7 @@
 function trajectory!(traj::SystemTrajectory{h}, cs::ControlSystem,
                      γ::SizedVector{h, <:AffineStrategy},
                      last_op::SystemTrajectory{h}, x0::SVector,
-                     max_elweise_divergence::Float64=Inf) where {h}
+                     max_elwise_divergence::Float64=Inf) where {h}
 
     @assert sampling_time(traj) == sampling_time(last_op) == sampling_time(cs)
 
@@ -17,7 +17,7 @@ function trajectory!(traj::SystemTrajectory{h}, cs::ControlSystem,
         # the deviation from the last operating point
         Δxₖ = xₖ - x̃ₖ
 
-        if norm(Δxₖ, Inf) > max_elweise_divergence
+        if norm(Δxₖ, Inf) > max_elwise_divergence
             return false
         end
 
