@@ -1,34 +1,38 @@
-function plot_traj(traj::SystemTrajectory, xy_ids::SIndex, uids::Union{SIndex, Nothing} = nothing, legend::Symbol=:none, path_marker=(:circle, 1, stroke(1, 1., :black)); k::Int=1)
-
+function plot_traj!(p::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
+                    uids::Union{SIndex, Nothing}=nothing, legend::Symbol=:none,
+                    path_marker=(:circle, 1, stroke(1, 1., :black)); k::Int=1)
     # get a color for each player
-    player_colors = distinguishable_colors(length(xy_ids), colorant"darkgreen")
+    player_colors = distinguishable_colors(length(xy_ids), colorant"green")
     # buffer for all the plots
 
     nu = length(eltype(traj.u))
     pu = plot(; layout=(nu, 1))
-    pxy = plot()
+    pxy = p
 
     if !isnothing(uids)
         # names for each input
         input_labels = show_labels ? reshape(["u$i" for i in 1:nu], 1, nu) : []
         # find the player color for each input
         input_colors = reshape([player_colors[findfirst(in.(i, uids))] for i in 1:nu], 1, nu)
-        plot!(pu, hcat(traj.u...)'; layout=(nu, 1), label=input_labels, seriescolor=input_colors, legend=legend)
+        plot!(pu, hcat(traj.u...)'; layout=(nu, 1), label=input_labels,
+              seriescolor=input_colors, legend=legend)
     end
     for (i, xy_i) in enumerate(xy_ids)
         # the trajectory
         x = collect(x[first(xy_i)] for x in traj.x)
         y = collect(x[last(xy_i)] for x in traj.x)
-        plot!(pxy, x, y; xlims=(-5, 5), ylims=(-5, 5), seriescolor=player_colors[i], label="p$i", legend=legend, marker=path_marker)
+        plot!(pxy, x, y; xlims=(-5, 5), ylims=(-5, 5),
+              seriescolor=player_colors[i], label="p$i", legend=legend)
 
         # marker at the current time step
-        scatter!(pxy, [x[k]], [y[k]], seriescolor=player_colors[i], label="x_p$i", legend=legend)
+        scatter!(pxy, [x[k]], [y[k]], seriescolor=player_colors[i],
+                 label="x_p$i", legend=legend)
     end
 
-    return isnothing(uids) ? plot(pxy, legend=legend) : plot(pu, pxy, legend=legend)
+    return isnothing(uids) ? pxy : plot(pu, pxy, legend=legend)
 end
 
-
+plot_traj(args...; kwargs...) = begin p = plot(); plot_traj!(p, args...; kwargs...) end
 
 # cost plots
 function plot_cost(g::AbstractGame, op::SystemTrajectory, dims, i::Int=1,
