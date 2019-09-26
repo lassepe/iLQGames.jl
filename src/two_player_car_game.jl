@@ -24,7 +24,7 @@
     # bounds on the steering state
     des_steer_bounds::Tuple{Float64, Float64} = (-deg2rad(30), deg2rad(30))
     # weight of the soft constraints
-    w::Float64 = 500.
+    w::Float64 = 50.
 end
 
 function generate_2player_car_game(T_horizon::Float64, ΔT::Float64, xg1::SVector, xg2::SVector)
@@ -42,7 +42,6 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64, xg1::SVecto
 
     # construct the game
     g = GeneralGame{((@S 1:2), (@S 3:4))}(dyn, costs)
-
     return g
 end
 
@@ -69,8 +68,8 @@ function iLQGames.quadraticize(pc::TwoPlayerCarCost, x::SVector{10},
     softconstr_quad!(Q, l, x, pc.des_steer_bounds..., pc.w, xi[4])
     # - speed
     softconstr_quad!(Q, l, x, pc.des_v_bounds..., pc.w, xi[5])
-    # - proximity -- TODO think about this weight scaling
-    proximitycost_quad!(Q, l, x, pc.r_avoid, 0.5*pc.w, 1, 2, 6, 7)
+    # - proximity
+    proximitycost_quad!(Q, l, x, pc.r_avoid, pc.w, 1, 2, 6, 7)
 
     # the goal cost
     goalstatecost_quad!(Q, l, pc.Qg, pc.xg, x[xi], xi, t, pc.t_final)

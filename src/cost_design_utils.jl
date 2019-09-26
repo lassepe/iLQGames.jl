@@ -1,7 +1,7 @@
 @inline function proximitycost(xp1::SVector{n}, xp2::SVector{n},
                                r_avoid::AbstractFloat, w::AbstractFloat) where {n}
     Δxp = xp1 - xp2
-    return softconstr(Δxp'*Δxp, r_avoid, Inf, w)
+    return softconstr(sqrt(Δxp'*Δxp), r_avoid, Inf, w)
 end
 
 @inline function proximitycost_quad!(Q::MMatrix, l::MVector, x::SVector,
@@ -9,19 +9,22 @@ end
                                  x2::Int, y2::Int)
     Δx = x[x1] - x[x2]
     Δy = x[y1] - x[y2]
-    Δsq = Δx^2 + Δy^2
-    if Δsq < r_avoid
-        # cost model: w*(Δsq - min)^2
-        δx = 4*w*Δx*(Δsq - r_avoid)
-        δy = 4*w*Δy*(Δsq - r_avoid)
+    Δnormsq = Δx^2 + Δy^2
+    Δnorm = sqrt(Δnormsq)
+    if Δnorm < r_avoid
+        # cost model: w*(Δnorm - min)^2
+        δx = 2*w*Δx*(Δnorm - r_avoid)/Δnorm
+        δy = 2*w*Δy*(Δnorm - r_avoid)/Δnorm
         l[x1] += δx
         l[y1] += δy
         l[x2] -= δx
         l[y2] -= δy
 
-        δxδx = 4w*(Δsq - r_avoid) + 8w*Δx^2
-        δyδy = 4w*(Δsq - r_avoid) + 8w*Δy^2
-        δxδy = 8w*Δx*Δy
+        w̃ = 2*w/Δnormsq
+
+        δxδx = (w̃*Δx^2) + (w̃*Δx^2*(r_avoid - Δnorm))/Δnorm - (w̃*Δnorm*(r_avoid - Δnorm))
+        δyδy = (w̃*Δy^2) + (w̃*Δy^2*(r_avoid - Δnorm))/Δnorm - (w̃*Δnorm*(r_avoid - Δnorm))
+        δxδy = (w̃*Δx*Δy) + (w̃*Δx*Δy*(r_avoid - Δnorm))/Δnorm
 
         Q[x1,x1] += δxδx
         Q[x1,x2] -= δxδx; Q[x2,x1] -= δxδx
@@ -36,6 +39,12 @@ end
         Q[y1,x2] -= δxδy; Q[x2,y1] -= δxδy
         Q[x2,y2] += δxδy; Q[y2,x2] += δxδy
     end
+end
+
+@inline function softconstr(val::Real, min::Real, max::Real, w::Real)
+    @assert min < max
+    gap = val < min ? val - min : val > max ? val - max : zero(w)
+    return w*gap^2
 end
 
 @inline function softconstr_quad!(Q::MMatrix, l::MVector, x::SVector,
@@ -58,12 +67,6 @@ end
         Q[idx, idx] += 2w
     end
     return nothing
-end
-
-@inline function softconstr(val::Real, min::Real, max::Real, w::Real)
-    @assert min < max
-    gap = val < min ? val - min : val > max ? val - max : zero(w)
-    return w*gap^2
 end
 
 @inline function goalstatecost(Qg::SMatrix{n,n}, xg::SVector{n}, x::SVector{n},
