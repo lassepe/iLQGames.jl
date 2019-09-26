@@ -1,8 +1,9 @@
 function plot_traj!(p::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
                     uids::Union{SIndex, Nothing}=nothing, legend::Symbol=:none,
-                    path_marker=(:circle, 1, stroke(1, 1., :black)); k::Int=1)
-    # get a color for each player
-    player_colors = distinguishable_colors(length(xy_ids), colorant"green")
+                    path_marker=(:circle, 1, stroke(1, 1., :black)),
+                    cname::AbstractString="blues"; k::Int=1)
+    # get a color for each player (using offset because first color is too faint)
+    player_colors = colormap(cname, length(xy_ids)+1)[2:end]
     # buffer for all the plots
 
     nu = length(eltype(traj.u))
@@ -21,7 +22,13 @@ function plot_traj!(p::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
         # the trajectory
         x = collect(x[first(xy_i)] for x in traj.x)
         y = collect(x[last(xy_i)] for x in traj.x)
-        plot!(pxy, x, y; xlims=(-5, 5), ylims=(-5, 5),
+
+        # TODO: remove or make option
+        # add t if 3d is desired
+        # t = collect(timepoints(traj))
+        # plotargs = (pxy, x, y, t)
+        plotargs = (pxy, x, y)
+        plot!(plotargs...; xlims=(-5, 5), ylims=(-5, 5),
               seriescolor=player_colors[i], label="p$i", legend=legend)
 
         # marker at the current time step
