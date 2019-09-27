@@ -89,7 +89,7 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
     last_op = copy(initial_op)
     current_op = initial_op
     current_strategy = initial_strategy
-    lqg_approx = LQGame(undef, g, Val(horizon(initial_op)))
+    lqg_approx = LQGame(undef, g)
 
     # 0. compute the operating point for the first run.
     trajectory!(current_op, dynamics(g), current_strategy, last_op, x0)

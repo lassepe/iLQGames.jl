@@ -20,7 +20,7 @@ function solve_lq_game(g::LQGame)
     Z = [pc.Q for pc in last(player_costs(g))]
     ζ = [pc.l for pc in last(player_costs(g))]
 
-    strategies = SizedVector{horizon(g), strategytype(g)}(undef)
+    strategies = strategytype(g)(undef)
 
     # Setup the S and Y matrix of the S * X = Y matrix equation
 
@@ -49,18 +49,6 @@ function solve_lq_game(g::LQGame)
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
         P_and_α = SMatrix(S)\SMatrix(Y)
-        #try
-        #    SMatrix{nu, nx+1}(S \ Y)
-        #catch e
-        #    @show Z
-        #    @show ζ
-        #    @show cost
-        #    @show A
-        #    @show B
-        #    @show S
-        #    @show Y
-        #    rethrow(e)
-        #end
         P = P_and_α[:, full_xrange]
         α = P_and_α[:, end]
 

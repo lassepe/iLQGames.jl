@@ -29,6 +29,7 @@ end
 
 function generate_2player_car_game(T_horizon::Float64, ΔT::Float64, xg1::SVector, xg2::SVector)
     t_final = T_horizon - 1.5*ΔT
+    h = Int(T_horizon/ΔT)
 
 
     # setup the dynamics
@@ -41,7 +42,7 @@ function generate_2player_car_game(T_horizon::Float64, ΔT::Float64, xg1::SVecto
     costs = @SVector [c1, c2]
 
     # construct the game
-    g = GeneralGame{((@S 1:2), (@S 3:4))}(dyn, costs)
+    g = GeneralGame{((@S 1:2), (@S 3:4)), h}(dyn, costs)
     return g
 end
 

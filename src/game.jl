@@ -3,7 +3,7 @@ $(TYPEDEF)
 
 Abstract representation of a finite horizon game.
 """
-abstract type AbstractGame{uids} end
+abstract type AbstractGame{uids, h} end
 
 
 """
@@ -26,7 +26,15 @@ function player_costs end
 
 Returns the type of the strategy that is a solution to this game.
 """
-function strategytype end
+# TODO: I would really prefer if we did not have to use this!
+function strategytype(g::AbstractGame)
+    elt = AffineStrategy{n_states(g), n_controls(g),
+                         SMatrix{n_controls(g), n_states(g), Float64,
+                                 n_controls(g)*n_states(g)},
+                         SVector{n_controls(g), Float64}}
+
+    return SizedArray{Tuple{horizon(g)}, elt, 1, 1}
+end
 
 """
 $(FUNCTIONNAME)(g::AbstractGame)
@@ -45,23 +53,30 @@ function lq_approximation end
 n_players(g::AbstractGame{uids}) where {uids} = length(uids)
 uindex(g::AbstractGame{uids}) where {uids} = uids
 player_index(g::AbstractGame) = SVector{n_players(g)}(1:n_players(g))
+horizon(g::AbstractGame{uids, h}) where {uids, h} = h
 # delegate some function calls to the dynamics
 n_states(g::AbstractGame) = n_states(dynamics(g))
 n_controls(g::AbstractGame) = n_controls(dynamics(g))
 xyindex(g::AbstractGame) = xyindex(dynamics(g))
 sampling_time(g::AbstractGame) = sampling_time(dynamics(g))
 
-"--------------------------- Implementations ---------------------------"
+"-------------------------------- Implementations ---------------------------------"
 
 
 "A simple contruction helper that runs some sanity checks on the types"
 @inline function game_sanity_checks(uids, TD, TC)
-    @assert n_states(TD) == n_states(eltype(TC)) "Cost and dynamics need the same state dimensions."
-    @assert n_controls(TD) == n_controls(eltype(TC)) "Cost and dynamics need the same input dimensions"
-    @assert isempty(intersect(uids...)) "Invalid uids: Two players can not control the same input"
-    @assert sum(length(uis) for uis in uids) == n_controls(TD) "Not all inputs have been assigned to players."
-    @assert all(isbits(uir) for uir in uids) "Invalid uids: all ranges should be isbits to make things fast."
-    @assert all(eltype(uir) == Int for uir in uids) "Invalid uids: the elements of the u_idx_range should be integers."
+    @assert(n_states(TD) == n_states(eltype(TC)),
+            "Cost and dynamics need the same state dimensions.")
+    @assert(n_controls(TD) == n_controls(eltype(TC)),
+            "Cost and dynamics need the same input dimensions")
+    @assert(isempty(intersect(uids...)),
+            "Invalid uids: Two players can not control the same input")
+    @assert(sum(length(uis) for uis in uids) == n_controls(TD),
+            "Not all inputs have been assigned to players.")
+    @assert(all(isbits(uir) for uir in uids),
+            "Invalid uids: all ranges should be isbits to make things fast.")
+    @assert(all(eltype(uir) == Int for uir in uids),
+            "Invalid uids: the elements of the u_idx_range should be integers.")
 end
 
 
@@ -71,18 +86,18 @@ $(TYPEDEF)
 A representation of a general game with potentially non-linear dynamics and
 non-quadratic costs.
 """
-struct GeneralGame{uids, TD<:ControlSystem, TC<:StaticVector} <: AbstractGame{uids}
+struct GeneralGame{uids, h, TD<:ControlSystem, TC<:StaticVector} <: AbstractGame{uids, h}
     dyn::TD
     cost::TC
 
-    GeneralGame{uids}(dyn::TD, cost::TC) where {uids, TD<:ControlSystem,
-                                                TC<:StaticVector} = begin
+    function GeneralGame{uids, h}(dyn::TD, cost::TC) where {uids, h,
+                                                            TD<:ControlSystem,
+        TC<:StaticVector}
         game_sanity_checks(uids, TD, TC)
         @assert TD <: ControlSystem
         @assert eltype(TC) <: PlayerCost
-        new{uids, TD, TC}(dyn, cost)
+        new{uids, h, TD, TC}(dyn, cost)
     end
-
 end
 
 dynamics(g::GeneralGame) = g.dyn
@@ -108,7 +123,7 @@ range of inputs.
 
 $(TYPEDFIELDS)
 """
-struct LQGame{uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} <: AbstractGame{uids}
+struct LQGame{uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} <: AbstractGame{uids, h}
     "The full linear system dynamics. A vector (time) over `LinearSystem`s."
     dyn::TD
     "The cost representation. A vector (time) over vector (player) over
@@ -124,9 +139,10 @@ struct LQGame{uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} <: AbstractGame{uid
 end
 
 # custom undef initiliazer
-function LQGame(::UndefInitializer, g::AbstractGame, ::Val{h}) where {h}
+function LQGame(::UndefInitializer, g::AbstractGame)
     nx = n_states(g)
     nu = n_controls(g)
+    h = horizon(g)
     # preallocate an empty lqgame
     # ltv dynamics
     TA = SMatrix{nx, nx, Float64, nx*nx}
@@ -147,21 +163,11 @@ function LQGame(::UndefInitializer, g::AbstractGame, ::Val{h}) where {h}
     lqg = LQGame{uindex(g)}(lin_dyn, quad_cost)
 end
 
-horizon(g::LQGame{uids, h}) where {uids, h} = h
-# TODO: I would really prefer if we did not have to use this!
-strategytype(g::LQGame) = AffineStrategy{n_states(g),
-                                          n_controls(g),
-                                          SMatrix{n_controls(g),
-                                                  n_states(g),
-                                                  Float64,
-                                                  n_controls(g)*n_states(g)},
-                                          SVector{n_controls(g),
-                                                  Float64}}
 dynamics(g::LQGame) = g.dyn
 player_costs(g::LQGame) = g.pcost
 
 function lq_approximation(g::GeneralGame, op::SystemTrajectory)
-    lqg = LQGame(undef, g, Val(horizon(op)))
+    lqg = LQGame(undef, g)
     lq_approximation!(lqg, g, op)
     return lqg
 end
