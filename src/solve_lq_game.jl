@@ -9,8 +9,8 @@ Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖ�
 """
 function solve_lq_game(g::LQGame)
     # extract control and input dimensions
-    nx = n_states(dynamics(g))
-    nu = n_controls(dynamics(g))
+    nx = n_states(g)
+    nu = n_controls(g)
 
     full_urange = SVector{nu}(1:nu)
     full_xrange = SVector{nx}(1:nx)
@@ -20,7 +20,7 @@ function solve_lq_game(g::LQGame)
     Z = [pc.Q for pc in last(player_costs(g))]
     ζ = [pc.l for pc in last(player_costs(g))]
 
-    strategies = SizedVector{horizon(g), strategy_type(g)}(undef)
+    strategies = SizedVector{horizon(g), strategytype(g)}(undef)
 
     # Setup the S and Y matrix of the S * X = Y matrix equation
 

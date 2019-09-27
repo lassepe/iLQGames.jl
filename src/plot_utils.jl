@@ -45,9 +45,9 @@ plot_traj(args...; kwargs...) = begin p = plot(); plot_traj!(p, args...; kwargs.
 function plot_cost(g::AbstractGame, op::SystemTrajectory, dims, i::Int=1,
                    st::Symbol=:contour; k::Int=1)
     lqg = lq_approximation(g, op)
-    nx = n_states(dynamics(g))
-    nu = n_controls(dynamics(g))
-    t = k * sampling_time(dynamics(g))
+    nx = n_states(g)
+    nu = n_controls(g)
+    t = k * sampling_time(g)
 
     offset2vec(Δd1, Δd2) = begin
         Δx = zeros(nx)

@@ -183,9 +183,9 @@ function sim()
     g = generate_2D_pointmass_game()
     strategy = solve_lq_game(g)
 
-    nx = n_states(dynamics(g))
-    nu = n_controls(dynamics(g))
-    ΔT = sampling_time(dynamics(g))
+    nx = n_states(g)
+    nu = n_controls(g)
+    ΔT = sampling_time(g)
     h = horizon(g)
 
     # dummy operating point

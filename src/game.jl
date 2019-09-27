@@ -26,7 +26,14 @@ function player_costs end
 
 Returns the type of the strategy that is a solution to this game.
 """
-function strategy_type end
+function strategytype end
+
+"""
+$(FUNCTIONNAME)(g::AbstractGame)
+
+Returns the type of the state that is used in this game.
+"""
+statetype(g::AbstractGame) = SVector{n_states(g), Float64}
 
 """
     $(FUNCTIONNAME)(g::AbstractGame)
@@ -38,7 +45,11 @@ function lq_approximation end
 n_players(g::AbstractGame{uids}) where {uids} = length(uids)
 uindex(g::AbstractGame{uids}) where {uids} = uids
 player_index(g::AbstractGame) = SVector{n_players(g)}(1:n_players(g))
-
+# delegate some function calls to the dynamics
+n_states(g::AbstractGame) = n_states(dynamics(g))
+n_controls(g::AbstractGame) = n_controls(dynamics(g))
+xyindex(g::AbstractGame) = xyindex(dynamics(g))
+sampling_time(g::AbstractGame) = sampling_time(dynamics(g))
 
 "--------------------------- Implementations ---------------------------"
 
@@ -114,13 +125,13 @@ end
 
 # custom undef initiliazer
 function LQGame(::UndefInitializer, g::AbstractGame, ::Val{h}) where {h}
-    nx = n_states(dynamics(g))
-    nu = n_controls(dynamics(g))
+    nx = n_states(g)
+    nu = n_controls(g)
     # preallocate an empty lqgame
     # ltv dynamics
     TA = SMatrix{nx, nx, Float64, nx*nx}
     TB = SMatrix{nx, nu, Float64, nx*nu}
-    TLS = LinearSystem{sampling_time(dynamics(g)), nx, nu, TA, TB}
+    TLS = LinearSystem{sampling_time(g), nx, nu, TA, TB}
     # time varying dynamics
     dyn = SizedVector{h, TLS}(undef)
     lin_dyn = LTVSystem(dyn)
@@ -138,13 +149,13 @@ end
 
 horizon(g::LQGame{uids, h}) where {uids, h} = h
 # TODO: I would really prefer if we did not have to use this!
-strategy_type(g::LQGame) = AffineStrategy{n_states(dynamics(g)),
-                                          n_controls(dynamics(g)),
-                                          SMatrix{n_controls(dynamics(g)),
-                                                  n_states(dynamics(g)),
+strategytype(g::LQGame) = AffineStrategy{n_states(g),
+                                          n_controls(g),
+                                          SMatrix{n_controls(g),
+                                                  n_states(g),
                                                   Float64,
-                                                  n_controls(dynamics(g))*n_states(dynamics(g))},
-                                          SVector{n_controls(dynamics(g)),
+                                                  n_controls(g)*n_states(g)},
+                                          SVector{n_controls(g),
                                                   Float64}}
 dynamics(g::LQGame) = g.dyn
 player_costs(g::LQGame) = g.pcost
