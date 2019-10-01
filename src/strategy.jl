@@ -5,6 +5,11 @@ struct AffineStrategy{nx, nu, TP<:SMatrix{nu, nx}, TA<:SVector{nu}}
     α::TA
 end
 
+Base.zero(γ::AffineStrategy) = zero(typeof(γ))
+function Base.zero(::Type{<:AffineStrategy{nx, nu, TP, TA}}) where {nx, nu, TP, TA}
+    return AffineStrategy(zero(TP), zero(TA))
+end
+
 """
     $(FUNCTIONNAME)(γ, Δx, ũ)
 
