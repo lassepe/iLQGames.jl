@@ -23,10 +23,6 @@ function plot_traj!(p::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
         x = collect(x[first(xy_i)] for x in traj.x)
         y = collect(x[last(xy_i)] for x in traj.x)
 
-        # TODO: remove or make option
-        # add t if 3d is desired
-        # t = collect(timepoints(traj))
-        # plotargs = (pxy, x, y, t)
         plotargs = (pxy, x, y)
         plot!(plotargs...; xlims=(-5, 5), ylims=(-5, 5),
               seriescolor=player_colors[i], label="p$i", legend=legend)

@@ -50,15 +50,18 @@ Returns the lq approximation of the game.
 """
 function lq_approximation end
 
-n_players(g::AbstractGame{uids}) where {uids} = length(uids)
-uindex(g::AbstractGame{uids}) where {uids} = uids
-player_index(g::AbstractGame) = SVector{n_players(g)}(1:n_players(g))
-horizon(g::AbstractGame{uids, h}) where {uids, h} = h
 # delegate some function calls to the dynamics
 n_states(g::AbstractGame) = n_states(dynamics(g))
 n_controls(g::AbstractGame) = n_controls(dynamics(g))
 xyindex(g::AbstractGame) = xyindex(dynamics(g))
 sampling_time(g::AbstractGame) = sampling_time(dynamics(g))
+
+# additional convenience methods
+n_players(g::AbstractGame{uids}) where {uids} = length(uids)
+uindex(g::AbstractGame{uids}) where {uids} = uids
+player_index(g::AbstractGame) = SVector{n_players(g)}(1:n_players(g))
+horizon(g::AbstractGame{uids, h}) where {uids, h} = h
+time_disc2cont(g::AbstractGame, k::Int) = (k-1)*sampling_time(g)
 
 "-------------------------------- Implementations ---------------------------------"
 
