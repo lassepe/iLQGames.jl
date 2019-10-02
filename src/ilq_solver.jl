@@ -16,17 +16,8 @@
     max_elwise_diff_step::Float64 = 20 * max_elwise_diff_converged
 end
 
-function has_converged(solver::iLQSolver,
-                       last_op::SystemTrajectory{h},
-                       current_op::SystemTrajectory{h},
-                       i_iter::Int) where {h}
-    if i_iter == 0
-        return false
-    elseif i_iter >= solver.max_n_iter
-        @warn "Iteration aborted because max interations exceeded."
-        return true
-    end
-
+function has_converged(solver::iLQSolver, last_op::SystemTrajectory{h},
+                       current_op::SystemTrajectory{h}) where {h}
     return are_close(current_op, last_op, solver.max_elwise_diff_converged)
 end
 
@@ -61,7 +52,9 @@ function backtrack_scale!(current_strategy::SizedVector,
             return true, next_op
         end
     end
-    # TODO: in this case, the result in next_op is not really meaningful
+    # in this case, the result in next_op is not really meaningful because the
+    # integration has not been finished, thus the `success` state needs to be
+    # evaluated and handled by the caller.
     return false, next_op
 end
 
@@ -83,6 +76,7 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
     # safe the start time of our computation
     start_time = time()
 
+    converged = false
     i_iter = 0
     # allocate memory for the last and the current operating point
     # TODO: can we allocate this outside this loop?
@@ -95,8 +89,7 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
     trajectory!(current_op, dynamics(g), current_strategy, last_op, x0)
 
     # ... and upate the current by integrating the non-linear dynamics
-    while !has_converged(solver, last_op, current_op, i_iter)
-        i_iter += 1
+    while !(converged || i_iter >= solver.max_n_iter)
         # sanity chech to make sure that we don't manipulate the wrong
         # object...
         @assert !(last_op === current_op) "current and last operating point
@@ -114,8 +107,16 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
         success, current_op = backtrack_scale!(current_strategy, current_op, g, solver)
         if(!success)
             @error "Could not stabilize solution."
+            # we immetiately return and state that the solution has not been
+            # stabilized
+            return false, current_op, current_strategy
         end
+
+        i_iter += 1
+        converged = has_converged(solver, last_op, current_op)
     end
 
-    return current_op, current_strategy
+    # NOTE: for `converged == false` the result may not be meaningful. `converged`
+    # has to be handled outside this function
+    return converged, current_op, current_strategy
 end
