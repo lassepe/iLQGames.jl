@@ -46,5 +46,5 @@ function linearize_discrete(cs::ProductSystem, x::SVector, u::SVector, t::Abstra
         A[xid, xid] = lin_sub.A
         B[xid, uid] = lin_sub.B
     end
-    return LinearSystem{sampling_time(cs)}(SMatrix(A), SMatrix(B))
+    return LinearSystem{samplingtime(cs)}(SMatrix(A), SMatrix(B))
 end

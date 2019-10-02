@@ -54,14 +54,15 @@ function lq_approximation end
 n_states(g::AbstractGame) = n_states(dynamics(g))
 n_controls(g::AbstractGame) = n_controls(dynamics(g))
 xyindex(g::AbstractGame) = xyindex(dynamics(g))
-sampling_time(g::AbstractGame) = sampling_time(dynamics(g))
+samplingtime(g::AbstractGame) = samplingtime(dynamics(g))
 
 # additional convenience methods
 n_players(g::AbstractGame{uids}) where {uids} = length(uids)
 uindex(g::AbstractGame{uids}) where {uids} = uids
 player_index(g::AbstractGame) = SVector{n_players(g)}(1:n_players(g))
 horizon(g::AbstractGame{uids, h}) where {uids, h} = h
-time_disc2cont(g::AbstractGame, k::Int) = (k-1)*sampling_time(g)
+time_disc2cont(g::AbstractGame, k::Int, t0::Float64=0.) = (t0 +
+                                                           (k-1)*samplingtime(g))
 
 "-------------------------------- Implementations ---------------------------------"
 
@@ -150,7 +151,7 @@ function LQGame(::UndefInitializer, g::AbstractGame)
     # ltv dynamics
     TA = SMatrix{nx, nx, Float64, nx*nx}
     TB = SMatrix{nx, nu, Float64, nx*nu}
-    TLS = LinearSystem{sampling_time(g), nx, nu, TA, TB}
+    TLS = LinearSystem{samplingtime(g), nx, nu, TA, TB}
     # time varying dynamics
     dyn = SizedVector{h, TLS}(undef)
     lin_dyn = LTVSystem(dyn)
@@ -180,8 +181,7 @@ function lq_approximation!(lqg::LQGame, g::GeneralGame, op::SystemTrajectory)
     @assert uindex(lqg) == uindex(g)
     for (k, (xₖ, uₖ)) in enumerate(zip(op.x, op.u))
         # discrete linearization along the operating point
-        # TODO fix later to also consider t₀ != 0
-        t = 0 + sampling_time(op)*(k-1);
+        t = time_disc2cont(op, k)
         dynamics(lqg)[k] = linearize_discrete(dynamics(g), xₖ, uₖ, t)
         # quadratiation of the cost along the operating point
         player_costs(lqg)[k] = map(player_costs(g)) do pcₖⁱ

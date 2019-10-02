@@ -19,7 +19,7 @@ using iLQGames:
     n_players,
     uindex,
     horizon,
-    sampling_time,
+    samplingtime,
     dynamics,
     player_costs,
     trajectory!
@@ -185,7 +185,7 @@ function sim()
 
     nx = n_states(g)
     nu = n_controls(g)
-    ΔT = sampling_time(g)
+    ΔT = samplingtime(g)
     h = horizon(g)
 
     # dummy operating point

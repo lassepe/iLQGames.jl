@@ -13,14 +13,15 @@ abstract type ControlSystem{ΔT, nx, nu} end
 
 Returns the sampling time ΔT of the system.
 """
-sampling_time(cs::ControlSystem{ΔT}) where {ΔT} = ΔT
+samplingtime(cs::ControlSystem{ΔT}) where {ΔT} = ΔT
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem)
 
-Returns true if the system is has a non-zero sampling rate (e.g. discrete or sampled contiuous system.
+Returns true if the system is has a non-zero sampling rate (e.g. discrete or sampled
+contiuous system.
 """
-issampled(cs::ControlSystem) = !iszero(sampling_time(cs))
+issampled(cs::ControlSystem) = !iszero(samplingtime(cs))
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem)
@@ -79,11 +80,12 @@ We provide a convencience default below.
 function linearize_discrete end
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat, ΔT::AbstractFloat)
+    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat,
+                    ΔT::AbstractFloat, n_intsteps::Float64)
 
 Integrate propagate the state `x0` given the control `u` and the current time
-`t0` until `t0+ΔT`. Here, `k` is the number of steps that is used between `t0` and
-`t0+ΔT`.
+`t0` until `t0+ΔT`. Here, `n_intsteps` is the number of steps that is used between
+`t0` and `t0+ΔT`.
 
 We provide a convencience default below.
 """
@@ -102,7 +104,7 @@ function xyindex end
 
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
+    $(TYPEDSIGNATURES)
 
 A convencience implementation of `linearize` using `ForwardDiff.jl`. Overload
 this with an explicit version to get better performance.
@@ -115,10 +117,12 @@ function _linearize_ad(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFlo
     B = ForwardDiff.jacobian(u->dx(cs, x, u, t), u)
     return LinearSystem{0}(A, B)
 end
-linearize(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat) = _linearize_ad(cs, x, u, t)
+function linearize(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
+    return _linearize_ad(cs, x, u, t)
+end
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u0::SVector, t0::AbstractFloat)
+    $(TYPEDSIGNATURES)
 
 A convencience implementation of `linearize_discrete`. For better performance,
 this may be overloaded with some explicit (analytic) expressions (that may even
@@ -127,21 +131,21 @@ avoid calling `linearize`).
 linearize_discrete(cs::ControlSystem,
                    x0::SVector,
                    u0::SVector,
-                   t0::AbstractFloat) = discretize(linearize(cs, x0, u0, t0), Val{sampling_time(cs)}())
+                   t0::AbstractFloat) = discretize(linearize(cs, x0, u0, t0),
+                                                   Val{samplingtime(cs)}())
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat, ΔT::AbstractFloat)
+    $(TYPEDSIGNATURES)
 
 A convencience implementation of `integrate` using RungeKutta of order 4 as
 convencience default. You may impelement your own integrator here. Consider
 using `DifferentialEquations.jl.
 """
-function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat, ΔT::AbstractFloat, k::Int=2)
-    @assert iszero(t0) "currently there are parts of the code that don't handle
-                       t0!=0 correctly so this shoudl not be used"
-    Δt = ΔT/k
+function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat,
+                   ΔT::AbstractFloat, n_intsteps::Int=2)
+    Δt = ΔT/n_intsteps
     x = x0
-    for t in range(t0, stop=t0+ΔT, length=k+1)[1:end-1]
+    for t in range(t0, stop=t0+ΔT, length=n_intsteps+1)[1:end-1]
         k1 = Δt * dx(cs, x, u, t);
         k2 = Δt * dx(cs, x + 0.5 * k1, u, t + 0.5 * Δt);
         k3 = Δt * dx(cs, x + 0.5 * k2, u, t + 0.5 * Δt);
@@ -152,11 +156,11 @@ function integrate(cs::ControlSystem, x0::SVector, u::SVector, t0::AbstractFloat
 end
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, k::Int)
+    $(TYPEDSIGNATURES)
 
 Integrate to xₖ₊₁ starting from x, applying u.
 """
-function next_x(cs::ControlSystem, x::SVector, u::SVector, k::Int)
+function next_x(cs::ControlSystem, x::SVector, u::SVector, t::Float64)
     @assert issampled(cs) "next_x requires `ControlSystem` with ΔT > 0."
-    return integrate(cs, x, u, 0., sampling_time(cs))
+    return integrate(cs, x, u, t, samplingtime(cs))
 end

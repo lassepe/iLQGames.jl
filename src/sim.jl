@@ -3,12 +3,12 @@ function trajectory!(traj::SystemTrajectory{h}, cs::ControlSystem,
                      last_op::SystemTrajectory{h}, x0::SVector,
                      max_elwise_divergence::Float64=Inf) where {h}
 
-    @assert sampling_time(traj) == sampling_time(last_op) == sampling_time(cs)
+    @assert samplingtime(traj) == samplingtime(last_op) == samplingtime(cs)
 
     xₖ = x0
-    # xₖ = first(last_op.x)
 
     for k in 1:h
+        tₖ = time_disc2cont(traj, k)
         # the quantities on the old operating point
         x̃ₖ = last_op.x[k]
         ũₖ = last_op.u[k]
@@ -26,7 +26,7 @@ function trajectory!(traj::SystemTrajectory{h}, cs::ControlSystem,
         u_opₖ = traj.u[k] = control_input(γₖ, Δxₖ, ũₖ)
 
         # integrate x forward in time for the next iteration.
-        xₖ = next_x(cs, x_opₖ, u_opₖ, k)
+        xₖ = next_x(cs, x_opₖ, u_opₖ, tₖ)
     end
     return true
 end
@@ -38,7 +38,7 @@ Returns a vector of costs for each player
 """
 function cost(g::GeneralGame, traj::SystemTrajectory)
     map(player_index(g)) do i
-        sum(player_costs(g)[i](traj.x[k], traj.u[k], sampling_time(g)*(k-1)) for k
+        sum(player_costs(g)[i](traj.x[k], traj.u[k], samplingtime(g)*(k-1)) for k
             in eachindex(traj.x))
     end
 end

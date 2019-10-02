@@ -47,7 +47,7 @@ function dx(cs::Car5D, x::SVector{5}, u::SVector{2}, t::AbstractFloat)
 end
 
 function linearize_discrete(cs::Car5D, x::SVector{5}, u::SVector{2}, t::AbstractFloat)
-    ΔT = sampling_time(cs)
+    ΔT = samplingtime(cs)
     cθ = cos(x[3]) * ΔT
     sθ = sin(x[3]) * ΔT
     cϕ = cos(x[4])

@@ -5,24 +5,29 @@ struct SystemTrajectory{h, ΔT, nx, nu, TX<:SizedVector{h,<:SVector{nx}},
     x::TX
     "The sequence of controls."
     u::TU
-    # TODO: also add t0 (initial time)
+    "The start time of this trajectory."
+    t0::Float64
 end
-function SystemTrajectory{ΔT}(x::TX, u::TU) where {h, ΔT, nx, nu,
-                                                   TX<:SizedVector{h,<:SVector{nx}},
-                                                   TU<:SizedVector{h,<:SVector{nu}}}
-    return SystemTrajectory{h, ΔT, nx, nu, TX, TU}(x, u)
+function SystemTrajectory{ΔT}(x::TX, u::TU, t0::Float64) where {h, ΔT, nx, nu,
+                                                                TX<:SizedVector{h,<:SVector{nx}},
+                                                                TU<:SizedVector{h,<:SVector{nu}}}
+    return SystemTrajectory{h, ΔT, nx, nu, TX, TU}(x, u, t0)
 end
-sampling_time(::SystemTrajectory{h, ΔT}) where {h, ΔT} = ΔT
+samplingtime(::SystemTrajectory{h, ΔT}) where {h, ΔT} = ΔT
 horizon(::SystemTrajectory{h}) where {h} = h
-time_disc2cont(traj::SystemTrajectory, k::Int) = (k-1)*sampling_time(traj)
+initialtime(traj::SystemTrajectory) = traj.t0
+time_disc2cont(traj::SystemTrajectory, k::Int) = (initialtime(traj) +
+                                                  (k-1)*samplingtime(traj))
 timepoints(traj::SystemTrajectory) = (time_disc2cont(traj, k) for k in
                                       1:horizon(traj))
 
 # thin interface with Base for convenience
-function Base.zero(::Type{<:SystemTrajectory{h, ΔT, nx, nu}}) where{h, ΔT, nx, nu}
+function Base.zero(::Type{<:SystemTrajectory{h, ΔT, nx, nu}}, t0::Float64=0.) where{h, ΔT, nx, nu}
     return SystemTrajectory{ΔT}(zero(SizedVector{h, SVector{nx, Float64}}),
-                                zero(SizedVector{h, SVector{nu, Float64}}))
+                                zero(SizedVector{h, SVector{nu, Float64}}), t0)
 end
-Base.zero(t::SystemTrajectory) = zero(typeof(t))
-Base.copy(t::SystemTrajectory) = SystemTrajectory{sampling_time(t)}(copy(t.x),
-                                                                    copy(t.u))
+Base.zero(traj::SystemTrajectory) = zero(typeof(traj), initialtime(traj))
+function Base.copy(traj::SystemTrajectory)
+    return SystemTrajectory{samplingtime(traj)}(copy(traj.x), copy(traj.u),
+                                                initialtime(traj))
+end

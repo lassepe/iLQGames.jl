@@ -43,7 +43,7 @@ function plot_cost(g::AbstractGame, op::SystemTrajectory, dims, i::Int=1,
     lqg = lq_approximation(g, op)
     nx = n_states(g)
     nu = n_controls(g)
-    t = k * sampling_time(g)
+    t = k * samplingtime(g)
 
     offset2vec(Δd1, Δd2) = begin
         Δx = zeros(nx)

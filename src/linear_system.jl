@@ -67,9 +67,10 @@ function discretize(ls::LinearSystem, vt::Val{ΔT}) where {ΔT}
     return discretize_euler(ls, vt)
 end
 
-struct LTVSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:LinearSystem{ΔT, nx, nu}}} <: ControlSystem{ΔT, nx, nu} "The discrete time series of linear systems."
+# TODO: this should probably know the absolute time
+struct LTVSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:LinearSystem{ΔT, nx, nu}}} <: ControlSystem{ΔT, nx, nu}
+    "The discrete time series of linear systems."
     dyn::TD
-
     LTVSystem(dyn::TD) where {h, ΔT, nx, nu, TD<:SizedVector{h, <:LinearSystem{ΔT, nx, nu}}} = begin
         @assert ΔT > 0 "LTVSystem require finite discretization steps."
         new{h, ΔT, nx, nu, TD}(dyn)
