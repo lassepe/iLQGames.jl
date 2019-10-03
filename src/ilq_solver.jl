@@ -5,7 +5,7 @@
     backtrack scaling."
     α_scale_step::Float64 = 0.5
     "Iteration is aborted if this number is exceeded."
-    max_n_iter::Int = 1000
+    max_n_iter::Int = 200
     "The maximum number of backtrackings per scaling step"
     max_scale_backtrack::Int = 20
     "The maximum elementwise difference bewteen operating points for
