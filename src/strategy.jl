@@ -5,6 +5,9 @@ struct AffineStrategy{nx, nu, TP<:SMatrix{nu, nx}, TA<:SVector{nu}}
     α::TA
 end
 
+n_states(γ::AffineStrategy{nx}) where {nx} = nx
+n_controls(γ::AffineStrategy{nx, nu}) where {nx, nu} = nu
+
 Base.zero(γ::AffineStrategy) = zero(typeof(γ))
 function Base.zero(::Type{<:AffineStrategy{nx, nu, TP, TA}}) where {nx, nu, TP, TA}
     return AffineStrategy(zero(TP), zero(TA))
