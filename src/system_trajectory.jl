@@ -16,8 +16,18 @@ end
 samplingtime(::SystemTrajectory{h, ΔT}) where {h, ΔT} = ΔT
 horizon(::SystemTrajectory{h}) where {h} = h
 initialtime(traj::SystemTrajectory) = traj.t0
-time_disc2cont(traj::SystemTrajectory, k::Int) = (initialtime(traj) +
-                                                  (k-1)*samplingtime(traj))
+function time_disc2cont(traj::SystemTrajectory, k::Int)
+    @assert 1 <= k <= horizon(traj)
+    return initialtime(traj) + (k-1)*samplingtime(traj)
+end
+
+function time_cont2disc(traj::SystemTrajectory, t::Float64)
+    @assert t >= initialtime(traj)
+    k = 1 + round(Int, (t-initialtime(traj))/samplingtime(traj))
+    @assert k <= horizon(traj)
+    return k
+end
+
 timepoints(traj::SystemTrajectory) = (time_disc2cont(traj, k) for k in
                                       1:horizon(traj))
 
