@@ -79,7 +79,8 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
     converged = false
     i_iter = 0
     # allocate memory for the last and the current operating point
-    # TODO: can we allocate this outside this loop?
+    # TODO: can we allocate this outside this loop? Maybe the solver can manage this
+    # memory.
     last_op = copy(initial_op)
     current_op = initial_op
     current_strategy = initial_strategy

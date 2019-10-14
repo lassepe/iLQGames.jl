@@ -1,4 +1,4 @@
-function plot_traj!(p::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
+function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
                     uids::Union{SIndex, Nothing}=nothing,
                     cname::AbstractString="blues", alpha::Float64=1.,
                     legend::Symbol=:none,
@@ -9,7 +9,6 @@ function plot_traj!(p::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
 
     nu = length(eltype(traj.u))
     pu = plot(; layout=(nu, 1))
-    pxy = p
 
     if !isnothing(uids)
         # names for each input
@@ -24,17 +23,17 @@ function plot_traj!(p::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
         x = collect(x[first(xy_i)] for x in traj.x)
         y = collect(x[last(xy_i)] for x in traj.x)
 
-        plotargs = (pxy, x, y)
+        plotargs = (plt, x, y)
         plot!(plotargs...; xlims=(-5, 5), ylims=(-5, 5),
               seriescolor=player_colors[i], label="p$i", legend=legend,
               seriesalpha=alpha)
 
         # marker at the current time step
-        scatter!(pxy, [x[k]], [y[k]], seriescolor=player_colors[i],
+        scatter!(plt, [x[k]], [y[k]], seriescolor=player_colors[i],
                  label="x_p$i", legend=legend)
     end
 
-    return isnothing(uids) ? pxy : plot(pu, pxy, legend=legend)
+    return isnothing(uids) ? plt : plot(pu, plt, legend=legend)
 end
 
 plot_traj(args...; kwargs...) = begin p = plot(); plot_traj!(p, args...; kwargs...) end
