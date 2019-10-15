@@ -67,7 +67,7 @@ function discretize(ls::LinearSystem, vt::Val{ΔT}) where {ΔT}
     return discretize_euler(ls, vt)
 end
 
-# TODO: this should probably know the absolute time
+# TODO: this should probably know the absolute time (like the `SystemTrajectory`)
 struct LTVSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:LinearSystem{ΔT, nx, nu}}} <: ControlSystem{ΔT, nx, nu}
     "The discrete time series of linear systems."
     dyn::TD

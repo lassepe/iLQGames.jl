@@ -70,7 +70,7 @@ finite horizon game g.
 """
 function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
                initial_op::SystemTrajectory,
-               initial_strategy::StaticVector)
+               initial_strategy::StaticVector, verbose::Bool=false)
 
 
     # safe the start time of our computation
@@ -107,7 +107,7 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
         last_op = copy(current_op)
         success, current_op = backtrack_scale!(current_strategy, current_op, g, solver)
         if(!success)
-            @error "Could not stabilize solution."
+            verbose && @warn "Could not stabilize solution."
             # we immetiately return and state that the solution has not been
             # stabilized
             return false, current_op, current_strategy
