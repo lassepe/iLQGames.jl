@@ -47,7 +47,7 @@ module iLQGames
 
     # some toy examples to work with
     include("toy_systems.jl")
-    include("two_player_car_game.jl")
+    include("n_player_car_game.jl")
 
     # some tools for plotting
     include("plot_utils.jl")

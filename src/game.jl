@@ -146,6 +146,7 @@ end
 function LQGame(::UndefInitializer, g::AbstractGame)
     nx = n_states(g)
     nu = n_controls(g)
+    np = n_players(g)
     h = horizon(g)
     # preallocate an empty lqgame
     # ltv dynamics
@@ -161,7 +162,7 @@ function LQGame(::UndefInitializer, g::AbstractGame)
     TL = SVector{nx, Float64}
     TR = SMatrix{nu, nu, Float64, nu*nu}
     TCi = QuadraticPlayerCost{nx, nu, TQ, TL, TR}
-    TC = SVector{2, TCi}
+    TC = SVector{np, TCi}
     quad_cost = SizedVector{h, TC}(undef)
 
     lqg = LQGame{uindex(g)}(lin_dyn, quad_cost)

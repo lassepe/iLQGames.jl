@@ -15,7 +15,7 @@ using iLQGames:
     iLQSolver,
     solve,
     AffineStrategy,
-    generate_2player_car_game
+    generate_nplayer_car_game
 
 using StaticArrays
 using LinearAlgebra
@@ -33,7 +33,7 @@ x0 = vcat(x01, x02)
 xg1 = @SVector [3., 0., 0., 0., 0.]
 xg2 = @SVector [0., -3., -pi/2, 0., 0.]
 # generate game
-g = generate_2player_car_game(T_horizon, ΔT, xg1, xg2)
+g = generate_nplayer_car_game(T_horizon, ΔT, xg1, xg2)
 
 # unpack for testing
 dyn = dynamics(g)
