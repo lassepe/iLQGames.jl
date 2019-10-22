@@ -1,15 +1,21 @@
+"Computes the joint state and control dimensions of the combined system."
+function xu_dims(sub_systems)
+    nx, nu = 0, 0; xids, uids = [], []
+    for sub in sub_systems
+        nxᵢ = n_states(sub); nuᵢ = n_controls(sub)
+        push!(xids, SVector{n_states(sub)}((nx+1):(nx+nxᵢ)))
+        push!(uids, SVector{n_controls(sub)}((nu+1):(nu+nuᵢ)))
+        nx += nxᵢ; nu += nuᵢ
+    end
+
+    return nx, nu, xids, uids
+end
+
 struct ProductSystem{ΔT, nx, nu, xids, uids, np, TS<:NTuple{np, <:ControlSystem{ΔT}}} <: ControlSystem{ΔT, nx, nu}
     sub_systems::TS
 
     function ProductSystem(sub_systems::TS) where {ΔT, np, TS<:NTuple{np, <:ControlSystem{ΔT}}}
-        # compute the joint state and control dimensions of the combined system
-        nx, nu = 0, 0; xids, uids = [], []
-        for sub in sub_systems
-            nxᵢ = n_states(sub); nuᵢ = n_controls(sub)
-            push!(xids, SVector{n_states(sub)}((nx+1):(nx+nxᵢ)))
-            push!(uids, SVector{n_controls(sub)}((nu+1):(nu+nuᵢ)))
-            nx += nxᵢ; nu += nuᵢ
-        end
+        nx, nu, xids, uids = xu_dims(sub_systems)
         new{ΔT, nx, nu, Tuple(xids), Tuple(uids), np, TS}(sub_systems)
     end
 end
