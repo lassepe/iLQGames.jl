@@ -17,9 +17,7 @@ function trajectory!(traj::SystemTrajectory{h}, cs::ControlSystem,
         # the deviation from the last operating point
         Δxₖ = xₖ - x̃ₖ
 
-        if norm(Δxₖ, Inf) > max_elwise_divergence
-            return false
-        end
+        infnorm(Δxₖ) <= max_elwise_divergence || return false
 
         # record the new operating point:
         x_opₖ = traj.x[k] = xₖ

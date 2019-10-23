@@ -21,6 +21,7 @@ module iLQGames
 
     # some macro sugar to make life easier
     include("sugar.jl")
+    include("performance.jl")
 
     # game utils
     include("strategy.jl")

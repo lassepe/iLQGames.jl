@@ -24,7 +24,7 @@ end
 function are_close(op1::SystemTrajectory, op2::SystemTrajectory,
                    max_elwise_diff::Float64)
     @assert horizon(op1) == horizon(op2)
-    return all(norm(op1.x[k] - op2.x[k], Inf) < max_elwise_diff for k in
+    return all(infnorm(op1.x[k] - op2.x[k]) < max_elwise_diff for k in
                eachindex(op2.x))
 end
 
@@ -71,10 +71,6 @@ finite horizon game g.
 function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
                initial_op::SystemTrajectory,
                initial_strategy::StaticVector, verbose::Bool=false)
-
-
-    # safe the start time of our computation
-    start_time = time()
 
     converged = false
     i_iter = 0
