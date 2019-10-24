@@ -75,7 +75,7 @@ lqg = lq_approximation(g, zero_op)
 # the lqg approximation evaluated at zero should be approximate the true cost:
 
 # solve the lq game
-solver = iLQSolver()
+solver = iLQSolver(g)
 # - setup initial_strategy
 steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
 acc_init(k::Int) = -cos(k/h*pi)*0.3

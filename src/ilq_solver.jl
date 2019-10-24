@@ -1,4 +1,4 @@
-@with_kw struct iLQSolver
+@with_kw struct iLQSolver{TLM}
     "The initial scaling of the feed-forward term."
     α_scale_init::Float64 = 0.1
     "The geometric scaling of the feed-forward term per scaling step in
@@ -14,6 +14,12 @@
     "The maximum elementwise difference bewteen operating points for per
     iteration step."
     max_elwise_diff_step::Float64 = 20 * max_elwise_diff_converged
+    "Preallocated memory for lq approximations."
+    _lq_mem::TLM
+end
+
+function iLQSolver(g, args...; kwargs...)
+    return iLQSolver(args...; kwargs..., _lq_mem=LQGame(undef, g))
 end
 
 function has_converged(solver::iLQSolver, last_op::SystemTrajectory{h},
@@ -80,9 +86,10 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
     last_op = copy(initial_op)
     current_op = initial_op
     current_strategy = initial_strategy
-    lqg_approx = LQGame(undef, g)
+    lqg_approx = solver._lq_mem
 
     # 0. compute the operating point for the first run.
+    # TODO -- we could probably allow to skip this in some warm-starting scenarios
     trajectory!(current_op, dynamics(g), current_strategy, last_op, x0)
 
     # ... and upate the current by integrating the non-linear dynamics
@@ -100,7 +107,7 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
 
         # 3. do line search to stabilize the strategy selection and extract the
         # next operating point
-        last_op = copy(current_op)
+        last_op = current_op
         success, current_op = backtrack_scale!(current_strategy, current_op, g, solver)
         if(!success)
             verbose && @warn "Could not stabilize solution."

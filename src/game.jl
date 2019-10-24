@@ -154,7 +154,7 @@ function LQGame(::UndefInitializer, g::AbstractGame)
     TB = SMatrix{nx, nu, Float64, nx*nu}
     TLS = LinearSystem{samplingtime(g), nx, nu, TA, TB}
     # time varying dynamics
-    dyn = SizedVector{h, TLS}(undef)
+    dyn = SizedVector{h, TLS, 1}(undef)
     lin_dyn = LTVSystem(dyn)
 
     # costs:
@@ -163,7 +163,7 @@ function LQGame(::UndefInitializer, g::AbstractGame)
     TR = SMatrix{nu, nu, Float64, nu*nu}
     TCi = QuadraticPlayerCost{nx, nu, TQ, TL, TR}
     TC = SVector{np, TCi}
-    quad_cost = SizedVector{h, TC}(undef)
+    quad_cost = SizedVector{h, TC, 1}(undef)
 
     lqg = LQGame{uindex(g)}(lin_dyn, quad_cost)
 end
