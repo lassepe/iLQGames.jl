@@ -57,12 +57,12 @@ function plot_cost(g::AbstractGame, op::SystemTrajectory, dims, i::Int=1,
 
     projected_cost(Δd1, Δd2=0) = begin
         Δx = offset2vec(Δd1, Δd2)
-        return player_costs(g)[i](op.x[k]+Δx, op.u[k], t)
+        return player_costs(g)[i](g, op.x[k]+Δx, op.u[k], t)
     end
 
     projected_cost_approx(Δd1, Δd2=0) = begin
         Δx = offset2vec(Δd1, Δd2)
-        c0 = player_costs(g)[i](op.x[k], op.u[k], t)
+        c0 = player_costs(g)[i](g, op.x[k], op.u[k], t)
         return player_costs(lqg)[k][i](Δx, (@SVector zeros(nu))) + c0
     end
 

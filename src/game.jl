@@ -59,7 +59,7 @@ samplingtime(g::AbstractGame) = samplingtime(dynamics(g))
 # additional convenience methods
 n_players(g::AbstractGame{uids}) where {uids} = length(uids)
 uindex(g::AbstractGame{uids}) where {uids} = uids
-player_index(g::AbstractGame) = SVector{n_players(g)}(1:n_players(g))
+pindex(g::AbstractGame) = SVector{n_players(g)}(1:n_players(g))
 horizon(g::AbstractGame{uids, h}) where {uids, h} = h
 time_disc2cont(g::AbstractGame, k::Int, t0::Float64=0.) = (t0 +
                                                            (k-1)*samplingtime(g))
@@ -186,7 +186,7 @@ function lq_approximation!(lqg::LQGame, g::GeneralGame, op::SystemTrajectory)
         dynamics(lqg)[k] = linearize_discrete(dynamics(g), xₖ, uₖ, t)
         # quadratiation of the cost along the operating point
         player_costs(lqg)[k] = map(player_costs(g)) do pcₖⁱ
-            quadraticize(pcₖⁱ, xₖ, uₖ, t)
+            quadraticize(pcₖⁱ, g, xₖ, uₖ, t)
         end
     end
 end

@@ -41,7 +41,7 @@ nx = n_states(dyn)
 nu = n_controls(dyn)
 c1, c2 = player_costs(g)
 
-# test quadratization of the cost and quadratization of cost
+# test quadraticization of the cost and quadratization of cost
 x = @SVector zeros(nx)
 u = @SVector zeros(nu)
 t = 0.
@@ -54,10 +54,11 @@ t = 0.
         global t = T_horizon
 
         for c in (c1, c2)
-            qc = [quad(c, x, u, t) for quad in (quadraticize, _quadraticize_ad)]
-            @test isapprox(qc[1].Q, qc[2].Q)
-            @test isapprox(qc[1].l, qc[2].l)
-            @test isapprox(qc[1].R, qc[2].R)
+            qc_manual = quadraticize(c, g, x, u, t)
+            qc_ad = _quadraticize_ad(c, g, x, u, t)
+            @test isapprox(qc_manual.Q, qc_ad.Q)
+            @test isapprox(qc_manual.l, qc_ad.l)
+            @test isapprox(qc_manual.R, qc_ad.R)
         end
 
         # test linearization of the dynamics

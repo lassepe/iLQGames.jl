@@ -1,5 +1,6 @@
-struct NPlayerCarCost{nx, nu, xids, uids, TG<:SVector{5}, TR<:SMatrix{2,2},
-                      TQs<:SMatrix{5,5}, TQg<:SMatrix{5,5}} <: PlayerCost{nx, nu}
+# TODO: tidy up. For fow, implementing both interfaces
+struct NPlayerCarCost{nx,nu,xids,uids,TG<:SVector{5},TR<:SMatrix{2,2},
+                      TQs<:SMatrix{5,5},TQg<:SMatrix{5,5}} <: NPlayerNavigationCost{nx,nu,xids,uids}
     # an unique identifier for this player
     player_id::Int
     # the desired goal state for this player
@@ -49,64 +50,34 @@ function NPlayerCarCost{xids, uids}(;player_id::Int, xg::TG, t_final::Float64,
                                                                 des_steer_bounds, w)
 end
 
-function iLQGames.quadraticize(pc::NPlayerCarCost, x::SVector, u::SVector,
-                               t::AbstractFloat)
-    nx = n_states(pc)
-    nu = n_controls(pc)
+"---------------- Implementing the NPlayerNavigationCost interface ----------------"
 
-    xi = xindex(pc)[pc.player_id]
-    ui = uindex(pc)[pc.player_id]
+player_id(pc::NPlayerCarCost) = pc.player_id
+# TODO: refine to on-demand construction
+inputcost(pc::NPlayerCarCost) = InputCost(pc.R)
+inputconstr(pc::NPlayerCarCost) = (SoftConstr(2, pc.des_acc_bounds..., pc.w),)
+statecost(pc::NPlayerCarCost) = StateCost(pc.Qs)
+stateconstr(pc::NPlayerCarCost) = (SoftConstr(4, pc.des_steer_bounds..., pc.w),
+                                   SoftConstr(5, pc.des_v_bounds..., pc.w))
+proximitycost(pc::NPlayerCarCost) = ProximityCost(pc.r_avoid, pc.w)
+goalcost(pc::NPlayerCarCost) = GoalCost(pc.t_final, pc.xg, pc.Qg)
 
-    l = @MVector zeros(nx)
-    Q = @MMatrix zeros(nx, nx)
-    R = @MMatrix zeros(nu, nu)
+"---------------------- Legacy functions for sanity checking ----------------------"
 
-    # the quadratic part of the control cost
-    inputcost_quad!(R, pc.R, ui)
-    # soft constraints on the control
-    # - acceleration constraint
-    softconstr_quad!(R, u, pc.des_acc_bounds..., pc.w, ui[2])
-
-    # the quadratic part of the state cost
-    statecost_quad!(Q, l, pc.Qs, x[xi], xi)
-    # soft constraints on the state
-    # - steering angle
-    softconstr_quad!(Q, l, x, pc.des_steer_bounds..., pc.w, xi[4])
-    # - speed
-    softconstr_quad!(Q, l, x, pc.des_v_bounds..., pc.w, xi[5])
-    # - proximity
-    for (j, xj) in enumerate(xindex(pc))
-        j != pc.player_id || continue
-        xindex_ego, yindex_ego = xi[1], xi[2]
-        xindex_other, yindex_other = xj[1], xj[2]
-        proximitycost_quad!(Q, l, x, pc.r_avoid, pc.w, xindex_ego, yindex_ego,
-                            xindex_other, yindex_other)
-    end
-
-    # the goal cost
-    goalstatecost_quad!(Q, l, pc.Qg, pc.xg, x[xi], xi, t, pc.t_final)
-
-    return QuadraticPlayerCost(SMatrix(Q), SVector(l), SMatrix(R))
-end
-
-function (pc::NPlayerCarCost)(x::SVector, u::SVector, t::Float64)
+function _legacy_cost(pc::NPlayerCarCost, x::SVector, u::SVector, t::Float64)
     # extract the states and inputs for this player
     xᵢ = x[xindex(pc)[pc.player_id]]
     uᵢ = u[uindex(pc)[pc.player_id]]
     # setup the cost: each player wan't to:
     cost = 0.
-    # control:
-    #   - reduce steering and acceleration/breaking effort
-    # state:
-    #  - avoid collisions
-    #  - be close close to some target
+
     # control cost: only cares about own control
     cost += inputcost(pc.R, uᵢ)
-    # running cost for states (e.g. large steering)
-    cost += statecost(pc.Qs, xᵢ)
-
     # acceleration constraints
     cost += softconstr(uᵢ[2], pc.des_acc_bounds..., pc.w)
+
+    # running cost for states (e.g. large steering)
+    cost += statecost(pc.Qs, xᵢ)
     # steering angle constraint
     cost += softconstr(xᵢ[4], pc.des_steer_bounds..., pc.w)
     # speed constraints

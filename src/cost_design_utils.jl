@@ -1,12 +1,92 @@
-@inline function proximitycost(xp1::SVector{n}, xp2::SVector{n},
-                               r_avoid::AbstractFloat, w::AbstractFloat) where {n}
+struct StateCost{TQ<:SMatrix}
+    Q::TQ
+end
+@inline (c::StateCost)(x) = 1/2*x'*c.Q*x
+@inline function quad!(Q::MMatrix, l::MVector, c::StateCost,
+                       x::SVector{n}, xi::SVector{n}) where {n}
+    Q[xi, xi] += c.Q
+    l[xi] += c.Q * x
+    return nothing
+end
+# TODO: remove legacy
+@inline statecost(Q::SMatrix{n,n}, x::SVector{n}) where {n} = 1/2*x'*Q*x
+
+struct InputCost{TR<:SMatrix}
+    R::TR
+end
+@inline (c::InputCost)(u) = 1/2*u'*c.R*u
+@inline function quad!(R::MMatrix, c::InputCost, ui::SVector{n}) where {n}
+    R[ui, ui] += c.R
+    return nothing
+end
+# TODO: remove legacy
+@inline inputcost(R::SMatrix{n,n}, u::SVector{n}) where {n} = 1/2*u'*R*u
+
+# Interface to implement NPlayerNavigationCost
+@with_kw struct SoftConstr
+    "The index of the state/input element this applies to."
+    id::Int
+    "The soft lower bound."
+    min::Float64
+    "The soft upper bound."
+    max::Float64
+    "The weight of the soft constraint."
+    w::Float64
+end
+@inline function softconstr(val::Real, min::Real, max::Real, w::Real)
+    @assert min < max
+    gap = val < min ? val - min : val > max ? val - max : zero(w)
+    return w*gap^2
+end
+@inline function (constr::SoftConstr)(x, xi)
+    @unpack id, min, max, w = constr
+    val = x[xi[id]]
+    return softconstr(val, min, max, w)
+end
+
+@inline function quad!(Q::MMatrix, l::MVector, constr::SoftConstr, x::SVector, xi)
+    @unpack id, w, min, max = constr
+    idx = xi[id]
+
+    @assert min < max
+    if x[idx] < min
+        Q[idx, idx] += 2w
+        l[idx] += 2w*(x[idx] - min)
+    elseif x[idx] > max
+        Q[idx, idx] += 2w
+        l[idx] += 2w*(x[idx] - max)
+    end
+    return nothing
+end
+
+@inline function quad!(R::MMatrix, constr::SoftConstr, u::SVector, ui)
+    @unpack id, w, min, max = constr
+    idx = ui[id]
+
+    @assert min < max
+    if !(min < u[idx] < max)
+        R[idx, idx] += 2w
+    end
+    return nothing
+end
+
+@with_kw struct ProximityCost
+    r_avoid::Float64
+    w::Float64
+end
+
+@inline function (pc::ProximityCost)(xp1::SVector, xp2::SVector)
+    @unpack r_avoid, w = pc
     Δxp = xp1 - xp2
     return softconstr(sqrt(Δxp'*Δxp), r_avoid, Inf, w)
 end
 
-@inline function proximitycost_quad!(Q::MMatrix, l::MVector, x::SVector,
-                                 r_avoid::Real, w::Real, x1::Int, y1::Int,
-                                 x2::Int, y2::Int)
+@inline function quad!(Q::MMatrix, l::MVector, pc::ProximityCost, x::SVector,
+                       xyi_1, xyi_2)
+    @unpack r_avoid, w = pc
+
+    x1, y1 = xyi_1[1], xyi_1[2]
+    x2, y2 = xyi_2[1], xyi_2[2]
     Δx = x[x1] - x[x2]
     Δy = x[y1] - x[y2]
     Δnormsq = Δx^2 + Δy^2
@@ -41,34 +121,33 @@ end
     end
 end
 
-@inline function softconstr(val::Real, min::Real, max::Real, w::Real)
-    @assert min < max
-    gap = val < min ? val - min : val > max ? val - max : zero(w)
-    return w*gap^2
+@with_kw struct GoalCost{TG<:SVector, TQg<:SMatrix}
+    t_active::Float64
+    xg::TG
+    Qg::TQg
 end
 
-@inline function softconstr_quad!(Q::MMatrix, l::MVector, x::SVector,
-                                  min::Real, max::Real, w::Real, idx::Int)
-    @assert min < max
-    if x[idx] < min
-        Q[idx, idx] += 2w
-        l[idx] += 2w*(x[idx] - min)
-    elseif x[idx] > max
-        Q[idx, idx] += 2w
-        l[idx] += 2w*(x[idx] - max)
+@inline function (gc::GoalCost)(x, t)
+    @unpack t_active, xg, Qg = gc
+    if t >= t_active
+        Δx = x - xg
+        return 1/2 * Δx'*Qg*Δx
+    else
+        return 0.0
+    end
+end
+
+@inline function quad!(Q::MMatrix, l::MVector, gc::GoalCost, x::SVector,
+                       xid::SVector{n}, t::AbstractFloat) where {n}
+    @unpack t_active, xg, Qg = gc
+    if t >= t_active
+        Q[xid, xid] += Qg
+        l[xid] += Qg*(x-xg)
     end
     return nothing
 end
 
-@inline function softconstr_quad!(Q::MMatrix, x::SVector, min::Real, max::Real,
-                                  w::Real, idx::Int)
-    @assert min < max
-    if !(min < x[idx] < max)
-        Q[idx, idx] += 2w
-    end
-    return nothing
-end
-
+# TODO: remove legacy
 @inline function goalstatecost(Qg::SMatrix{n,n}, xg::SVector{n}, x::SVector{n},
                                t::AbstractFloat, t_active::AbstractFloat) where {n}
     if t >= t_active
@@ -79,28 +158,9 @@ end
     end
 end
 
-@inline function goalstatecost_quad!(Q::MMatrix, l::MVector, Qg::SMatrix{n, n},
-                                     xg::SVector{n}, x::SVector,
-                                     xid::SVector{n}, t::AbstractFloat,
-                                     t_active::AbstractFloat) where {n}
-    if t >= t_active
-        Q[xid, xid] += Qg
-        l[xid] += Qg*(x-xg)
-    end
-    return nothing
+# TODO: remove legacy
+@inline function proximitycost(xp1::SVector{n}, xp2::SVector{n},
+                               r_avoid::AbstractFloat, w::AbstractFloat) where {n}
+    Δxp = xp1 - xp2
+    return softconstr(sqrt(Δxp'*Δxp), r_avoid, Inf, w)
 end
-
-@inline statecost(Qs::SMatrix{n,n}, x::SVector{n}) where {n} = 1/2*x'*Qs*x
-@inline function statecost_quad!(Q::MMatrix, l::MVector, Qs::SMatrix{n,n},
-                                 x::SVector{n}, xid::SVector{n}) where {n}
-    Q[xid, xid] += Qs
-    l[xid] += Qs * x
-    return nothing
-end
-
-@inline inputcost(R::SMatrix{n,n}, u::SVector{n}) where {n} = 1/2*u'*R*u
-@inline function inputcost_quad!(R::MMatrix, Rᵢ::SMatrix{n,n}, uid::SVector{n}) where {n}
-    R[uid, uid] += Rᵢ
-    return nothing
-end
-
