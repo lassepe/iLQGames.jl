@@ -15,8 +15,6 @@ struct NPlayerCarCost{nx, nu, xids, uids, TG<:SVector{5}, TR<:SMatrix{2,2},
     # the avoidance radius
     r_avoid::Float64
     # soft constraints
-    # the gravity constant
-    gravity::Float64
     # bounds on the acceleration input
     des_acc_bounds::Tuple{Float64, Float64}
     # bounds on the velocity state
@@ -45,7 +43,7 @@ function NPlayerCarCost{xids, uids}(;player_id::Int, xg::TG, t_final::Float64,
     nu = np * 2
     return NPlayerCarCost{nx, nu, xids, uids, TG, TR, TQs, TQg}(player_id, xg,
                                                                 t_final, R, Qs, Qg,
-                                                                r_avoid, gravity,
+                                                                r_avoid,
                                                                 des_acc_bounds,
                                                                 des_v_bounds,
                                                                 des_steer_bounds, w)

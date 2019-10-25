@@ -46,8 +46,9 @@ module iLQGames
     # some handy tools for problem description
     include("cost_design_utils.jl")
 
-    # some toy examples to work with
-    include("toy_systems.jl")
+    # some dynamical systems to work with
+    include("lorenz.jl")
+    include("car_5d.jl")
     include("n_player_car_game.jl")
 
     # some tools for plotting
