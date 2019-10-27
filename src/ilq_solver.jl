@@ -103,7 +103,7 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
         lq_approximation!(lqg_approx, g, current_op)
 
         # 2. solve the current lq version of the game
-        current_strategy = solve_lq_game(lqg_approx)
+        solve_lq_game!(current_strategy, lqg_approx)
 
         # 3. do line search to stabilize the strategy selection and extract the
         # next operating point

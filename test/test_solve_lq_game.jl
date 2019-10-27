@@ -13,7 +13,7 @@ using iLQGames:
     LTVSystem,
     LQGame,
     SystemTrajectory,
-    solve_lq_game,
+    solve_lq_game!,
     n_states,
     n_controls,
     n_players,
@@ -21,6 +21,7 @@ using iLQGames:
     horizon,
     samplingtime,
     dynamics,
+    strategytype,
     player_costs,
     trajectory!
 
@@ -140,7 +141,7 @@ function solve_lyapunov_iterations(dyn::LinearSystem, c1::QuadraticPlayerCost, c
     return (P1, P2)
 end
 
-function test_lyapunov(g::LQGame)
+function test_lyapunov(g::LQGame, strategies)
 
     # 1. Lyapunov solution for the inifnite horizion problem
     P1_lyap, P2_lyap = solve_lyapunov_iterations(dynamics(g)[1],
@@ -151,7 +152,7 @@ function test_lyapunov(g::LQGame)
     P_lyap = [P1_lyap; P2_lyap]
 
     # 2. LQ game solution
-    strategies = solve_lq_game(g)
+    solve_lq_game!(strategies, g)
     γ0 = first(strategies)
     P_lqg = γ0.P
 
@@ -169,12 +170,14 @@ end
 
 @testset "solve_lq_game" begin
     g1D = generate_1D_pointmass_game()
-    test_lyapunov(g1D)
-    @benchmark_show solve_lq_game($g1D)
+    strategies1D = strategytype(g1D)(undef)
+    test_lyapunov(g1D, strategies1D)
+    @benchmark_show solve_lq_game!($strategies1D, $g1D)
 
     g2D = generate_2D_pointmass_game()
-    test_lyapunov(g2D)
-    @benchmark_show solve_lq_game($g2D)
+    strategies2D = strategytype(g2D)(undef)
+    test_lyapunov(g2D, strategies2D)
+    @benchmark_show solve_lq_game!($strategies2D, $g2D)
 end;
 
 "--------------- manual test to run and check for sanity ---------------"

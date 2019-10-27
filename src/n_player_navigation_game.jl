@@ -20,8 +20,8 @@ function goalcost end
 xindex(c::NPlayerNavigationCost{nx, nu, xids}) where {nx, nu, xids} = xids
 uindex(c::NPlayerNavigationCost{nx, nu, xids, uids}) where {nx, nu, xids, uids} = uids
 
-function iLQGames.quadraticize(pc::NPlayerNavigationCost, g::GeneralGame,
-                               x::SVector, u::SVector, t::AbstractFloat)
+@inline function iLQGames.quadraticize(pc::NPlayerNavigationCost, g::GeneralGame,
+                                       x::SVector, u::SVector, t::AbstractFloat)
     nx = n_states(pc)
     nu = n_controls(pc)
 

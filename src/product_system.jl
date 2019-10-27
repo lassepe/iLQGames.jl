@@ -40,7 +40,7 @@ end
 
 # computing large matrix exponentials is expensive. Therefore, we exploit the
 # sparsity of the dynamics and compute the linearization for each sub_systems
-function linearize_discrete(cs::ProductSystem, x::SVector, u::SVector, t::AbstractFloat)
+@inline function linearize_discrete(cs::ProductSystem, x::SVector, u::SVector, t::AbstractFloat)
     nx = n_states(cs)
     nu = n_controls(cs)
     # the full matrices

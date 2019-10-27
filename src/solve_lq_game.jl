@@ -7,7 +7,7 @@ strategies for both players.
 Assumes that dynamics are given by `xₖ₊₁ = Aₖ*xₖ + ∑ᵢBₖⁱ uₖⁱ`.
 
 """
-function solve_lq_game(g::LQGame)
+function solve_lq_game!(strategies, g::LQGame)
     # extract control and input dimensions
     nx = n_states(g)
     nu = n_controls(g)
@@ -19,8 +19,6 @@ function solve_lq_game(g::LQGame)
     # quadratic cost to go
     Z = [pc.Q for pc in last(player_costs(g))]
     ζ = [pc.l for pc in last(player_costs(g))]
-
-    strategies = strategytype(g)(undef)
 
     # Setup the S and Y matrix of the S * X = Y matrix equation
 
@@ -67,6 +65,4 @@ function solve_lq_game(g::LQGame)
 
         strategies[kk] = AffineStrategy(P, α)
     end
-
-    return strategies
 end
