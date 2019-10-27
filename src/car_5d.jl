@@ -7,9 +7,9 @@ A simple dubins car model.
 
 $(TYPEDFIELDS)
 """
-struct Car5D{ΔT} <: ControlSystem{ΔT, 5, 2}
+@with_kw struct Car5D{ΔT} <: ControlSystem{ΔT, 5, 2}
     "inter-axle length (m)"
-    l::Float64
+    l::Float64=1.0
 end
 
 function dx(cs::Car5D, x::SVector{5}, u::SVector{2}, t::AbstractFloat)

@@ -32,7 +32,6 @@ uindex(c::NPlayerNavigationCost{nx, nu, xids, uids}) where {nx, nu, xids, uids} 
     Q = @MMatrix zeros(nx, nx)
     R = @MMatrix zeros(nu, nu)
 
-
     # quadratic input cost
     quad!(R, inputcost(pc), ui)
     # input constraints
@@ -96,4 +95,23 @@ function (pc::NPlayerNavigationCost)(g::AbstractGame, x::SVector, u::SVector, t:
     cost += goalcost(pc)(xᵢ, t)
 
     return cost
+end
+
+function generate_nplayer_navigation_game(DynType::Type, CostModelType::Type,
+                                          T_horizon::Float64, ΔT::Float64,
+                                          goals::Vararg{SVector})
+    # the number of players
+    np = length(goals)
+    # the time at which the goal cost is activated
+    t_final = T_horizon - 1.5*ΔT
+    h = Int(T_horizon/ΔT)
+    # setting up the dynamics
+    dyn = ProductSystem(Tuple(DynType{ΔT}() for i in 1:np))
+
+    xids = xindex(dyn)
+    uids = uindex(dyn)
+    costs = SVector{np}([CostModelType{xids,uids}(player_id=i, xg=goals[i],
+                                                  t_final=t_final) for i in 1:np])
+
+    return GeneralGame{uids,h}(dyn, costs)
 end

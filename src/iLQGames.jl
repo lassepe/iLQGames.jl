@@ -53,6 +53,7 @@ module iLQGames
     include("unicycle_4D_flat.jl")
     include("n_player_navigation_game.jl")
     include("n_player_car_game.jl")
+    include("n_player_unicycle_game.jl")
 
     # some tools for plotting
     include("plot_utils.jl")
