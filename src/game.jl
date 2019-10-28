@@ -53,6 +53,7 @@ function lq_approximation end
 # delegate some function calls to the dynamics
 n_states(g::AbstractGame) = n_states(dynamics(g))
 n_controls(g::AbstractGame) = n_controls(dynamics(g))
+xindex(g::AbstractGame) = xindex(dynamics(g))
 xyindex(g::AbstractGame) = xyindex(dynamics(g))
 samplingtime(g::AbstractGame) = samplingtime(dynamics(g))
 
