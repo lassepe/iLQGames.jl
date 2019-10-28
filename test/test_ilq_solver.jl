@@ -15,7 +15,7 @@ using iLQGames:
     SystemTrajectory,
     lq_approximation,
     iLQSolver,
-    solve,
+    solve!,
     AffineStrategy,
     generate_nplayer_navigation_game
 
@@ -88,4 +88,4 @@ acc_init(k::Int) = -cos(k/h*pi)*0.3
                                             steer_init(k), acc_init(k)])) for k in 1:h])
 # generate initial operating point from simulating initial strategy
 # solve the game
-display(@benchmark solve($g, $solver, $x0, $zero(zero_op), $γ_init))
+display(@benchmark(solve!(copy(zero_op), copy(γ_init), $g, $solver, $x0)))

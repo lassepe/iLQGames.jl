@@ -43,9 +43,8 @@ function scale!(current_strategy::SizedVector, current_op::SystemTrajectory,
 end
 
 function backtrack_scale!(current_strategy::SizedVector,
-                          current_op::SystemTrajectory, g::AbstractGame,
-                          solver::iLQSolver)
-    next_op = zero(current_op)
+                          current_op::SystemTrajectory, last_op::SystemTrajectory,
+                          g::AbstractGame, solver::iLQSolver)
     for i in 1:solver.max_scale_backtrack
         # initially we do a large scaling. Afterwards, always half feed forward
         # term.
@@ -53,30 +52,34 @@ function backtrack_scale!(current_strategy::SizedVector,
         scale!(current_strategy, current_op, sf)
         # we compute the new trajectory but abort integration once we have
         # diverged more than solver.max_elwise_diff_step
-        if trajectory!(next_op, dynamics(g), current_strategy, current_op,
-                       first(current_op.x), solver.max_elwise_diff_step)
-            return true, next_op
+        if trajectory!(current_op, dynamics(g), current_strategy, last_op,
+                       first(last_op.x), solver.max_elwise_diff_step)
+            return true
         end
     end
     # in this case, the result in next_op is not really meaningful because the
     # integration has not been finished, thus the `success` state needs to be
     # evaluated and handled by the caller.
-    return false, next_op
+    return false
 end
 
+function solve(initial_op::SystemTrajectory, initial_strategy::StaticVector, args...)
+    result_op = copy(initial_op)
+    result_strategy = copy(initial_strategy)
+
+    return solve!(result_op, result_strategy, args...)
+end
 
 """
 
-    $(FUNCTIONNAME)(p::AbstractGame,
-                    initial_op::SystemTrajectory,
-                    initial_strategy::StaticVector)
+    $(TYPEDSIGNATURES)
 
 Computes a solution solution to a (potentially non-linear and non-quadratic)
 finite horizon game g.
 """
-function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
-               initial_op::SystemTrajectory,
-               initial_strategy::StaticVector, verbose::Bool=false)
+function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
+                g::GeneralGame, solver::iLQSolver, x0::SVector,
+                verbose::Bool=false)
 
     converged = false
     i_iter = 0
@@ -107,8 +110,8 @@ function solve(g::AbstractGame, solver::iLQSolver, x0::SVector,
 
         # 3. do line search to stabilize the strategy selection and extract the
         # next operating point
-        last_op = current_op
-        success, current_op = backtrack_scale!(current_strategy, current_op, g, solver)
+        copyto!(last_op, current_op)
+        success = backtrack_scale!(current_strategy, current_op, last_op, g, solver)
         if(!success)
             verbose && @warn "Could not stabilize solution."
             # we immetiately return and state that the solution has not been
