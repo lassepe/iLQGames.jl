@@ -28,12 +28,12 @@ module iLQGames
     include("system_trajectory.jl")
     include("player_cost.jl")
 
+    # interface for feedback linearizable system
+    include("flat.jl")
     # dynamics abstraction
     include("control_system.jl")
     include("linear_system.jl")
     include("product_system.jl")
-    # interface for feedback linearizable system
-    include("flat.jl")
     # game abstraction
     include("game.jl")
     # ad quadraticization

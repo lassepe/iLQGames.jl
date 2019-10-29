@@ -1,8 +1,19 @@
-""""--------------------- The Feedback Linearization Interface ---------------------
+""""
 
  NOTE: Here we don't implement the interface for cost transformation (e.g. ∂l/∂ξ).
  Instead, the problem write should provide the transfomed cost directly.
+
+ Feedback linearizable systems shall implement this interface and join the trait.
 """
+
+# Holy traits for linearization style dispatch
+abstract type LinearizationStyle end
+struct DefaultLinearization <: LinearizationStyle end
+LinearizationStyle(cs) = DefaultLinearization()
+
+struct FeedbackLinearization <: LinearizationStyle end
+
+"--------------------- The Feedback Linearization Interface ---------------------"
 
 
 """

@@ -105,9 +105,36 @@ struct GeneralGame{uids, h, TD<:ControlSystem, TC<:StaticVector} <: AbstractGame
     end
 end
 
+dyntype(::Type{<:GeneralGame{uids,h,TD}}) where {uids,h,TD} = TD
 dynamics(g::GeneralGame) = g.dyn
 player_costs(g::GeneralGame) = g.cost
 
+"""
+    $(TYPEDSIGNATURES)
+
+Returns the most specific preallocation for the linearization.
+"""
+function linearization_alloc(g::AbstractGame)
+    linearization_alloc(LinearizationStyle(dynamics(g)), g)
+end
+function linearization_alloc(::DefaultLinearization, g::AbstractGame)
+    nx = n_states(g)
+    nu = n_controls(g)
+    ΔT = samplingtime(g)
+    h = horizon(g)
+    # preallocate an empty lqgame
+    # ltv dynamics
+    TA = SMatrix{nx, nx, Float64, nx*nx}
+    TB = SMatrix{nx, nu, Float64, nx*nu}
+    TLS = LinearSystem{ΔT, nx, nu, TA, TB}
+    dyn = SizedVector{h, TLS, 1}(undef)
+    # time varying dynamics
+    return LTVSystem(dyn)
+end
+function linearization_alloc(::FeedbackLinearization, g::AbstractGame)
+    println("HERE")
+    return feedback_linearized_system(dynamics(g))
+end
 
 """
 $(TYPEDEF)
@@ -128,35 +155,31 @@ range of inputs.
 
 $(TYPEDFIELDS)
 """
-struct LQGame{uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} <: AbstractGame{uids, h}
+struct LQGame{uids, h, TD<:Union{LTVSystem, LTISystem}, TC<:SizedVector{h}} <: AbstractGame{uids, h}
     "The full linear system dynamics. A vector (time) over `LinearSystem`s."
     dyn::TD
     "The cost representation. A vector (time) over vector (player) over
     `QuadraticPlayerCost`"
     pcost::TC
 
-    LQGame{uids}(dyn::TD, pcost::TC) where {uids, h, TD<:LTVSystem{h}, TC<:SizedVector{h}} = begin
+    function LQGame{uids}(dyn::TD, pcost::TC) where {uids,h,TD<:Union{LTVSystem,
+                                                                      LTISystem},
+                                                     TC<:SizedVector{h}}
         game_sanity_checks(uids, TD, eltype(TC))
-        @assert eltype(TD) <: LinearSystem "LQGames require linear (time varying) dynamics."
         @assert eltype(eltype(TC)) <: QuadraticPlayerCost "LQGames require quadratic cots."
         new{uids, h, TD, TC}(dyn, pcost)
     end
 end
 
-# custom undef initiliazer
-function LQGame(::UndefInitializer, g::AbstractGame)
+function lqgame_alloc(g::AbstractGame)
     nx = n_states(g)
     nu = n_controls(g)
     np = n_players(g)
     h = horizon(g)
-    # preallocate an empty lqgame
-    # ltv dynamics
-    TA = SMatrix{nx, nx, Float64, nx*nx}
-    TB = SMatrix{nx, nu, Float64, nx*nu}
-    TLS = LinearSystem{samplingtime(g), nx, nu, TA, TB}
-    # time varying dynamics
-    dyn = SizedVector{h, TLS, 1}(undef)
-    lin_dyn = LTVSystem(dyn)
+
+    # computes the most specific linearization from the knowledge that can be
+    # extrcted form g.
+    lin_dyn = linearization_alloc(g)
 
     # costs:
     TQ = SMatrix{nx, nx, Float64, nx*nx}
@@ -173,7 +196,7 @@ dynamics(g::LQGame) = g.dyn
 player_costs(g::LQGame) = g.pcost
 
 function lq_approximation(g::GeneralGame, op::SystemTrajectory)
-    lqg = LQGame(undef, g)
+    lqg = lqgame_alloc(g)
     lq_approximation!(lqg, g, op)
     return lqg
 end

@@ -48,7 +48,10 @@ xyindex(cs::Unicycle4D) = @SVector [1, 2]
 # TODO: Maybe use StaticArrays.FieldVector here to have a type safe desctiction
 # between ξ and x coordinates.
 
-function feedback_linearized_system(cs::Unicycle4D)
+# implement holy trait
+LinearizationStyle(::Unicycle4D) = FeedbackLinearization()
+
+@inline function feedback_linearized_system(cs::Unicycle4D)
     ΔT = samplingtime(cs)
     # ξ = (px, pẋ, py, pẏ)
     A = @SMatrix [1. ΔT 0. 0.;

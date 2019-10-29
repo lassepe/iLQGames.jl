@@ -56,3 +56,30 @@ end
     end
     return LinearSystem{samplingtime(cs)}(SMatrix(A), SMatrix(B))
 end
+
+"------------------- Implement Feedback Linearization Interface -------------------"
+
+# For now, the product system is only feedback linearizable if all subsystems are
+Base.@pure function LinearizationStyle(cs::ProductSystem)
+    linstyles = unique(LinearizationStyle.(cs.subsystems))
+    return length(linstyles) == 1 ? linstyles[1] : return DefaultLinearization()
+end
+
+
+# TODO: outsource some system-product function (Compose large system of subsystems)
+@inline function feedback_linearized_system(cs::ProductSystem)
+    nx = n_states(cs)
+    nu = n_controls(cs)
+    # the full matrices
+    A = @MMatrix zeros(nx, nx)
+    B = @MMatrix zeros(nx, nu)
+    for (i, sub) in enumerate(subsystems(cs))
+        xid = xindex(cs)[i]
+        uid = uindex(cs)[i]
+
+        lin_sub = feedback_linearized_system(sub)
+        A[xid, xid] = lin_sub.A
+        B[xid, uid] = lin_sub.B
+    end
+    return LinearSystem{samplingtime(cs)}(SMatrix(A), SMatrix(B))
+end

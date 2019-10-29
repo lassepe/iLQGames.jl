@@ -76,7 +76,16 @@ struct LTVSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:LinearSystem{ΔT, nx, nu}}
         new{h, ΔT, nx, nu, TD}(dyn)
     end
 end
+
 Base.eltype(::Type{<:LTVSystem{h, ΔT, nx, nu, TD}}) where {h, ΔT, nx, nu, TD} = eltype(TD)
 Base.getindex(ds::LTVSystem, i) = getindex(ds.dyn, i)
 Base.setindex!(ds::LTVSystem, v, i) = setindex!(ds.dyn, v, i)
 next_x(cs::LTVSystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.dyn[k], xₖ, uₖ)
+
+# TODO: we could also get away without this type but it seems more clean (?)
+struct LTISystem{ΔT,nx,nu,TL<:LinearSystem{ΔT,nx,nu}} <: ControlSystem{ΔT,nx,nu}
+    lti_dyn::TL
+end
+Base.eltype(::Type{<:LTISystem{ΔT,nx,nu,TL}}) where {ΔT,nx,nu,TL} = TL
+Base.getindex(cs::LTISystem, i) = lti_dyn
+next_x(cs::LTISystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.lti_dyn, xₖ, uₖ)

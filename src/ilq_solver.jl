@@ -21,7 +21,7 @@
 end
 
 function iLQSolver(g, args...; kwargs...)
-    return iLQSolver(args...; kwargs..., _lq_mem=LQGame(undef, g),
+    return iLQSolver(args...; kwargs..., _lq_mem=lqgame_alloc(g),
                      _op_mem=zero(SystemTrajectory{horizon(g), samplingtime(g),
                                                    n_states(g), n_controls(g)}))
 end
