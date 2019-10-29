@@ -32,6 +32,8 @@ module iLQGames
     include("control_system.jl")
     include("linear_system.jl")
     include("product_system.jl")
+    # interface for feedback linearizable system
+    include("flat.jl")
     # game abstraction
     include("game.jl")
     # ad quadraticization
@@ -50,7 +52,7 @@ module iLQGames
     # some dynamical systems to work with
     include("lorenz.jl")
     include("car_5d.jl")
-    include("unicycle_4D_flat.jl")
+    include("unicycle_4D.jl")
     include("n_player_navigation_game.jl")
     include("n_player_car_game.jl")
     include("n_player_unicycle_game.jl")

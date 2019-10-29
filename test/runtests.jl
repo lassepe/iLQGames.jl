@@ -7,6 +7,7 @@ macro testset_include(filename)
     @assert filename isa AbstractString
     quote
         @testset $filename begin
+            @info $filename
             include($filename)
         end;
     end
@@ -17,4 +18,5 @@ end
     @testset_include "test_linear_system.jl"
     @testset_include "test_solve_lq_game.jl"
     @testset_include "test_ilq_solver.jl"
+    @testset_include "test_nplayer_navigation.jl"
 end;

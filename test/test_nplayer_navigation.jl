@@ -5,7 +5,7 @@ using iLQGames:
     iLQGames,
     iLQSolver,
     GeneralGame,
-    Unicycle4DFlat,
+    Unicycle4D,
     Car5D,
     NPlayerUnicycleCost,
     NPlayerCarCost,
@@ -88,7 +88,7 @@ end;
 
 quad_sanity_check(g, pcs, nx, nu)
 
-"--------------------------------- Unicycle4DFlat ---------------------------------"
+"--------------------------------- Unicycle4D ---------------------------------"
 
 x01 = @SVector [-3., 0., 0., 0.]
 x02 = @SVector [0.,  3., 0., 0.]
@@ -96,7 +96,7 @@ x0 = vcat(x01, x02)
 # goal states (goal position of other player with opposite orientation)
 xg1 = @SVector [3., 0., 0., 0.]
 xg2 = @SVector [0., -3., 0., 0.]
-g = generate_nplayer_navigation_game(Unicycle4DFlat, NPlayerUnicycleCost, T_horizon,
+g = generate_nplayer_navigation_game(Unicycle4D, NPlayerUnicycleCost, T_horizon,
                                      ΔT, xg1, xg2)
 dyn = dynamics(g)
 nx = n_states(dyn)
