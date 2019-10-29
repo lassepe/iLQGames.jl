@@ -1,4 +1,4 @@
-@with_kw struct iLQSolver{TLM}
+@with_kw struct iLQSolver{TLM, TOM}
     "The initial scaling of the feed-forward term."
     α_scale_init::Float64 = 0.1
     "The geometric scaling of the feed-forward term per scaling step in
@@ -16,10 +16,14 @@
     max_elwise_diff_step::Float64 = 20 * max_elwise_diff_converged
     "Preallocated memory for lq approximations."
     _lq_mem::TLM
+    "Preallocated memory for operting points."
+    _op_mem::TOM
 end
 
 function iLQSolver(g, args...; kwargs...)
-    return iLQSolver(args...; kwargs..., _lq_mem=LQGame(undef, g))
+    return iLQSolver(args...; kwargs..., _lq_mem=LQGame(undef, g),
+                     _op_mem=zero(SystemTrajectory{horizon(g), samplingtime(g),
+                                                   n_states(g), n_controls(g)}))
 end
 
 function has_converged(solver::iLQSolver, last_op::SystemTrajectory{h},
@@ -70,6 +74,13 @@ function solve(initial_op::SystemTrajectory, initial_strategy::StaticVector, arg
     return solve!(result_op, result_strategy, args...)
 end
 
+"Copy the `initial_op` to a new operting point instance using preallocated memory."
+function copyop_prealloc!(solver::iLQSolver, initial_op::SystemTrajectory)
+    om = solver._op_mem
+    new_op = SystemTrajectory{samplingtime(om)}(om.x, om.u, initialtime(initial_op))
+    return copyto!(new_op, initial_op)
+end
+
 """
 
     $(TYPEDSIGNATURES)
@@ -83,10 +94,8 @@ function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
 
     converged = false
     i_iter = 0
-    # allocate memory for the last and the current operating point
-    # TODO: can we allocate this outside this loop? Maybe the solver can manage this
-    # memory.
-    last_op = copy(initial_op)
+    last_op = copyop_prealloc!(solver, initial_op)
+
     current_op = initial_op
     current_strategy = initial_strategy
     lqg_approx = solver._lq_mem
