@@ -14,7 +14,7 @@ function Base.zero(::Type{<:AffineStrategy{nx, nu, TP, TA}}) where {nx, nu, TP, 
 end
 
 """
-    $(FUNCTIONNAME)(γ, Δx, ũ)
+    $(TYPEDSIGNATURES)
 
 Computes the control input for a given affine strategy γ, for a state reference
 deviation of Δx and a control reference of ũ.

@@ -22,7 +22,7 @@ player.
 function player_costs end
 
 """
-    $(FUNCTIONNAME)(g::AbstractGame)
+    $(TYPEDSIGNATURES)
 
 Returns the type of the strategy that is a solution to this game.
 """
@@ -37,7 +37,7 @@ function strategytype(g::AbstractGame)
 end
 
 """
-$(FUNCTIONNAME)(g::AbstractGame)
+    $(TYPEDSIGNATURES)
 
 Returns the type of the state that is used in this game.
 """

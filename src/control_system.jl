@@ -9,14 +9,15 @@ system is continuous.
 abstract type ControlSystem{ΔT, nx, nu} end
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem)
+    $(TYPEDSIGNATURES)
 
 Returns the sampling time ΔT of the system.
 """
-samplingtime(cs::ControlSystem{ΔT}) where {ΔT} = ΔT
+samplingtime(::Type{<:ControlSystem{ΔT}}) where {ΔT} = ΔT
+samplingtime(cs::ControlSystem) = samplingtime(typeof(cs))
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem)
+    $(TYPEDSIGNATURES)
 
 Returns true if the system is has a non-zero sampling rate (e.g. discrete or sampled
 contiuous system.
@@ -24,7 +25,7 @@ contiuous system.
 issampled(cs::ControlSystem) = !iszero(samplingtime(cs))
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem)
+    $(TYPEDSIGNATURES)
 
 Returns the number of states of the control system.
 """
@@ -32,12 +33,14 @@ n_states(::Type{<:ControlSystem{ΔT, nx}}) where {ΔT, nx} = nx
 n_states(cs::ControlSystem) = n_states(typeof(cs))
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem)
+    $(TYPEDSIGNATURES)
 
 Returns the number of controls of the control system.
 """
 n_controls(::Type{<:ControlSystem{ΔT, nx, nu}}) where {ΔT, nx, nu} = nu
 n_controls(cs::ControlSystem) = n_controls(typeof(cs))
+
+"-------------------------------- Minimal Interface -------------------------------"
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem, x::SVector, u::SVector, t::AbstractFloat)
@@ -100,8 +103,14 @@ Returns the indeces of the x and y coordinate of this sytem as SIndex.
 """
 function xyindex end
 
-"--------------------- Convencience Implementations ---------------------"
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem)
 
+Returns the indices of the states of this system as SIndex.
+"""
+function xindex end
+
+"--------------------- Convencience Implementations ---------------------"
 
 """
     $(TYPEDSIGNATURES)
