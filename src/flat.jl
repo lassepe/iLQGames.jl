@@ -8,8 +8,8 @@
 """
     $(FUNCTIONNAME)(cs::ControlSystem)
 
-Returns a LinearSystem that descibes the dynamics of the linearized state
-coordinate.
+Returns a discretized LinearSystem that descibes the dynamics of the linearized
+state coordinate.
 
 NOTE: this must not be used with the non-linear state coordinates.
 """

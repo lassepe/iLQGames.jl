@@ -41,5 +41,40 @@ function linearize_discrete(cs::Unicycle4D, x::SVector{4}, u::SVector{2},
     return LinearSystem{ΔT}(A, B)
 end
 
-# TODO: handle coordinate change here
 xyindex(cs::Unicycle4D) = @SVector [1, 2]
+
+"------------------- Implement Feedback Linearization Interface -------------------"
+
+# TODO: Maybe use StaticArrays.FieldVector here to have a type safe desctiction
+# between ξ and x coordinates.
+
+function feedback_linearized_system(cs::Unicycle4D)
+    ΔT = samplingtime(cs)
+    # ξ = (px, pẋ, py, pẏ)
+    A = @SMatrix [1. ΔT 0. 0.;
+                  0. 1. 0. 0.;
+                  0. 0. 1. ΔT;
+                  0. 0. 0. 1.;]
+    B = @SMatrix [0. 0.;
+                  ΔT 0.;
+                  0. 0.;
+                  0. ΔT];
+    return LinearSystem{ΔT}(A, B)
+end
+
+function x_from(cs::Unicycle4D, ξ::SVector{4})
+    # px, py, θ, v
+    return @SVector [ξ[1], ξ[3], atan(ξ[4], ξ[2]), sqrt(ξ[2]^2 + ξ[4]^2)]
+end
+
+function ξ_from(cs::Unicycle4D, x::SVector{4})
+    # px, pẋ, py, pẏ
+    return @SVector [x[1], cos(x[3])*x[4], x[2], sin(x[3])*x[4]]
+end
+
+function λ_issingular(cs::Unicycle4D, ξ::SVector{4})
+    vx = ξ[2]; vy = ξ[4]
+    ϵ = 0.01
+    # cant invert for velocities near 0
+    return isnan(vx) || isnan(vy) || (abs(vx) < ϵ && abs(vy) < ϵ)
+end
