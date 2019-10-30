@@ -65,7 +65,9 @@ LinearizationStyle(::Unicycle4D) = FeedbackLinearization()
                   ΔT 0.;
                   0. 0.;
                   0. ΔT];
-    return LinearSystem{ΔT}(A, B)
+
+    dyn = LinearSystem{ΔT}(A, B)
+    return LTISystem(dyn, ξxyindex(cs))
 end
 
 function x_from(cs::Unicycle4D, ξ::SVector{4})

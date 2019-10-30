@@ -83,9 +83,11 @@ Base.setindex!(ds::LTVSystem, v, i) = setindex!(ds.dyn, v, i)
 next_x(cs::LTVSystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.dyn[k], xₖ, uₖ)
 
 # TODO: we could also get away without this type but it seems more clean (?)
-struct LTISystem{ΔT,nx,nu,TL<:LinearSystem{ΔT,nx,nu}} <: ControlSystem{ΔT,nx,nu}
-    lti_dyn::TL
+struct LTISystem{ΔT,nx,nu,TL<:LinearSystem{ΔT,nx,nu}, TXY} <: ControlSystem{ΔT,nx,nu}
+    dyn::TL
+    xyids::TXY
 end
+xindex(cs::LTISystem) = cs.xyids
 Base.eltype(::Type{<:LTISystem{ΔT,nx,nu,TL}}) where {ΔT,nx,nu,TL} = TL
-Base.getindex(cs::LTISystem, i) = lti_dyn
-next_x(cs::LTISystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.lti_dyn, xₖ, uₖ)
+Base.getindex(cs::LTISystem, i) = cs.dyn
+next_x(cs::LTISystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.dyn, xₖ, uₖ)
