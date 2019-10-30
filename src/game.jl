@@ -132,8 +132,14 @@ function linearization_alloc(::JacobianLinearization, g::AbstractGame)
     return LTVSystem(dyn)
 end
 function linearization_alloc(::FeedbackLinearization, g::AbstractGame)
-    return feedback_linearized_system(dynamics(g))
+    @info("""
+          Processing game with feedback linearizable dynamics. Consider
+          transforming the game before feeding to the game solver. The system will
+          *NOT* be implicitly feedback linearized.
+          """, maxlog=1)
+    return linearization_alloc(JacobianLinearization(), g::AbstractGame)
 end
+linearization_alloc(::TrivialLinearization, g::AbstractGame) = dynamics(g)
 
 """
 $(TYPEDEF)
@@ -170,7 +176,7 @@ struct LQGame{uids, h, TD<:Union{LTVSystem, LTISystem}, TC<:SizedVector{h}} <: A
     end
 end
 
-function lqgame_alloc(g::AbstractGame)
+function lqgame_preprocess_alloc(g::AbstractGame)
     nx = n_states(g)
     nu = n_controls(g)
     np = n_players(g)
@@ -195,7 +201,7 @@ dynamics(g::LQGame) = g.dyn
 player_costs(g::LQGame) = g.pcost
 
 function lq_approximation(g::GeneralGame, op::SystemTrajectory)
-    lqg = lqgame_alloc(g)
+    lqg = lqgame_preprocess_alloc(g)
     lq_approximation!(lqg, g, op)
     return lqg
 end
@@ -216,9 +222,10 @@ end
 @inline function linearize!(lqg::LQGame, dyn::ControlSystem, xₖ, uₖ, t, k::Int)
     return linearize!(LinearizationStyle(dyn), lqg, dyn, xₖ, uₖ, t, k)
 end
-@inline function linearize!(::JacobianLinearization, lqg, dyn, xₖ, uₖ, t, k::Int)
+@inline function linearize!(::LinearizationStyle, lqg, dyn, xₖ, uₖ, t, k::Int)
     return dynamics(lqg)[k] = linearize_discrete(dyn, xₖ, uₖ, t)
 end
-# TODO: Maybe we can do this less subtle. Currenty we simply do nothing because
-# the LQGame already holds the right linear dynamics (created in lqgame_alloc)
-@inline linearize!(::FeedbackLinearization, lqg, args...) = dynamics(lqg)
+# TODO: Maybe we can do this less subtle. Currenty we simply do nothing because the
+# LQGame already holds the right linear dynamics (created in
+# lqgame_preprocess_alloc)
+@inline linearize!(::TrivialLinearization, lqg, args...) = dynamics(lqg)

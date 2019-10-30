@@ -21,6 +21,7 @@ struct LinearSystem{ΔT, nx, nu, TA<:SMatrix{nx, nx}, TB<:SMatrix{nx, nu}} <: Co
 end
 
 LinearSystem{ΔT}(A::TA, B::TB) where {ΔT, nx, nu, TA<:SMatrix{nx, nx}, TB<:SMatrix{nx, nu}} = LinearSystem{ΔT, nx, nu, TA, TB}(A, B)
+LinearizationStyle(::LinearSystem) = TrivialLinearization()
 
 dx(ls::LinearSystem, x::SVector, u::SVector, t::AbstractFloat)  = begin @assert !issampled(ls); ls.A*x + ls.B*u end
 next_x(ls::LinearSystem, x::SVector, u::SVector) = begin @assert issampled(ls); ls.A*x + ls.B*u end
@@ -76,7 +77,7 @@ struct LTVSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:LinearSystem{ΔT, nx, nu}}
         new{h, ΔT, nx, nu, TD}(dyn)
     end
 end
-
+LinearizationStyle(::LTVSystem) = TrivialLinearization()
 Base.eltype(::Type{<:LTVSystem{h, ΔT, nx, nu, TD}}) where {h, ΔT, nx, nu, TD} = eltype(TD)
 Base.getindex(ds::LTVSystem, i) = getindex(ds.dyn, i)
 Base.setindex!(ds::LTVSystem, v, i) = setindex!(ds.dyn, v, i)
@@ -87,6 +88,7 @@ struct LTISystem{ΔT,nx,nu,TL<:LinearSystem{ΔT,nx,nu}, TXY} <: ControlSystem{Δ
     dyn::TL
     xyids::TXY
 end
+LinearizationStyle(::LTISystem) = TrivialLinearization()
 xindex(cs::LTISystem) = cs.xyids
 Base.eltype(::Type{<:LTISystem{ΔT,nx,nu,TL}}) where {ΔT,nx,nu,TL} = TL
 Base.getindex(cs::LTISystem, i) = cs.dyn
