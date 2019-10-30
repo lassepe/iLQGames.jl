@@ -1,4 +1,4 @@
-abstract type NPlayerNavigationCost{nx,nu,xids,uids} <: PlayerCost{nx,nu} end
+abstract type NPlayerNavigationCost{nx,nu} <: PlayerCost{nx,nu} end
 
 "The index of the player this cost applies to."
 function player_id end
@@ -17,8 +17,6 @@ function goalcost end
 
 "--------------------------------- Implementation ---------------------------------"
 
-xindex(c::NPlayerNavigationCost{nx, nu, xids}) where {nx, nu, xids} = xids
-uindex(c::NPlayerNavigationCost{nx, nu, xids, uids}) where {nx, nu, xids, uids} = uids
 
 @inline function iLQGames.quadraticize(pc::NPlayerNavigationCost, g::GeneralGame,
                                        x::SVector, u::SVector, t::AbstractFloat)
@@ -110,8 +108,8 @@ function generate_nplayer_navigation_game(DynType::Type, CostModelType::Type,
 
     xids = xindex(dyn)
     uids = uindex(dyn)
-    costs = SVector{np}([CostModelType{xids,uids}(player_id=i, xg=goals[i],
-                                                  t_final=t_final) for i in 1:np])
+    costs = SVector{np}([CostModelType(i, xids, uids, goals[i], t_final)
+                         for i in 1:np])
 
     return GeneralGame{uids,h}(dyn, costs)
 end

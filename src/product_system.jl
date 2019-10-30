@@ -8,30 +8,32 @@ function xu_dims(subsystems)
         nx += nxᵢ; nu += nuᵢ
     end
 
-    return nx, nu, xids, uids
+    return nx, nu, Tuple(xids), Tuple(uids)
 end
 
-struct ProductSystem{ΔT,nx,nu,xids,uids,xyids,np,
-                     TS<:NTuple{np,<:ControlSystem{ΔT}}}<:ControlSystem{ΔT, nx, nu}
+struct ProductSystem{ΔT,nx,nu,np,TS<:NTuple{np,<:ControlSystem{ΔT}},TXI<:NTuple{np},
+                     TUI<:NTuple{np},TXY<:NTuple{np}}<:ControlSystem{ΔT, nx, nu}
     subsystems::TS
-
-    function ProductSystem(subsystems::TS) where {ΔT, np, TS<:NTuple{np, <:ControlSystem{ΔT}}}
+    xids::TXI
+    uids::TUI
+    xyids::TXY
+    function ProductSystem(subsystems::TS) where {ΔT,np,TS<:NTuple{np,<:ControlSystem{ΔT}}}
         nx, nu, xids, uids = xu_dims(subsystems)
         xyids = Tuple(xid[xyindex(sub)] for (xid, sub) in zip(xids, subsystems))
-        new{ΔT,nx,nu,Tuple(xids),Tuple(uids),xyids,np,TS}(subsystems)
+        new{ΔT,nx,nu,np,TS,typeof(xids),typeof(uids),typeof(xyids)}(subsystems, xids, uids, xyids)
     end
 end
-xindex(cs::ProductSystem{ΔT,nx,nu,xids}) where {ΔT,nx,nu,xids} = xids
-uindex(cs::ProductSystem{ΔT,nx,nu,xids,uids}) where {ΔT,nx,nu,xids,uids} = uids
-xyindex(cs::ProductSystem{ΔT,nx,nu,xids,uids,xyids}) where {ΔT,nx,nu,xids,uids,xyids} = xyids
 subsystems(cs::ProductSystem) = cs.subsystems
+xindex(cs::ProductSystem) = cs.xids
+uindex(cs::ProductSystem) = cs.uids
+xyindex(cs::ProductSystem) = cs.xyids
 
-function dx(cs::ProductSystem{ΔT, nx, nu, xids, uids}, x::SVector{nx},
-            u::SVector{nu}, t::AbstractFloat) where {ΔT, nx, nu, xids, uids}
+function dx(cs::ProductSystem{ΔT, nx, nu}, x::SVector{nx},
+            u::SVector{nu}, t::AbstractFloat) where {ΔT, nx, nu}
 
     dx_val = MVector{nx, promote_type(eltype(x), eltype(u))}(undef)
 
-    for (xidᵢ, uidᵢ, subᵢ) in zip(xids, uids, cs.subsystems)
+    for (xidᵢ, uidᵢ, subᵢ) in zip(xindex(cs), uindex(cs), subsystems(cs))
         dx_val[xidᵢ] = dx(subᵢ, x[xidᵢ], u[uidᵢ], t)
     end
 
