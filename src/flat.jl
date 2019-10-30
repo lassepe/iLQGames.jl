@@ -15,6 +15,22 @@ struct FeedbackLinearization <: LinearizationStyle end
 
 "--------------------- The Feedback Linearization Interface ---------------------"
 
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem)
+
+Returns the number of ξ states (linearized states).
+"""
+function n_linstates end
+
+"""
+$(FUNCTIONNAME)(cs::ControlSystem)
+
+Returns the indices of the cartesian x and y coordinates in the linearized state
+vector ξ.
+"""
+# TODO, technically this could be computed by propagating xyindex(cs) through
+# ξ_from.
+function ξxyindex end
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem)

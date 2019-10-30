@@ -41,9 +41,12 @@ function linearize_discrete(cs::Unicycle4D, x::SVector{4}, u::SVector{2},
     return LinearSystem{ΔT}(A, B)
 end
 
-xyindex(cs::Unicycle4D) = @SVector [1, 2]
+xyindex(cs::Unicycle4D) = SVector(1, 2)
 
 "------------------- Implement Feedback Linearization Interface -------------------"
+
+n_linstates(cs::Unicycle4D) = 4
+ξxyindex(cs::Unicycle4D) = SVector(1, 3)
 
 # TODO: Maybe use StaticArrays.FieldVector here to have a type safe desctiction
 # between ξ and x coordinates.
