@@ -132,7 +132,6 @@ function linearization_alloc(::DefaultLinearization, g::AbstractGame)
     return LTVSystem(dyn)
 end
 function linearization_alloc(::FeedbackLinearization, g::AbstractGame)
-    println("HERE")
     return feedback_linearized_system(dynamics(g))
 end
 
@@ -201,16 +200,25 @@ function lq_approximation(g::GeneralGame, op::SystemTrajectory)
     return lqg
 end
 
+
 function lq_approximation!(lqg::LQGame, g::GeneralGame, op::SystemTrajectory)
-    # TODO check full matching type
-    @assert uindex(lqg) == uindex(g)
     for (k, (xₖ, uₖ)) in enumerate(zip(op.x, op.u))
         # discrete linearization along the operating point
         t = time_disc2cont(op, k)
-        dynamics(lqg)[k] = linearize_discrete(dynamics(g), xₖ, uₖ, t)
+        linearize!(lqg, dynamics(g), xₖ, uₖ, t, k)
         # quadratiation of the cost along the operating point
         player_costs(lqg)[k] = map(player_costs(g)) do pcₖⁱ
             quadraticize(pcₖⁱ, g, xₖ, uₖ, t)
         end
     end
 end
+
+@inline function linearize!(lqg::LQGame, dyn::ControlSystem, xₖ, uₖ, t, k::Int)
+    return linearize!(LinearizationStyle(dyn), lqg, dyn, xₖ, uₖ, t, k)
+end
+@inline function linearize!(::DefaultLinearization, lqg, dyn, xₖ, uₖ, t, k::Int)
+    return dynamics(lqg)[k] = linearize_discrete(dyn, xₖ, uₖ, t)
+end
+# TODO: Maybe we can do this less subtle. Currenty we simply do nothing because
+# the LQGame already holds the right linear dynamics (created in lqgame_alloc)
+@inline linearize!(::FeedbackLinearization, lqg, args...) = dynamics(lqg)
