@@ -117,7 +117,7 @@ Returns the most specific preallocation for the linearization.
 function linearization_alloc(g::AbstractGame)
     linearization_alloc(LinearizationStyle(dynamics(g)), g)
 end
-function linearization_alloc(::DefaultLinearization, g::AbstractGame)
+function linearization_alloc(::JacobianLinearization, g::AbstractGame)
     nx = n_states(g)
     nu = n_controls(g)
     ΔT = samplingtime(g)
@@ -216,7 +216,7 @@ end
 @inline function linearize!(lqg::LQGame, dyn::ControlSystem, xₖ, uₖ, t, k::Int)
     return linearize!(LinearizationStyle(dyn), lqg, dyn, xₖ, uₖ, t, k)
 end
-@inline function linearize!(::DefaultLinearization, lqg, dyn, xₖ, uₖ, t, k::Int)
+@inline function linearize!(::JacobianLinearization, lqg, dyn, xₖ, uₖ, t, k::Int)
     return dynamics(lqg)[k] = linearize_discrete(dyn, xₖ, uₖ, t)
 end
 # TODO: Maybe we can do this less subtle. Currenty we simply do nothing because

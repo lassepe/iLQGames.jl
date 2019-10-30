@@ -8,10 +8,14 @@
 
 # Holy traits for linearization style dispatch
 abstract type LinearizationStyle end
-struct DefaultLinearization <: LinearizationStyle end
-LinearizationStyle(cs) = DefaultLinearization()
-
+# systems without a special structure (e.g. use jacobian linearization)
+struct JacobianLinearization <: LinearizationStyle end
+# systems that are feedback linearizable (i.e. differentially flat systems)
 struct FeedbackLinearization <: LinearizationStyle end
+# systems that are trivially linearized (e.g. already linear)
+struct TrivialLinearization <: LinearizationStyle end
+
+LinearizationStyle(cs) = JacobianLinearization()
 
 "--------------------- The Feedback Linearization Interface ---------------------"
 

@@ -26,7 +26,7 @@ end
 
 Base.@pure function common_linstyle(subsystems::NTuple)
     linstyles = unique(LinearizationStyle.(subsystems))
-    return length(linstyles) == 1 ? linstyles[1] : return DefaultLinearization()
+    return length(linstyles) == 1 ? linstyles[1] : return JacobianLinearization()
 end
 
 struct ProductSystem{ΔT,nx,nu,np,nξ,TS<:NTuple{np,<:ControlSystem{ΔT}},TXI<:NTuple{np},
@@ -91,7 +91,7 @@ end
 
 # For now, the product system is only feedback linearizable if all subsystems are
 function LinearizationStyle(cs::ProductSystem)
-    return (isnothing(n_linstates(cs)) ? DefaultLinearization() :
+    return (isnothing(n_linstates(cs)) ? JacobianLinearization() :
             FeedbackLinearization())
 end
 
