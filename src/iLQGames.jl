@@ -56,6 +56,7 @@ module iLQGames
     include("n_player_navigation_game.jl")
     include("n_player_car_game.jl")
     include("n_player_unicycle_game.jl")
+    include("n_player_2Ddoubleintegrator_cost.jl")
 
     # some tools for plotting
     include("plot_utils.jl")
