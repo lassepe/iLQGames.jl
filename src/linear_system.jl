@@ -89,7 +89,7 @@ struct LTISystem{ΔT,nx,nu,TL<:LinearSystem{ΔT,nx,nu}, TXY} <: ControlSystem{Δ
     xyids::TXY
 end
 LinearizationStyle(::LTISystem) = TrivialLinearization()
-xindex(cs::LTISystem) = cs.xyids
+xyindex(cs::LTISystem) = cs.xyids
 Base.eltype(::Type{<:LTISystem{ΔT,nx,nu,TL}}) where {ΔT,nx,nu,TL} = TL
 Base.getindex(cs::LTISystem, i) = cs.dyn
-next_x(cs::LTISystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.dyn, xₖ, uₖ)
+next_x(cs::LTISystem, xₖ::SVector, uₖ::SVector, ::Float64) = next_x(cs.dyn, xₖ, uₖ)

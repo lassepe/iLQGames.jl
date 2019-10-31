@@ -219,10 +219,10 @@ function lq_approximation!(lqg::LQGame, g::GeneralGame, op::SystemTrajectory)
     end
 end
 
-@inline function linearize!(lqg::LQGame, dyn::ControlSystem, xₖ, uₖ, t, k::Int)
+@inline function linearize!(lqg::LQGame, dyn::ControlSystem, xₖ, uₖ, t, k)
     return linearize!(LinearizationStyle(dyn), lqg, dyn, xₖ, uₖ, t, k)
 end
-@inline function linearize!(::LinearizationStyle, lqg, dyn, xₖ, uₖ, t, k::Int)
+@inline function linearize!(::LinearizationStyle, lqg, dyn, xₖ, uₖ, t, k)
     return dynamics(lqg)[k] = linearize_discrete(dyn, xₖ, uₖ, t)
 end
 # TODO: Maybe we can do this less subtle. Currenty we simply do nothing because the

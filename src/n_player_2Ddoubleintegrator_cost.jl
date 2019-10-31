@@ -3,6 +3,8 @@ struct NPlayer2DDoubleIntegratorCost{nx,nu,TXI<:NTuple,TUI<:NTuple,TIC,TICR,TSC,
                                      TSCR,TPC,TGC} <: NPlayerNavigationCost{nx,nu}
     "the index of the player this cost applies to"
     player_id::Int
+    xids::TXI
+    uids::TUI
     inputcost::TIC
     inputconstr::TICR
     statecost::TSC
@@ -11,7 +13,7 @@ struct NPlayer2DDoubleIntegratorCost{nx,nu,TXI<:NTuple,TUI<:NTuple,TIC,TICR,TSC,
     goalcost::TGC
 end
 
-function NPlayer2DDoubleIntegratorCost(player_id, xids::TXI, uids::TXI, xg, t_final;
+function NPlayer2DDoubleIntegratorCost(player_id, xids::TXI, uids::TUI, xg, t_final;
          inputcost::TIC=InputCost(SMatrix{2,2}([1. 0.; 0. 1.]) * 10),
          inputconstr::TICR=tuple(),
          statecost::TSC=StateCost(SMatrix{4,4}(diagm([0., 1., 0., 1.])) * 40),
@@ -37,3 +39,5 @@ statecost(c::NPlayer2DDoubleIntegratorCost) = c.statecost
 stateconstr(c::NPlayer2DDoubleIntegratorCost) = c.stateconstr
 proximitycost(c::NPlayer2DDoubleIntegratorCost) = c.proximitycost
 goalcost(c::NPlayer2DDoubleIntegratorCost) = c.goalcost
+xindex(pc::NPlayer2DDoubleIntegratorCost) = pc.xids
+uindex(pc::NPlayer2DDoubleIntegratorCost) = pc.uids
