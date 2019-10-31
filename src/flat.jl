@@ -45,7 +45,7 @@ state coordinate.
 NOTE: this must not be used with the non-linear state coordinates.
 """
 #TODO: maybe wrap state type for safety.
-function feedback_linearized_system end
+function feedbacklin end
 
 """
     $(FUNCTIONNAME)(cs::ControlSystem, ξ)

@@ -99,7 +99,7 @@ n_linstates(cs::ProductSystem{ΔT,nx,nu,np,nξ}) where {ΔT,nx,nu,np,nξ} = nξ
 ξxyindex(cs::ProductSystem) = cs.ξxyids
 
 # TODO: outsource some system-product function (Compose large system of subsystems)
-@inline function feedback_linearized_system(cs::ProductSystem)
+@inline function feedbacklin(cs::ProductSystem)
     nx = n_states(cs)
     nu = n_controls(cs)
     # the full matrices
@@ -109,7 +109,7 @@ n_linstates(cs::ProductSystem{ΔT,nx,nu,np,nξ}) where {ΔT,nx,nu,np,nξ} = nξ
         xid = xindex(cs)[i]
         uid = uindex(cs)[i]
 
-        lin_sub = feedback_linearized_system(sub)
+        lin_sub = feedbacklin(sub)
         A[xid, xid] = lin_sub.dyn.A
         B[xid, uid] = lin_sub.dyn.B
     end

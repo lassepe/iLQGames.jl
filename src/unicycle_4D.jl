@@ -54,7 +54,7 @@ n_linstates(cs::Unicycle4D) = 4
 # implement holy trait
 LinearizationStyle(::Unicycle4D) = FeedbackLinearization()
 
-@inline function feedback_linearized_system(cs::Unicycle4D)
+@inline function feedbacklin(cs::Unicycle4D)
     ΔT = samplingtime(cs)
     # ξ = (px, pẋ, py, pẏ)
     A = @SMatrix [1. ΔT 0. 0.;
