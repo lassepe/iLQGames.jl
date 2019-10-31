@@ -26,6 +26,13 @@ We provide a convencience default below.
 """
 function quadraticize end
 
+"""
+    $(FUNCTIONNAME)(pc::PlayerCost)
+
+Returns the index of the player this cost is associated with.
+"""
+function player_id end
+
 n_states(::Type{<:PlayerCost{nx}}) where {nx} = nx
 n_states(p::PlayerCost) = n_states(typeof(p))
 n_controls(::Type{<:PlayerCost{nx, nu}}) where {nx, nu} = nu

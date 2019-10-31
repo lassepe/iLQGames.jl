@@ -39,3 +39,17 @@ proximitycost(c::NPlayerUnicycleCost) = c.proximitycost
 goalcost(c::NPlayerUnicycleCost) = c.goalcost
 xindex(pc::NPlayerUnicycleCost) = pc.xids
 uindex(pc::NPlayerUnicycleCost) = pc.uids
+
+"------------------ Implementing Feedback Linearization Interface -----------------"
+
+"Here, we don't transform the cost explicitly but as suggested in
+https://arxiv.org/abs/1910.00681 we formulate a new cost directly in ξ coordinates."
+function transformed_cost(cs::Unicycle4D, c::NPlayerUnicycleCost)
+    @unpack t_active, xg = goalcost(c)
+    ξg = ξ_from(cs, xg)
+    if λ_issingular(cs, ξg)
+        @warn "State conversion map is singular at provided goal state."
+    end
+    return NPlayer2DDoubleIntegratorCost(player_id(c), xindex(c), uindex(c), ξg,
+                                         t_active)
+end

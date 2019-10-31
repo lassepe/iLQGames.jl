@@ -1,7 +1,5 @@
 abstract type NPlayerNavigationCost{nx,nu} <: PlayerCost{nx,nu} end
 
-"The index of the player this cost applies to."
-function player_id end
 "Returns an `::InputCost`."
 function inputcost end
 "Returns an iterable of `::SoftConstr` for the inputs."

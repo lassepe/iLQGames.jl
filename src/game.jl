@@ -111,6 +111,33 @@ player_costs(g::GeneralGame) = g.cost
 """
     $(TYPEDSIGNATURES)
 
+Transforms a `GeneralGame` `g` with feedback linearizable dynamics (i.e.
+`LinearizationStyle(dynamics(g)) isa FeedbackLinearization`) to it's linearized
+form.
+"""
+function transform_to_feedbacklin(g::GeneralGame, x0)
+    @assert LinearizationStyle(dynamics(g)) isa FeedbackLinearization
+    # transform the dynamics
+    lin_dyn = feedbacklin(dynamics(g))
+    # approximate the cost by a cost in ξ coordinates
+    ξ_cost = map(enumerate(player_costs(g))) do (i, c)
+        transformed_cost(dynamics(g), c)
+    end |> SVector{n_players(g)}
+
+    # transformed game
+    gξ = GeneralGame{uindex(g),horizon(g)}(lin_dyn, ξ_cost)
+    # transform initial conditions
+    ξ0 = ξ_from(dynamics(g), x0)
+    if λ_issingular(dynamics(g), ξ0)
+        @warn "State conversion map is singular at provided initial conditions."
+    end
+
+    return gξ, ξ0
+end
+
+"""
+    $(TYPEDSIGNATURES)
+
 Returns the most specific preallocation for the linearization.
 """
 function linearization_alloc(g::AbstractGame)

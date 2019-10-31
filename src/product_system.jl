@@ -168,3 +168,8 @@ function decoupling_drift_term(cs::ProductSystem, x)
     # ordered in an ascending order.
     return vcat(Tuple(ms)...)
 end
+
+function transformed_cost(cs::ProductSystem, c::PlayerCost)
+    # forward to the corresponding subsystem
+    return transformed_cost(subsystems(cs)[player_id(c)], c)
+end

@@ -74,6 +74,19 @@ states `ξ`.
 """
 function λ_issingular end
 
+# Cost transformation
+
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem, c::PlayerCost)
+
+Computes the transformed cost for the linear ξ coordinates.
+
+NOTE: This may either be an exact transformation (by applying the chain-rule to the
+x-domain cost) or an approximation based on a new cost directly formulated in ξ (as
+suggested in https://arxiv.org/abs/1910.00681)
+"""
+function transformed_cost end
+
 "-------------------------- Optional Interface Extension --------------------------"
 
 ## Affine input transformation: u = Minv(x) * (z - m(x))

@@ -25,7 +25,8 @@ using iLQGames:
     uindex,
     goalcost,
     ξ_from,
-    subsystems
+    subsystems,
+    transform_to_feedbacklin
 
 # generate a game
 T_horizon = 10.
@@ -52,29 +53,23 @@ solver = iLQSolver(g)
 steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
 acc_init(k::Int) = -cos(k/h*pi)*0.3
 γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
-                                 (@SVector zeros(nu))) for k in 1:h])
-@info "Solve *without* feedback linearization:"
-# display(@benchmark(solve!(copy(zero_op), copy(γ_init), $g, $solver, $x0)))
+                                 (@SVector [steer_init(k), 0.7*acc_init(k),
+                                            steer_init(k), acc_init(k)])) for k in 1:h])
+@info "Benchmark *without* feedback linearization:"
+display(@benchmark(solve!(copy(zero_op), copy(γ_init), $g, $solver, $x0)))
 
-# TODO: FIXME -- for now manually transformed to linearized form
-function transform_to_feedbacklin(g::GeneralGame, x0)
-    @assert LinearizationStyle(dynamics(g)) isa FeedbackLinearization
-    # transform the dynamics
-    lin_dyn = feedbacklin(dynamics(g))
-    # approximate the cost by a cost in ξ coordinates
-    # TODO: do more generically
-    ξ_cost = map(enumerate(player_costs(g))) do (i, c)
-        ξg = ξ_from(subsystems(dynamics(g))[i], goalcost(c).xg)
-        return NPlayer2DDoubleIntegratorCost(player_id(c), xindex(c), uindex(c), ξg,
-                                             goalcost(c).t_active)
-    end |> SVector{n_players(g)}
 
-    return GeneralGame{uindex(g), horizon(g)}(lin_dyn, ξ_cost), ξ_from(dynamics(g),
-                                                                       x0)
-end
+steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
+acc_init(k::Int) = -cos(k/h*pi)*0.3
+γξ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
+                                 (@SVector [steer_init(k), 0.7*acc_init(k),
+                                            steer_init(k), acc_init(k)])) for k in 1:h])
 
 gξ, ξ0 = transform_to_feedbacklin(g, x0)
 solverξ = iLQSolver(gξ)
-# TODO: also transform strategies and operating point
-
-display(@benchmark(solve!(copy(zero_op), copy(γ_init), $gξ, $solverξ, $ξ0)))
+γξ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
+                                 (@SVector [-0.05, 0.02,
+                                            0.02, 0.05])) for k in 1:h])
+@info "Benchmark *with* feedback linearization:"
+display(@benchmark(solve!(copy(zero_op), copy(γξ_init), $gξ, $solverξ, $ξ0)))
+solve!(copy(zero_op), copy(γξ_init), gξ, solverξ, ξ0)
