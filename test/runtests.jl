@@ -19,4 +19,5 @@ end
     @testset_include "test_solve_lq_game.jl"
     @testset_include "test_ilq_solver.jl"
     @testset_include "test_nplayer_navigation.jl"
+    @testset_include "test_flat.jl"
 end;
