@@ -1,6 +1,6 @@
 @with_kw struct iLQSolver{TLM, TOM}
     "The initial scaling of the feed-forward term."
-    α_scale_init::Float64 = 0.1
+    α_scale_init::Float64 = 0.15
     "The geometric scaling of the feed-forward term per scaling step in
     backtrack scaling."
     α_scale_step::Float64 = 0.5
@@ -13,7 +13,7 @@
     max_elwise_diff_converged::Float64 = α_scale_init/2
     "The maximum elementwise difference bewteen operating points for per
     iteration step."
-    max_elwise_diff_step::Float64 = 20 * max_elwise_diff_converged
+    max_elwise_diff_step::Float64 = 10 * max_elwise_diff_converged
     "Preallocated memory for lq approximations."
     _lq_mem::TLM
     "Preallocated memory for operting points."
