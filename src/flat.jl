@@ -47,6 +47,8 @@ NOTE: this must not be used with the non-linear state coordinates.
 #TODO: maybe wrap state type for safety.
 function feedbacklin end
 
+## State transformation λ
+
 """
     $(FUNCTIONNAME)(cs::ControlSystem, ξ)
 
@@ -71,3 +73,21 @@ Returns true if the state converstion map is singular at the given *linear* syst
 states `ξ`.
 """
 function λ_issingular end
+
+"-------------------------- Optional Interface Extension --------------------------"
+
+## Affine input transformation: u = Minv(x) * (z - m(x))
+
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem, x)
+
+Returns the inverse decoupling matrix M⁻¹(x) for input transformation.
+"""
+function inverse_decoupling_matrix end
+
+"""
+    $(FUNCTIONNAME)(cs::ControlSystem, x)
+
+Returns the drift term m(x) for input transformation.
+"""
+function decoupling_drift_term end

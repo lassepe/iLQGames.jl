@@ -86,3 +86,11 @@ function λ_issingular(cs::Unicycle4D, ξ::SVector{4})
     # cant invert for velocities near 0
     return isnan(vx) || isnan(vy) || (abs(vx) < ϵ && abs(vy) < ϵ)
 end
+
+function inverse_decoupling_matrix(cs::Unicycle4D, x::SVector{4})
+    cθ = cos(x[3]); sθ = sin(x[3]); v = x[4]
+    return @SMatrix[cθ    sθ;
+                   -sθ/v -cθ/v]
+end
+
+@inline decoupling_drift_term(cs::Unicycle4D, x::SVector{4}) = @SVector(zeros(n_controls(cs)))

@@ -18,7 +18,7 @@ function goalcost end
 "--------------------------------- Implementation ---------------------------------"
 
 
-@inline function iLQGames.quadraticize(pc::NPlayerNavigationCost, g::GeneralGame,
+function iLQGames.quadraticize(pc::NPlayerNavigationCost, g::GeneralGame,
                                        x::SVector, u::SVector, t::AbstractFloat)
     nx = n_states(pc)
     nu = n_controls(pc)

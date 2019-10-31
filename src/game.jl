@@ -60,13 +60,12 @@ samplingtime(g::AbstractGame) = samplingtime(dynamics(g))
 # additional convenience methods
 n_players(g::AbstractGame{uids}) where {uids} = length(uids)
 uindex(g::AbstractGame{uids}) where {uids} = uids
-pindex(g::AbstractGame) = SVector{n_players(g)}(1:n_players(g))
 horizon(g::AbstractGame{uids, h}) where {uids, h} = h
 time_disc2cont(g::AbstractGame, k::Int, t0::Float64=0.) = (t0 +
                                                            (k-1)*samplingtime(g))
+pindex(g) = @S 1:n_players(g)
 
 "-------------------------------- Implementations ---------------------------------"
-
 
 "A simple contruction helper that runs some sanity checks on the types"
 @inline function game_sanity_checks(uids, TD, TC)

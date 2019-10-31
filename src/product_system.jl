@@ -30,7 +30,7 @@ Base.@pure function common_linstyle(subsystems::NTuple)
 end
 
 struct ProductSystem{ΔT,nx,nu,np,nξ,TS<:NTuple{np,<:ControlSystem{ΔT}},TXI<:NTuple{np},
-                     TUI<:NTuple{np},TXY<:NTuple{np},TXII,TXIXY}<:ControlSystem{ΔT,nx,nu}
+                     TUI<:NTuple{np},TXY<:NTuple{np},TXII<:NTuple{np},TXIXY<:NTuple{np}}<:ControlSystem{ΔT,nx,nu}
     subsystems::TS
     xids::TXI
     uids::TUI
@@ -44,13 +44,14 @@ struct ProductSystem{ΔT,nx,nu,np,nξ,TS<:NTuple{np,<:ControlSystem{ΔT}},TXI<:N
         if common_linstyle(subsystems) isa FeedbackLinearization
             nξ, ξids, ξxyids = ξ_dims(subsystems)
         else
-            nξ, ξids, ξxyids = nothing, nothing, nothing
+            nξ, ξids, ξxyids = 0, Tuple(0 for i in 1:np), Tuple(0 for i in 1:np)
         end
         new{ΔT,nx,nu,np,nξ,TS,typeof(xids),typeof(uids),
             typeof(xyids),typeof(ξids),typeof(ξxyids)}(subsystems, xids, uids,
                                                        xyids, ξids, ξxyids)
     end
 end
+n_players(cs::ProductSystem{ΔT,nx,nu,np}) where {ΔT,nx,nu,np} = np
 subsystems(cs::ProductSystem) = cs.subsystems
 xindex(cs::ProductSystem) = cs.xids
 uindex(cs::ProductSystem) = cs.uids
@@ -90,13 +91,11 @@ end
 "------------------- Implement Feedback Linearization Interface -------------------"
 
 # For now, the product system is only feedback linearizable if all subsystems are
-function LinearizationStyle(cs::ProductSystem)
-    return (isnothing(n_linstates(cs)) ? JacobianLinearization() :
-            FeedbackLinearization())
-end
+LinearizationStyle(cs::ProductSystem) = common_linstyle(subsystems(cs))
 
 n_linstates(cs::ProductSystem{ΔT,nx,nu,np,nξ}) where {ΔT,nx,nu,np,nξ} = nξ
 ξxyindex(cs::ProductSystem) = cs.ξxyids
+ξindex(cs::ProductSystem) = cs.ξids
 
 # TODO: outsource some system-product function (Compose large system of subsystems)
 @inline function feedbacklin(cs::ProductSystem)
@@ -117,47 +116,55 @@ n_linstates(cs::ProductSystem{ΔT,nx,nu,np,nξ}) where {ΔT,nx,nu,np,nξ} = nξ
     return LTISystem(dyn, ξxyindex(cs))
 end
 
-# TODO: There might be a more compact way to do this:
-# https://stackoverflow.com/questions/58616878/julia-efficiently-map-zipped-tuples-to-tuple
 function x_from(cs::ProductSystem, ξ::SVector)
     subs = subsystems(cs)
-    xids = xindex(cs)
-    # TODO: in general: we could have nx != nξ. For now this is okay.
-    ξids = xindex(cs)
-    nx = n_states(cs)
-    x = @MVector zeros(nx)
-
-    for i in 1:length(subs)
-        ξᵢ = ξ[ξids[i]]
-        subᵢ = subs[i]
-        x[xids[i]] = x_from(subᵢ, ξᵢ)
+    ξids = ξindex(cs)
+    xs = map(pindex(cs)) do i
+        x_from(subs[i], ξ[ξids[i]])
     end
-
-    return SVector(x)
+    # Notice: we can safely vcat because in a product system, xids will always be
+    # ordered in an ascending order.
+    return vcat(Tuple(xs)...)
 end
 
 function ξ_from(cs::ProductSystem, x::SVector)
     subs = subsystems(cs)
     xids = xindex(cs)
-    # TODO: in general: we could have nx != nξ. For now this is okay.
-    ξids = xindex(cs)
-    nξ = n_states(cs)
-    ξ = @MVector zeros(nξ)
-
-    for i in 1:length(subs)
-        xᵢ = x[xids[i]]
-        subᵢ = subs[i]
-        ξ[ξids[i]] = ξ_from(subᵢ, xᵢ)
+    ξs = map(pindex(cs)) do i
+        ξ_from(subs[i], x[xids[i]])
     end
-
-    return SVector(ξ)
+    # Notice: we can safely vcat because in a product system, ξids will always be
+    # ordered in an ascending order.
+    return vcat(Tuple(ξs)...)
 end
 
 function λ_issingular(cs::ProductSystem, ξ::SVector)
-    subs = subsystems(cs)
-    # TODO: in general: we could have nx != nξ. For now this is okay.
-    ξids = xindex(cs)
-    return any(zip(subsystems(cs), ξids)) do (subᵢ, ξis)
+    return any(zip(subsystems(cs), ξindex(cs))) do (subᵢ, ξis)
         λ_issingular(subᵢ, ξ[ξis])
     end
+end
+
+# TODO: why does this allocate?
+function inverse_decoupling_matrix(cs::ProductSystem, x::SVector)
+    nu = n_controls(cs)
+    Minv = @MMatrix(zeros(nu, nu))
+    for (sub, xid, uid) in zip(subsystems(cs), xindex(cs), uindex(cs))
+        xᵢ = x[xid]
+        Minv[uid, uid] = inverse_decoupling_matrix(sub, xᵢ)
+    end
+    return SMatrix(Minv)
+end
+
+function decoupling_drift_term(cs::ProductSystem, x)
+    nu = n_controls(cs)
+    subs = subsystems(cs)
+    xids = xindex(cs)
+    uids = uindex(cs)
+
+    ms = map(pindex(cs)) do i
+        decoupling_drift_term(subs[i], x[xids[i]])
+    end
+    # Notice: we can safely vcat because in a product system, uids will always be
+    # ordered in an ascending order.
+    return vcat(Tuple(ms)...)
 end
