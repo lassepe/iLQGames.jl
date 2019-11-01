@@ -32,12 +32,20 @@ timepoints(traj::SystemTrajectory) = (time_disc2cont(traj, k) for k in
                                       1:horizon(traj))
 
 # thin interface with Base for convenience
-@inline function Base.zero(::Type{<:SystemTrajectory{h, ΔT, nx, nu}},
-                           t0::Float64=0.) where{h, ΔT, nx, nu}
-    return SystemTrajectory{ΔT}(zero(SizedVector{h, SVector{nx, Float64}}),
-                                zero(SizedVector{h, SVector{nu, Float64}}), t0)
+@inline function Base.zero(::Type{<:SystemTrajectory{h,ΔT,nx,nu}},
+                           t0::Float64=0.) where{h,ΔT,nx,nu}
+    return SystemTrajectory{ΔT}(zero(SizedVector{h,SVector{nx,Float64}}),
+                                zero(SizedVector{h,SVector{nu,Float64}}), t0)
 end
 Base.zero(traj::SystemTrajectory) = zero(typeof(traj), initialtime(traj))
+function Base.zero(::Type{SystemTrajectory}, g)
+    h = horizon(g)
+    ΔT = samplingtime(g)
+    nx = n_states(g)
+    nu = n_controls(g)
+    return zero(SystemTrajectory{h,ΔT,nx,nu})
+end
+
 function zero!(traj::SystemTrajectory)
     for k in 1:horizon(traj)
         traj.x[k] = zero(traj.x[k])
