@@ -57,16 +57,24 @@ xindex(cs::ProductSystem) = cs.xids
 uindex(cs::ProductSystem) = cs.uids
 xyindex(cs::ProductSystem) = cs.xyids
 
-function dx(cs::ProductSystem{ΔT, nx, nu}, x::SVector{nx},
-            u::SVector{nu}, t::AbstractFloat) where {ΔT, nx, nu}
-
-    dx_val = MVector{nx, promote_type(eltype(x), eltype(u))}(undef)
-
-    for (xidᵢ, uidᵢ, subᵢ) in zip(xindex(cs), uindex(cs), subsystems(cs))
-        dx_val[xidᵢ] = dx(subᵢ, x[xidᵢ], u[uidᵢ], t)
+function dx(cs::ProductSystem, x::SVector, u::SVector, t::AbstractFloat)
+    dxs = map(subsystems(cs), xindex(cs), uindex(cs)) do sub, xid, uid
+        xᵢ = x[xid]
+        uᵢ = u[uid]
+        return dx(sub, xᵢ, uᵢ, t)
     end
+    return vcat(dxs...)
+end
 
-    return SVector{nx}(dx_val)
+# TODO: maybe make this a generated funtions. Depending on the dimensionality,
+# it might be benificial to do the sparse or dense `next_x`.
+function next_x(cs::ProductSystem, x::SVector, u::SVector, t::Float64)
+    xs = map(subsystems(cs), xindex(cs), uindex(cs)) do sub, xid, uid
+        xᵢ = x[xid]
+        uᵢ = u[uid]
+        return next_x(sub, xᵢ, uᵢ, t)
+    end
+    return vcat(xs...)
 end
 
 # computing large matrix exponentials is expensive. Therefore, we exploit the
@@ -97,8 +105,7 @@ n_linstates(cs::ProductSystem{ΔT,nx,nu,np,nξ}) where {ΔT,nx,nu,np,nξ} = nξ
 ξxyindex(cs::ProductSystem) = cs.ξxyids
 ξindex(cs::ProductSystem) = cs.ξids
 
-# TODO: outsource some system-product function (Compose large system of subsystems)
-@inline function feedbacklin(cs::ProductSystem)
+function feedbacklin(cs::ProductSystem)
     nx = n_states(cs)
     nu = n_controls(cs)
     # the full matrices
@@ -113,7 +120,16 @@ n_linstates(cs::ProductSystem{ΔT,nx,nu,np,nξ}) where {ΔT,nx,nu,np,nξ} = nξ
         B[xid, uid] = lin_sub.dyn.B
     end
     dyn = LinearSystem{samplingtime(cs)}(SMatrix(A), SMatrix(B))
-    return LTISystem(dyn, ξxyindex(cs))
+    return LTISystem(dyn, ξxyindex(cs), ξindex(cs))
+end
+
+# TODO: this might be better in some cases (as the new system has some sparsity
+# properties)
+function sparse_feedbacklin(cs::ProductSystem)
+    feedbacklin_subs = map(subsystems(cs)) do sub
+        feedbacklin(sub)
+    end
+    return ProductSystem(feedbacklin_subs)
 end
 
 function x_from(cs::ProductSystem, ξ::SVector)

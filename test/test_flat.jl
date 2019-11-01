@@ -72,4 +72,3 @@ solverξ = iLQSolver(gξ)
                                             0.02, 0.05])) for k in 1:h])
 @info "Benchmark *with* feedback linearization:"
 display(@benchmark(solve!(copy(zero_op), copy(γξ_init), $gξ, $solverξ, $ξ0)))
-solve!(copy(zero_op), copy(γξ_init), gξ, solverξ, ξ0)
