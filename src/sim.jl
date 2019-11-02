@@ -35,8 +35,8 @@ $(FUNCTIONNAME)(g::AbstractGame, traj::SystemTrajectory)
 Returns a vector of costs for each player
 """
 function cost(g::GeneralGame, traj::SystemTrajectory)
-    map(pindex(g)) do i
-        sum(player_costs(g)[i](g, traj.x[k], traj.u[k], samplingtime(g)*(k-1)) for k
-            in eachindex(traj.x))
+    map(player_costs(g)) do ci
+        sum(ci(g, traj.x[k], traj.u[k], time_disc2cont(traj, k)) for k in
+            eachindex(traj.x))
     end
 end
