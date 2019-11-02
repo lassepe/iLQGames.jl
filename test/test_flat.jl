@@ -1,3 +1,4 @@
+using Test
 using StaticArrays
 using BenchmarkTools
 
@@ -27,6 +28,8 @@ using iLQGames:
     ξ_from,
     subsystems,
     transform_to_feedbacklin
+
+using iLQGames.TestUtils
 
 # generate a game
 T_horizon = 10.
@@ -70,5 +73,8 @@ solverξ = iLQSolver(gξ)
 γξ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
                                  (@SVector [-0.05, 0.02,
                                             0.02, 0.05])) for k in 1:h])
+
+quad_sanity_check(gξ)
+
 @info "Benchmark *with* feedback linearization:"
 display(@benchmark(solve!(copy(zero_op), copy(γξ_init), $gξ, $solverξ, $ξ0)))

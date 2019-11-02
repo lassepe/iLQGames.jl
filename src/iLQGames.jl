@@ -58,7 +58,8 @@ module iLQGames
     include("n_player_unicycle_game.jl")
     include("n_player_2Ddoubleintegrator_cost.jl")
 
-    # some tools for plotting
+    # some helpful tooling
     include("plot_utils.jl")
+    include("test_utils.jl")
 
 end # module

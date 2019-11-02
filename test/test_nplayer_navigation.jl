@@ -21,27 +21,10 @@ using iLQGames:
     generate_nplayer_navigation_game,
     solve!
 
+using iLQGames.TestUtils
+
 using StaticArrays
 using LinearAlgebra
-
-function quad_sanity_check(g::GeneralGame, pcs, nx, nu)
-    @testset "Quadratization comparison" begin
-        for i in 1:100
-            x = SVector{nx, Float64}(randn(nx))
-            u = SVector{nu, Float64}(randn(nu))
-            t = T_horizon
-
-            for pc in pcs
-                qc_manual = quadraticize(pc, g, x, u, t)
-                qc_ad= _quadraticize_ad(pc, g, x, u, t)
-
-                @test isapprox(qc_manual.Q, qc_ad.Q)
-                @test isapprox(qc_manual.l, qc_ad.l)
-                @test isapprox(qc_manual.R, qc_ad.R)
-            end
-        end
-    end;
-end
 
 # generate a game
 T_horizon = 10.
@@ -86,7 +69,7 @@ t = 0.
     end
 end;
 
-quad_sanity_check(g, pcs, nx, nu)
+quad_sanity_check(g)
 
 "--------------------------------- Unicycle4D ---------------------------------"
 
@@ -105,7 +88,7 @@ pcs = player_costs(g)
 h = horizon(g)
 zero_op = zero(SystemTrajectory{h, ΔT, nx, nu})
 
-quad_sanity_check(g, pcs, nx, nu)
+quad_sanity_check(g)
 
 # solve the lq game
 solver = iLQSolver(g)
