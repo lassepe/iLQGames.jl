@@ -16,13 +16,13 @@ function goalcost end
 "--------------------------------- Implementation ---------------------------------"
 
 
-function iLQGames.quadraticize(pc::NPlayerNavigationCost, g::GeneralGame,
-                                       x::SVector, u::SVector, t::AbstractFloat)
+function quadraticize(pc::NPlayerNavigationCost, g::GeneralGame, x::SVector,
+                      u::SVector, t::AbstractFloat)
     nx = n_states(pc)
     nu = n_controls(pc)
 
-    xi = xindex(pc)[pc.player_id]
-    ui = uindex(pc)[pc.player_id]
+    xi = xindex(pc)[player_id(pc)]
+    ui = uindex(pc)[player_id(pc)]
 
     l = @MVector zeros(nx)
     Q = @MMatrix zeros(nx, nx)
@@ -44,8 +44,8 @@ function iLQGames.quadraticize(pc::NPlayerNavigationCost, g::GeneralGame,
 
     # pairwise proximity cost
     xyi_ego = xyindex(g)[player_id(pc)]
-    for (j, xyi_other) in enumerate(xindex(pc))
-        j != pc.player_id || continue
+    for (j, xyi_other) in enumerate(xyindex(g))
+        j != player_id(pc) || continue
         quad!(Q, l, proximitycost(pc), x, xyi_ego, xyi_other)
     end
 
@@ -57,8 +57,8 @@ end
 
 function (pc::NPlayerNavigationCost)(g::AbstractGame, x::SVector, u::SVector, t::Float64)
     # extract the states and inputs for this player
-    xi = xindex(pc)[pc.player_id]
-    ui = uindex(pc)[pc.player_id]
+    xi = xindex(pc)[player_id(pc)]
+    ui = uindex(pc)[player_id(pc)]
     xᵢ = x[xi]
     uᵢ = u[ui]
     # setup the cost: each player wan't to:
