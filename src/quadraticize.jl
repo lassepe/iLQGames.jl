@@ -21,7 +21,8 @@ function _quadraticize_ad(pc::PlayerCost{nx, nu}, g::GeneralGame, x::SVector{nx}
     # the quadratic control component o the cost is the hessian in u
     R = ForwardDiff.hessian(u_cost, u)
 
-    return QuadraticPlayerCost(Q, l, R)
+    return QuadraticPlayerCost(l, Q, R)
 end
-quadraticize(pc::PlayerCost, g::GeneralGame, x::SVector, u::SVector,
-             t::AbstractFloat) = _quadraticize_ad(pc, g, x, u, t)
+
+quadraticize!(qcache::QuadCache, pc::PlayerCost, g::GeneralGame, x::SVector,
+              u::SVector, t::AbstractFloat) = _quadraticize_ad(pc, g, x, u, t)

@@ -16,43 +16,43 @@ function goalcost end
 "--------------------------------- Implementation ---------------------------------"
 
 
-function quadraticize(pc::NPlayerNavigationCost, g::GeneralGame, x::SVector,
-                      u::SVector, t::AbstractFloat)
+function quadraticize!(qcache::QuadCache, pc::NPlayerNavigationCost,
+                       g::GeneralGame, x::SVector, u::SVector, t::AbstractFloat)
     nx = n_states(pc)
     nu = n_controls(pc)
 
     xi = xindex(pc)[player_id(pc)]
     ui = uindex(pc)[player_id(pc)]
 
-    l = @MVector zeros(nx)
-    Q = @MMatrix zeros(nx, nx)
-    R = @MMatrix zeros(nu, nu)
+    # reset the cache
+    reset!(qcache)
 
     # quadratic input cost
-    quad!(R, inputcost(pc), ui)
+    quad!(qcache.R, inputcost(pc), ui)
     # input constraints
     for constrᵢ in inputconstr(pc)
-        quad!(R, constrᵢ, u, ui)
+        quad!(qcache.R, constrᵢ, u, ui)
     end
 
     # quadratic state cost
-    quad!(Q, l, statecost(pc), x[xi], xi)
+    quad!(qcache.Q, qcache.l, statecost(pc), x[xi], xi)
     # state constraints
     for constrᵢ in stateconstr(pc)
-        quad!(Q, l, constrᵢ, x, xi)
+        quad!(qcache.Q, qcache.l, constrᵢ, x, xi)
     end
 
     # pairwise proximity cost
     xyi_ego = xyindex(g)[player_id(pc)]
     for (j, xyi_other) in enumerate(xyindex(g))
         j != player_id(pc) || continue
-        quad!(Q, l, proximitycost(pc), x, xyi_ego, xyi_other)
+        quad!(qcache.Q, qcache.l, proximitycost(pc), x, xyi_ego, xyi_other)
     end
 
     # the goal cost
-    quad!(Q, l, goalcost(pc), x[xi], xi, t)
+    quad!(qcache.Q, qcache.l, goalcost(pc), x[xi], xi, t)
 
-    return QuadraticPlayerCost(SMatrix(Q), SVector(l), SMatrix(R))
+    return QuadraticPlayerCost(SVector(qcache.l), SMatrix(qcache.Q),
+                               SMatrix(qcache.R))
 end
 
 function (pc::NPlayerNavigationCost)(g::AbstractGame, x::SVector, u::SVector, t::Float64)

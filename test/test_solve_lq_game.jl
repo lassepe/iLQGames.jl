@@ -39,12 +39,12 @@ function generate_1D_pointmass_game()
     B = SMatrix{2, 2}([0.5*ΔT^2 ΔT; 0.32*ΔT^2 0.11*ΔT]')
     dyn = LinearSystem{ΔT}(A, B)
     # costs for each player
-    c1 = QuadraticPlayerCost((@SMatrix [1. 0.; 0. 1.]), # Q
-                             (@SVector [0., 0.]),       # l
-                             (@SMatrix [1. 0.; 0. 0.])) # R
-    c2 = QuadraticPlayerCost(-c1.Q,                     # Q
-                             -c1.l,                     # l
-                             (@SMatrix [0. 0.; 0. 1.])) # R
+    c1 = QuadraticPlayerCost(@SVector([0., 0.]),       # l
+                             @SMatrix([1. 0.; 0. 1.]), # Q
+                             @SMatrix([1. 0.; 0. 0.])) # R
+    c2 = QuadraticPlayerCost(-c1.l,                     # l
+                             -c1.Q,                     # Q
+                             @SMatrix([0. 0.; 0. 1.])) # R
 
     costs = @SVector [c1, c2]
     # the lq game (player one has control input 1 and 2; player 2 has control input 3
@@ -79,19 +79,19 @@ function generate_2D_pointmass_game()
 
     # cost
     # player 1 want's the position to be zero
-    c1 = QuadraticPlayerCost((@SMatrix [1. 0. 0. 0.;
-                                        0. 2. 0. 0.;
-                                        0. 0. 0. 0.;
-                                        0. 0. 0. 0.]), # Q
-                             (@SVector zeros(4)),      # l
+    c1 = QuadraticPlayerCost(@SVector(zeros(4)),      # l
+                             @SMatrix([1. 0. 0. 0.;
+                                       0. 2. 0. 0.;
+                                       0. 0. 0. 0.;
+                                       0. 0. 0. 0.]), # Q
                              (@SMatrix [1. 0. 0. 0.;
                                         0. 1. 0. 0.;
                                         0. 0. 0. 0.;
                                         0. 0. 0. 0.]))# R)
     # cost
     # player 2 is adversarial
-    c2 = QuadraticPlayerCost(-c1.Q,                   # Q
-                             -c1.l ,                  # l
+    c2 = QuadraticPlayerCost(-c1.l,                   # Q
+                             -c1.Q ,                  # l
                              (@SMatrix [0. 0. 0. 0.;
                                         0. 0. 0. 0.;
                                         0. 0. 1. 0.;

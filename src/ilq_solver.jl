@@ -1,4 +1,4 @@
-@with_kw struct iLQSolver{TLM, TOM}
+@with_kw struct iLQSolver{TLM, TOM, TQM}
     "The initial scaling of the feed-forward term."
     α_scale_init::Float64 = 0.15
     "The geometric scaling of the feed-forward term per scaling step in
@@ -16,14 +16,17 @@
     max_elwise_diff_step::Float64 = 10 * max_elwise_diff_converged
     "Preallocated memory for lq approximations."
     _lq_mem::TLM
+    "Preallocated memory for quadraticization results."
+    _qcache_mem::TQM
     "Preallocated memory for operting points."
     _op_mem::TOM
 end
 
 function iLQSolver(g, args...; kwargs...)
-    return iLQSolver(args...; kwargs..., _lq_mem=lqgame_preprocess_alloc(g),
-                     _op_mem=zero(SystemTrajectory{horizon(g), samplingtime(g),
-                                                   n_states(g), n_controls(g)}))
+    return iLQSolver(args...; kwargs...,
+                     _lq_mem=lqgame_preprocess_alloc(g),
+                     _qcache_mem=zero(QuadCache{n_states(g),n_controls(g)}),
+                     _op_mem=zero(SystemTrajectory, g))
 end
 
 function has_converged(solver::iLQSolver, last_op::SystemTrajectory{h},
@@ -99,6 +102,7 @@ function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
     current_op = initial_op
     current_strategy = initial_strategy
     lqg_approx = solver._lq_mem
+    qcache = solver._qcache_mem
 
     # 0. compute the operating point for the first run.
     # TODO -- we could probably allow to skip this in some warm-starting scenarios
@@ -112,7 +116,7 @@ function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
         refer to the *same* object."
 
         # 1. linearize dynamics and quadratisize costs to obtain an lq game
-        lq_approximation!(lqg_approx, g, current_op)
+        lq_approximation!(lqg_approx, qcache, g, current_op)
 
         # 2. solve the current lq version of the game
         solve_lq_game!(current_strategy, lqg_approx)

@@ -52,11 +52,11 @@ Represents the quadratic players costs for a singel player in a game.
 
 $(TYPEDFIELDS)
 """
-struct QuadraticPlayerCost{nx, nu, TQ<:SMatrix{nx, nx}, TL<:SVector{nx}, TR<:SMatrix{nu, nu}} <: PlayerCost{nx, nu}
-    "The qudratic state cost matrix"
-    Q::TQ
+struct QuadraticPlayerCost{nx, nu, TL<:SVector{nx}, TQ<:SMatrix{nx, nx}, TR<:SMatrix{nu, nu}} <: PlayerCost{nx, nu}
     "The linear state cost"
     l::TL
+    "The qudratic state cost matrix"
+    Q::TQ
     "A square matrix to represent the quadratic control cost for this player"
     R::TR
 end

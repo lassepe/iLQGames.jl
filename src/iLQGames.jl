@@ -36,6 +36,8 @@ module iLQGames
     include("product_system.jl")
     # game abstraction
     include("game.jl")
+    include("prealloc.jl")
+    include("game_impl.jl")
     # ad quadraticization
     include("quadraticize.jl")
 

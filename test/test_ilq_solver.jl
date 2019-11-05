@@ -19,6 +19,8 @@ using iLQGames:
     AffineStrategy,
     generate_nplayer_navigation_game
 
+using iLQGames.TestUtils
+
 using StaticArrays
 using LinearAlgebra
 
@@ -48,26 +50,7 @@ x = @SVector zeros(nx)
 u = @SVector zeros(nu)
 t = 0.
 
-
-@testset "LQ Approximation Sanity Check." begin
-    for i in 1:100
-        global x = SVector{nx, Float64}(randn(nx))
-        global u = SVector{nu, Float64}(randn(nu))
-        global t = T_horizon
-
-        for c in (c1, c2)
-            qc_manual = quadraticize(c, g, x, u, t)
-            qc_ad = _quadraticize_ad(c, g, x, u, t)
-            @test isapprox(qc_manual.Q, qc_ad.Q)
-            @test isapprox(qc_manual.l, qc_ad.l)
-            @test isapprox(qc_manual.R, qc_ad.R)
-        end
-
-        # test linearization of the dynamics
-        linearize_discrete(dyn, x, u, t)
-    end
-end;
-
+quad_sanity_check(g)
 
 # test the lq approximation:
 # generate an operating point
