@@ -10,10 +10,10 @@
     max_scale_backtrack::Int = 20
     "The maximum elementwise difference bewteen operating points for
     convergence."
-    max_elwise_diff_converged::Float64 = α_scale_init/2
+    max_elwise_diff_converged::Float64 = α_scale_init/10
     "The maximum elementwise difference bewteen operating points for per
     iteration step."
-    max_elwise_diff_step::Float64 = 10 * max_elwise_diff_converged
+    max_elwise_diff_step::Float64 = 30 * max_elwise_diff_converged
     "Preallocated memory for lq approximations."
     _lq_mem::TLM
     "Preallocated memory for quadraticization results."
