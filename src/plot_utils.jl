@@ -1,10 +1,39 @@
+"The legacy version of the plot function that computes the player colors form a
+simple color map (just distinguishable colors)"
 function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
                     uids::Union{SIndex, Nothing}=nothing,
-                    cname::AbstractString="blues", alpha::Float64=1.,
-                    legend::Symbol=:none,
-                    path_marker=(:circle, 1, stroke(1, 1., :black)), ; k::Int=1)
+                    cname::AbstractString="blues", args...; kwargs...)
     # get a color for each player (using offset because first color is too faint)
     player_colors = colormap(cname, length(xy_ids)+1)[2:end]
+    # TODO, consider swapping uids and cname globally
+    return plot_traj!(plt, traj, xy_ids, player_colors, uids, args...; kwargs...)
+end
+
+"Colors each players trajectory by the players cost."
+function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, g::AbstractGame,
+                    cs::ColorScheme, rangescale::Union{Tuple, Nothing}=nothing,
+                    args...; kwargs...)
+
+    # cost
+    pcs = cost(g, traj)
+    rangescale = isnothing(rangescale) ? extrema(pcs) : rangescale
+    player_colors = [get(cs, pc, rangescale) for pc in pcs]
+
+    return plot_traj!(plt, traj, xyindex(g), player_colors, args...;
+                      kwargs...)
+end
+
+function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, g::AbstractGame,
+                    player_colors::AbstractArray, args...; kwargs...)
+    return  plot_traj!(plt, traj, xyindex(g), player_colors, args...; kwargs...)
+end
+
+""
+function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
+                    player_colors::AbstractArray,
+                    uids::Union{SIndex, Nothing}=nothing, alpha::Float64=1.,
+                    legend::Symbol=:none,
+                    path_marker=(:circle, 1, stroke(1, 1., :black)), ; k::Int=1)
     # buffer for all the plots
 
     nu = length(eltype(traj.u))
