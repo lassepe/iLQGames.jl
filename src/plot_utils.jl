@@ -33,7 +33,8 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
                     player_colors::AbstractArray,
                     uids::Union{SIndex, Nothing}=nothing, alpha::Float64=1.,
                     legend::Symbol=:none,
-                    path_marker=(:circle, 1, stroke(1, 1., :black)), ; k::Int=1)
+                    path_marker=(:circle, 1, stroke(1, 1., :black)), ; k::Int=1,
+                    kp=k)
     # buffer for all the plots
 
     nu = length(eltype(traj.u))
@@ -58,8 +59,10 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
               seriesalpha=alpha)
 
         # marker at the current time step
-        scatter!(plt, [x[k]], [y[k]], seriescolor=player_colors[i],
-                 label="x_p$i", legend=legend)
+        for k in unique([k, kp])
+            scatter!(plt, [x[k]], [y[k]], seriescolor=player_colors[i],
+                     label="x_p$i", legend=legend)
+        end
     end
 
     return isnothing(uids) ? plt : plot(pu, plt, legend=legend)
