@@ -10,6 +10,8 @@ function statecost end
 function stateconstr end
 "The `::ProximityCost` for a player with any other player."
 function proximitycost end
+"The ::ObstacleCost for obstacles that need to be avoided by all players."
+function obstaclecost end
 "The terminal `::GoalCost` to encourage reaching some goal"
 function goalcost end
 
@@ -46,6 +48,11 @@ function quadraticize!(qcache::QuadCache, pc::NPlayerNavigationCost,
     for (j, xyi_other) in enumerate(xyindex(g))
         j != player_id(pc) || continue
         quad!(qcache.Q, qcache.l, proximitycost(pc), x, xyi_ego, xyi_other)
+    end
+
+    # obstacle avoidance cost
+    for oc in obstaclecost(pc)
+        quad!(qcache.Q, qcache.l, oc, x, xi)
     end
 
     # the goal cost
@@ -85,6 +92,11 @@ function (pc::NPlayerNavigationCost)(g::AbstractGame, x::SVector, u::SVector, t:
         # other positions
         xp_other = x[xys[j]]
         cost += proximitycost(pc)(xp_ego, xp_other)
+    end
+
+    # obstacle avoidance cost
+    for oc in obstaclecost(pc)
+        cost += oc(xp_ego)
     end
 
     # goal state cost cost:

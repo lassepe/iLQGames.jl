@@ -46,6 +46,47 @@ end
     return nothing
 end
 
+@with_kw struct ObstacleCost{TP<:SVector}
+    pos::TP
+    w::Float64
+    r_avoid::Float64
+end
+
+@inline function (oc::ObstacleCost)(xp::SVector)
+    @unpack pos, r_avoid, w = oc
+    Δxp = xp - pos
+    return softconstr(sqrt(Δxp'*Δxp), r_avoid, Inf, w)
+end
+
+@inline function quad!(Q::MMatrix, l::MVector, oc::ObstacleCost, x::SVector, xyi)
+    @unpack pos, r_avoid, w = oc
+
+    x1, y1 = xyi[1], xyi[2]
+    obsx, obsy = pos[1], pos[2]
+
+    Δx = x[x1] - obsx
+    Δy = x[y1] - obsy
+    Δnormsq = Δx^2 + Δy^2
+    Δnorm = sqrt(Δnormsq)
+    if Δnorm < r_avoid
+        # cost model: w*(Δnorm - min)^2
+        δx = 2*w*Δx*(Δnorm - r_avoid)/Δnorm
+        δy = 2*w*Δy*(Δnorm - r_avoid)/Δnorm
+        l[x1] += δx
+        l[y1] += δy
+
+        w̃ = 2*w/Δnormsq
+
+        δxδx = (w̃*Δx^2) + (w̃*Δx^2*(r_avoid - Δnorm))/Δnorm - (w̃*Δnorm*(r_avoid - Δnorm))
+        δyδy = (w̃*Δy^2) + (w̃*Δy^2*(r_avoid - Δnorm))/Δnorm - (w̃*Δnorm*(r_avoid - Δnorm))
+        δxδy = (w̃*Δx*Δy) + (w̃*Δx*Δy*(r_avoid - Δnorm))/Δnorm
+
+        Q[x1,x1] += δxδx
+        Q[y1,y1] += δyδy
+        Q[x1,y1] += δxδy; Q[y1,x1] += δxδy
+    end
+end
+
 @with_kw struct ProximityCost
     r_avoid::Float64
     w::Float64
