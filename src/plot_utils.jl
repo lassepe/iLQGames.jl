@@ -54,9 +54,9 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
         y = collect(x[last(xy_i)] for x in traj.x)
 
         plotargs = (plt, x, y)
-        plot!(plotargs...; xlims=(-5, 5), ylims=(-5, 5),
+        plot!(plotargs...; xlims=(-3.5, 3.5), ylims=(-1, 1),
               seriescolor=player_colors[i], label="p$i", legend=legend,
-              seriesalpha=alpha)
+              seriesalpha=alpha, aspect_ratio=1)
 
         # marker at the current time step
         for k in unique([k, kp])
