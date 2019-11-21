@@ -4,17 +4,17 @@
     "The regularization term for the control cost quadraticization."
     control_regularization::Float64 = 1.0
     "The initial scaling of the feed-forward term."
-    α_scale_init::Float64 = 0.75
+    α_scale_init::Float64 = 0.85
     "The geometric scaling of the feed-forward term per scaling step in
     backtrack scaling."
-    α_scale_step::Float64 = 0.5
+    α_scale_step::Float64 = 0.3
     "Iteration is aborted if this number is exceeded."
     max_n_iter::Int = 200
     "The maximum number of backtrackings per scaling step"
     max_scale_backtrack::Int = 20
     "The maximum elementwise difference bewteen operating points for
     convergence."
-    max_elwise_diff_converged::Float64 = 0.01
+    max_elwise_diff_converged::Float64 = 0.035
     "The maximum elementwise difference bewteen operating points for per
     iteration step."
     max_elwise_diff_step::Float64 = 1.

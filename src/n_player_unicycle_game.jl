@@ -13,12 +13,11 @@ struct NPlayerUnicycleCost{nx,nu,TXI<:NTuple,TUI<:NTuple,TIC,TICR,TSC,TSCR,TPC,T
 end
 
 function NPlayerUnicycleCost(player_id, xids::TXI, uids::TUI, xg, t_final;
-         inputcost::TIC=QuadCost(SMatrix{2,2}([1. 0.; 0. 1.]) * 10),
-         inputconstr::TICR=(SoftConstr(1, deg2rad(-10), deg2rad(10), 50),
-                            SoftConstr(2, -9.81, 9.81, 50)),
-         statecost::TSC=QuadCost(SMatrix{4,4}(diagm([0., 0., 0., 1.])) * 30),
-         stateconstr::TSCR=(SoftConstr(4, -0.05, 2., 50),
-                            SoftConstr(2, -0.75, 0.75, 50)),
+         inputcost::TIC=InputCost(SMatrix{2,2}([5. 0.; 0. 2.]) * 10),
+         inputconstr::TICR=tuple(),
+         statecost::TSC=QuadCost(SMatrix{4,4}(diagm([0., 0., 0., 1.])) * 50),
+         stateconstr::TSCR=(#SoftConstr(4, 0., 2., 50),
+                            SoftConstr(2, -0.75, 0.75, 50),),
          proximitycost::TPC=ProximityCost(1.0, 50),
          obstaclecost::TOC=tuple(),
          goalcost::TGC=GoalCost(t_final, xg, SMatrix{4,4}(diagm([1.,1.,1.,0.])) *
