@@ -60,6 +60,7 @@ statecost(pc::NPlayerCarCost) = QuadCost(pc.Qs)
 stateconstr(pc::NPlayerCarCost) = (SoftConstr(4, pc.des_steer_bounds..., pc.w),
                                    SoftConstr(5, pc.des_v_bounds..., pc.w))
 proximitycost(pc::NPlayerCarCost) = ProximityCost(pc.r_avoid, pc.w)
+obstaclecost(pc::NPlayerCarCost) = tuple()
 goalcost(pc::NPlayerCarCost) = GoalCost(pc.t_final, pc.xg, pc.Qg)
 xindex(pc::NPlayerCarCost) = pc.xids
 uindex(pc::NPlayerCarCost) = pc.uids

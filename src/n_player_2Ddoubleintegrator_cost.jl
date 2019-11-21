@@ -39,6 +39,7 @@ inputconstr(c::NPlayer2DDoubleIntegratorCost) = c.inputconstr
 statecost(c::NPlayer2DDoubleIntegratorCost) = c.statecost
 stateconstr(c::NPlayer2DDoubleIntegratorCost) = c.stateconstr
 proximitycost(c::NPlayer2DDoubleIntegratorCost) = c.proximitycost
+obstaclecost(c::NPlayer2DDoubleIntegratorCost) = tuple()
 goalcost(c::NPlayer2DDoubleIntegratorCost) = c.goalcost
 xindex(pc::NPlayer2DDoubleIntegratorCost) = pc.xids
 uindex(pc::NPlayer2DDoubleIntegratorCost) = pc.uids

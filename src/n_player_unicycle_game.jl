@@ -17,10 +17,10 @@ function NPlayerUnicycleCost(player_id, xids::TXI, uids::TUI, xg, t_final;
          inputconstr::TICR=(SoftConstr(1, deg2rad(-10), deg2rad(10), 50),
                             SoftConstr(2, -9.81, 9.81, 50)),
          statecost::TSC=QuadCost(SMatrix{4,4}(diagm([0., 0., 0., 1.])) * 30),
-         stateconstr::TSCR=(SoftConstr(4, -0.05, 2., 50),),
+         stateconstr::TSCR=(SoftConstr(4, -0.05, 2., 50),
+                            SoftConstr(2, -0.75, 0.75, 50)),
          proximitycost::TPC=ProximityCost(1.0, 50),
-         obstaclecost::TOC=(ObstacleCost(SVector(0., 100), 100, 99.25),
-                            ObstacleCost(SVector(0., -100), 100, 99.25)),
+         obstaclecost::TOC=tuple(),
          goalcost::TGC=GoalCost(t_final, xg, SMatrix{4,4}(diagm([1.,1.,1.,0.])) *
                                 300)) where {TXI,TUI,TIC,TICR,TSC,TSCR,TPC,TOC,TGC}
 
