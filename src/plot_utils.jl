@@ -42,7 +42,7 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
 
     if !isnothing(uids)
         # names for each input
-        input_labels = show_labels ? reshape(["u$i" for i in 1:nu], 1, nu) : []
+        input_labels = reshape(["u$i" for i in 1:nu], 1, nu)
         # find the player color for each input
         input_colors = reshape([player_colors[findfirst(in.(i, uids))] for i in 1:nu], 1, nu)
         plot!(pu, hcat(traj.u...)'; layout=(nu, 1), label=input_labels,
