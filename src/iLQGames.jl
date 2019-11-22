@@ -6,6 +6,7 @@ module iLQGames
     using StaticArrays
     using LinearAlgebra
     using Parameters
+    using DataFrames
     using Colors, ColorSchemes
     import Base:
         getindex,

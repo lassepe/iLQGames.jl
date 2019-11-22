@@ -103,8 +103,7 @@ Computes a solution solution to a (potentially non-linear and non-quadratic)
 finite horizon game g.
 """
 function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
-                g::GeneralGame, solver::iLQSolver, x0::SVector,
-                verbose::Bool=false)
+                g::GeneralGame, solver::iLQSolver, x0::SVector, verbose::Bool=false)
 
     converged = false
     i_iter = 0
@@ -118,8 +117,18 @@ function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
     # TODO -- we could probably allow to skip this in some warm-starting scenarios
     trajectory!(current_op, dynamics(g), current_strategy, last_op, x0)
 
+    # meta data for RA-L evaluation
+    insert_costs!(df::DataFrame, costs, iter::Int) = begin
+        for (pid, c) in enumerate(costs)
+            push!(df, (iter=iter, player_id=pid, cost=c))
+        end
+    end
+    metadata = (op_init=deepcopy(current_op),
+                cost_data=DataFrame(iter=Int[], player_id=Int[], cost=Float64[]))
+    insert_costs!(metadata.cost_data, cost(g, current_op), i_iter)
+
     # ... and upate the current by integrating the non-linear dynamics
-    while !(converged || i_iter >= solver.max_n_iter)
+    while !(i_iter >= solver.max_n_iter)
         # sanity chech to make sure that we don't manipulate the wrong
         # object...
         @assert !(last_op === current_op) "current and last operating point
@@ -140,14 +149,19 @@ function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
             verbose && @warn "Could not stabilize solution."
             # we immetiately return and state that the solution has not been
             # stabilized
-            return false, current_op, current_strategy
+            return false, current_op, current_strategy, metadata
         end
 
         i_iter += 1
-        converged = has_converged(solver, last_op, current_op)
+        converged = converged || has_converged(solver, last_op, current_op)
+
+        # record the cost for the meta-data
+        insert_costs!(metadata.cost_data, cost(g, current_op), i_iter)
     end
+
+    println(i_iter)
 
     # NOTE: for `converged == false` the result may not be meaningful. `converged`
     # has to be handled outside this function
-    return converged, current_op, current_strategy
+    return converged, current_op, current_strategy, metadata
 end
