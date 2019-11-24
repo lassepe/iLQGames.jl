@@ -34,7 +34,7 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
                     uids::Union{SIndex, Nothing}=nothing, alpha::Float64=1.,
                     legend::Symbol=:none,
                     path_marker=(:circle, 1, stroke(1, 1., :black)); k::Int=1,
-                    xlims=(-3.5, 3.5), ylims=(-1, 1))
+                    xlims=(-3.5, 3.5), ylims=(-1, 1), linealpha=1)
     nu = length(eltype(traj.u))
     pu = plot(; layout=(nu, 1))
 
@@ -54,11 +54,13 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
         plotargs = (plt, x, y)
         plot!(plotargs...; xlims=xlims, ylims=ylims,
               seriescolor=player_colors[i], label="p$i", legend=legend,
-              seriesalpha=alpha, aspect_ratio=1)
+              seriesalpha=alpha, aspect_ratio=1, linealpha=linealpha)
 
         # marker at time step k
-        scatter!(plt, [x[k]], [y[k]], seriescolor=player_colors[i],
-                 label="x_p$i", legend=legend)
+        if k > 0
+            scatter!(plt, [x[k]], [y[k]], seriescolor=player_colors[i],
+                     label="x_p$i", legend=legend)
+        end
     end
 
     return isnothing(uids) ? plt : plot(pu, plt, legend=legend)
