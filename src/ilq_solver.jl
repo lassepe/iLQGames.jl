@@ -9,15 +9,15 @@
     backtrack scaling."
     α_scale_step::Float64 = 0.3
     "Iteration is aborted if this number is exceeded."
-    max_n_iter::Int = 200
+    max_n_iter::Int = 100
     "The maximum number of backtrackings per scaling step"
     max_scale_backtrack::Int = 20
     "The maximum elementwise difference bewteen operating points for
     convergence."
-    max_elwise_diff_converged::Float64 = 0.035
+    max_elwise_diff_converged::Float64 = 0.01
     "The maximum elementwise difference bewteen operating points for per
     iteration step."
-    max_elwise_diff_step::Float64 = 1.
+    max_elwise_diff_step::Float64 = 1.0
     "Preallocated memory for lq approximations."
     _lq_mem::TLM
     "Preallocated memory for quadraticization results."
