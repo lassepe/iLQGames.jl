@@ -1,10 +1,10 @@
 abstract type NPlayerNavigationCost{nx,nu} <: PlayerCost{nx,nu} end
 
-"Returns an `::InputCost`."
+"Returns an the input cost object, e.g. ::QuadCost"
 function inputcost end
 "Returns an iterable of `::SoftConstr` for the inputs."
 function inputconstr end
-"Returns  a `::StateCost`."
+"Returns  a `::QuadCost`."
 function statecost end
 "Returns an interable of `::SoftConstr` for the states."
 function stateconstr end
@@ -28,10 +28,10 @@ function quadraticize!(qcache::QuadCache, pc::NPlayerNavigationCost,
     reset!(qcache)
 
     # quadratic input cost
-    quad!(qcache.R, inputcost(pc), ui)
+    quad!(qcache.R, qcache.r, inputcost(pc), u[ui], ui)
     # input constraints
     for constrᵢ in inputconstr(pc)
-        quad!(qcache.R, constrᵢ, u, ui)
+        quad!(qcache.R, qcache.r, constrᵢ, u, ui)
     end
 
     # quadratic state cost
@@ -52,7 +52,7 @@ function quadraticize!(qcache::QuadCache, pc::NPlayerNavigationCost,
     quad!(qcache.Q, qcache.l, goalcost(pc), x[xi], xi, t)
 
     return QuadraticPlayerCost(SVector(qcache.l), SMatrix(qcache.Q),
-                               SMatrix(qcache.R))
+                               SVector(qcache.r), SMatrix(qcache.R))
 end
 
 function (pc::NPlayerNavigationCost)(g::AbstractGame, x::SVector, u::SVector, t::Float64)

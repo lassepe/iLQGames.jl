@@ -54,47 +54,12 @@ end
 
 player_id(pc::NPlayerCarCost) = pc.player_id
 # TODO: refine to on-demand construction
-inputcost(pc::NPlayerCarCost) = InputCost(pc.R)
+inputcost(pc::NPlayerCarCost) = QuadCost(pc.R)
 inputconstr(pc::NPlayerCarCost) = (SoftConstr(2, pc.des_acc_bounds..., pc.w),)
-statecost(pc::NPlayerCarCost) = StateCost(pc.Qs)
+statecost(pc::NPlayerCarCost) = QuadCost(pc.Qs)
 stateconstr(pc::NPlayerCarCost) = (SoftConstr(4, pc.des_steer_bounds..., pc.w),
                                    SoftConstr(5, pc.des_v_bounds..., pc.w))
 proximitycost(pc::NPlayerCarCost) = ProximityCost(pc.r_avoid, pc.w)
 goalcost(pc::NPlayerCarCost) = GoalCost(pc.t_final, pc.xg, pc.Qg)
 xindex(pc::NPlayerCarCost) = pc.xids
 uindex(pc::NPlayerCarCost) = pc.uids
-
-"---------------------- Legacy functions for sanity checking ----------------------"
-
-function _legacy_cost(pc::NPlayerCarCost, x::SVector, u::SVector, t::Float64)
-    # extract the states and inputs for this player
-    xᵢ = x[xindex(pc)[pc.player_id]]
-    uᵢ = u[uindex(pc)[pc.player_id]]
-    # setup the cost: each player wan't to:
-    cost = 0.
-
-    # control cost: only cares about own control
-    cost += inputcost(pc.R, uᵢ)
-    # acceleration constraints
-    cost += softconstr(uᵢ[2], pc.des_acc_bounds..., pc.w)
-
-    # running cost for states (e.g. large steering)
-    cost += statecost(pc.Qs, xᵢ)
-    # steering angle constraint
-    cost += softconstr(xᵢ[4], pc.des_steer_bounds..., pc.w)
-    # speed constraints
-    cost += softconstr(xᵢ[5], pc.des_v_bounds..., pc.w)
-
-    # proximity constraint
-    xy_ego = xᵢ[@S(1:2)]
-    for (j, xj) in enumerate(xindex(pc))
-        j != pc.player_id || continue
-        xy_other = x[xj[@S(1:2)]]
-        cost += proximitycost(xy_ego, xy_other, pc.r_avoid, pc.w)
-    end
-
-    # goal state cost cost:
-    cost += goalstatecost(pc.Qg, pc.xg, xᵢ, t, pc.t_final)
-
-    return cost
-end

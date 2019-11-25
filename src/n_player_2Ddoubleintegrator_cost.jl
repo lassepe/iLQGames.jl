@@ -14,9 +14,9 @@ struct NPlayer2DDoubleIntegratorCost{nx,nu,TXI<:NTuple,TUI<:NTuple,TIC,TICR,TSC,
 end
 
 function NPlayer2DDoubleIntegratorCost(player_id, xids::TXI, uids::TUI, xg, t_final;
-         inputcost::TIC=InputCost(SMatrix{2,2}([1. 0.; 0. 1.]) * 10),
+         inputcost::TIC=QuadCost(SMatrix{2,2}([1. 0.; 0. 1.]) * 10),
          inputconstr::TICR=tuple(),
-         statecost::TSC=StateCost(SMatrix{4,4}(diagm([0., 1., 0., 1.])) * 40),
+         statecost::TSC=QuadCost(SMatrix{4,4}(diagm([0., 1., 0., 1.])) * 40),
          # TODO: think of a way to enforce v > 0
          stateconstr::TSCR=(SoftConstr(2, -2., 2., 50),
                             SoftConstr(4, -2., 2., 50)),

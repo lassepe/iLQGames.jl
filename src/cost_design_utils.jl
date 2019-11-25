@@ -1,26 +1,13 @@
-struct StateCost{TQ<:SMatrix}
+struct QuadCost{TQ<:SMatrix}
     Q::TQ
 end
-@inline (c::StateCost)(x) = 1/2*x'*c.Q*x
-@inline function quad!(Q::MMatrix, l::MVector, c::StateCost,
+@inline (c::QuadCost)(x) = 1/2*x'*c.Q*x
+@inline function quad!(Q::MMatrix, l::MVector, c::QuadCost,
                        x::SVector{n}, xi::SVector{n}) where {n}
     Q[xi, xi] += c.Q
     l[xi] += c.Q * x
     return nothing
 end
-# TODO: remove legacy
-@inline statecost(Q::SMatrix{n,n}, x::SVector{n}) where {n} = 1/2*x'*Q*x
-
-struct InputCost{TR<:SMatrix}
-    R::TR
-end
-@inline (c::InputCost)(u) = 1/2*u'*c.R*u
-@inline function quad!(R::MMatrix, c::InputCost, ui::SVector{n}) where {n}
-    R[ui, ui] += c.R
-    return nothing
-end
-# TODO: remove legacy
-@inline inputcost(R::SMatrix{n,n}, u::SVector{n}) where {n} = 1/2*u'*R*u
 
 # Interface to implement NPlayerNavigationCost
 @with_kw struct SoftConstr
@@ -55,17 +42,6 @@ end
     elseif x[idx] > max
         Q[idx, idx] += 2w
         l[idx] += 2w*(x[idx] - max)
-    end
-    return nothing
-end
-
-@inline function quad!(R::MMatrix, constr::SoftConstr, u::SVector, ui)
-    @unpack id, w, min, max = constr
-    idx = ui[id]
-
-    @assert min < max
-    if !(min < u[idx] < max)
-        R[idx, idx] += 2w
     end
     return nothing
 end
@@ -145,22 +121,4 @@ end
         l[xid] += Qg*(x-xg)
     end
     return nothing
-end
-
-# TODO: remove legacy
-@inline function goalstatecost(Qg::SMatrix{n,n}, xg::SVector{n}, x::SVector{n},
-                               t::AbstractFloat, t_active::AbstractFloat) where {n}
-    if t >= t_active
-        Δx = x - xg
-        return 1/2 * Δx'*Qg*Δx
-    else
-        return 0.0
-    end
-end
-
-# TODO: remove legacy
-@inline function proximitycost(xp1::SVector{n}, xp2::SVector{n},
-                               r_avoid::AbstractFloat, w::AbstractFloat) where {n}
-    Δxp = xp1 - xp2
-    return softconstr(sqrt(Δxp'*Δxp), r_avoid, Inf, w)
 end

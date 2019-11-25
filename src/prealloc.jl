@@ -1,17 +1,20 @@
-struct QuadCache{nx,nu,TL<:MVector{nx},TQ<:MMatrix{nx,nx}, TR<:MMatrix{nu,nu}}
+struct QuadCache{nx,nu,TL<:MVector{nx},TQ<:MMatrix{nx,nx},
+                 TRL<:MVector{nu},TRQ<:MMatrix{nu,nu}}
     l::TL
     Q::TQ
-    R::TR
+    r::TRL
+    R::TRQ
 end
 
 function Base.zero(::Type{<:QuadCache{nx,nu}}) where {nx,nu}
     return QuadCache(@MVector(zeros(nx)), @MMatrix(zeros(nx,nx)),
-                     @MMatrix(zeros(nu,nu)))
+                     @MVector(zeros(nu)), @MMatrix(zeros(nu,nu)))
 end
 
 function reset!(qcache::QuadCache)
     fill!(qcache.l, 0.)
     fill!(qcache.Q, 0.)
+    fill!(qcache.r, 0.)
     fill!(qcache.R, 0.)
 end
 
@@ -58,10 +61,11 @@ function lqgame_preprocess_alloc(g::AbstractGame)
     lin_dyn = linearization_alloc(g)
 
     # costs:
-    TQ = SMatrix{nx, nx, Float64, nx*nx}
     TL = SVector{nx, Float64}
-    TR = SMatrix{nu, nu, Float64, nu*nu}
-    TCi = QuadraticPlayerCost{nx, nu, TL, TQ, TR}
+    TQ = SMatrix{nx, nx, Float64, nx*nx}
+    TRL = SVector{nu, Float64}
+    TRQ = SMatrix{nu, nu, Float64, nu*nu}
+    TCi = QuadraticPlayerCost{nx, nu, TL, TQ, TRL, TRQ}
     TC = SVector{np, TCi}
     quad_cost = SizedVector{h, TC, 1}(undef)
 

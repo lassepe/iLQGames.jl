@@ -55,20 +55,6 @@ x = @SVector zeros(nx)
 u = @SVector zeros(nu)
 t = 0.
 
-@testset "Scalar comparison old new." begin
-    for i in 1:100
-        x = SVector{nx, Float64}(randn(nx))
-        u = SVector{nu, Float64}(randn(nu))
-        t = T_horizon
-
-        for pc in pcs
-            c_old = iLQGames._legacy_cost(pc, x, u, t)
-            c_new = pc(g, x, u, t)
-            @test isapprox(c_old, c_new)
-        end
-    end
-end;
-
 quad_sanity_check(g)
 
 "--------------------------------- Unicycle4D ---------------------------------"
