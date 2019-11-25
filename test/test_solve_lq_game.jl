@@ -41,9 +41,11 @@ function generate_1D_pointmass_game()
     # costs for each player
     c1 = QuadraticPlayerCost(@SVector([0., 0.]),       # l
                              @SMatrix([1. 0.; 0. 1.]), # Q
+                             @SVector([0., 0.]),       # r
                              @SMatrix([1. 0.; 0. 0.])) # R
-    c2 = QuadraticPlayerCost(-c1.l,                     # l
-                             -c1.Q,                     # Q
+    c2 = QuadraticPlayerCost(-c1.l,                    # l
+                             -c1.Q,                    # Q
+                             @SVector([0., 0.]),       # r
                              @SMatrix([0. 0.; 0. 1.])) # R
 
     costs = @SVector [c1, c2]
@@ -84,18 +86,20 @@ function generate_2D_pointmass_game()
                                        0. 2. 0. 0.;
                                        0. 0. 0. 0.;
                                        0. 0. 0. 0.]), # Q
-                             (@SMatrix [1. 0. 0. 0.;
-                                        0. 1. 0. 0.;
-                                        0. 0. 0. 0.;
-                                        0. 0. 0. 0.]))# R)
+                             @SVector(zeros(4)),      # r
+                             @SMatrix([1. 0. 0. 0.;
+                                       0. 1. 0. 0.;
+                                       0. 0. 0. 0.;
+                                       0. 0. 0. 0.]))# R)
     # cost
     # player 2 is adversarial
     c2 = QuadraticPlayerCost(-c1.l,                   # Q
                              -c1.Q ,                  # l
-                             (@SMatrix [0. 0. 0. 0.;
-                                        0. 0. 0. 0.;
-                                        0. 0. 1. 0.;
-                                        0. 0. 0. 1.]))# R)
+                             @SVector(zeros(4)),      # r
+                             @SMatrix([0. 0. 0. 0.;
+                                       0. 0. 0. 0.;
+                                       0. 0. 1. 0.;
+                                       0. 0. 0. 1.]))# R)
     costs = @SVector [c1, c2]
 
     ltv_dyn = LTVSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
