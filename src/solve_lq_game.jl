@@ -21,7 +21,6 @@ function solve_lq_game!(strategies, g::LQGame)
     ζ = [pc.l for pc in last(player_costs(g))]
 
     # Setup the S and Y matrix of the S * X = Y matrix equation
-
     S = @MMatrix zeros(nu, nu)
     Y = @MMatrix zeros(nu, nx + 1)
 
@@ -42,7 +41,7 @@ function solve_lq_game!(strategies, g::LQGame)
             # the current set of rows that we construct for player ii
             S[udxᵢ, :] = cost[ii].R[udxᵢ, full_urange] + BᵢZᵢ*B
             # append the fully constructed row to the full S-Matrix
-            Y[udxᵢ, :] = [(BᵢZᵢ*A) (B[:, udxᵢ]'*ζ[ii])]
+            Y[udxᵢ, :] = [(BᵢZᵢ*A) (B[:, udxᵢ]'*ζ[ii] + cost[ii].r[udxᵢ])]
         end
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
@@ -59,8 +58,8 @@ function solve_lq_game!(strategies, g::LQGame)
         for ii in 1:n_players(g)
             cᵢ= cost[ii]
             PRᵢ = P' * cᵢ.R
-            ζ[ii] = (F' * (ζ[ii] + Z[ii] * β) + cᵢ.l) + PRᵢ * α
-            Z[ii] = (F' * Z[ii] * F + cost[ii].Q) + PRᵢ * P
+            ζ[ii] = F' * (ζ[ii] + Z[ii] * β) + cᵢ.l + PRᵢ * α - P' * cost[ii].r
+            Z[ii] = F' * Z[ii] * F + cost[ii].Q + PRᵢ * P
         end
 
         strategies[kk] = AffineStrategy(P, α)
