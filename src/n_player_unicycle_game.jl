@@ -13,7 +13,7 @@ struct NPlayerUnicycleCost{nx,nu,TXI<:NTuple,TUI<:NTuple,TIC,TICR,TSC,TSCR,TPC,T
 end
 
 function NPlayerUnicycleCost(player_id, xids::TXI, uids::TUI, xg, t_final;
-         inputcost::TIC=InputCost(SMatrix{2,2}([5. 0.; 0. 2.]) * 10),
+         inputcost::TIC=QuadCost(SMatrix{2,2}([5. 0.; 0. 2.]) * 10),
          inputconstr::TICR=tuple(),
          statecost::TSC=QuadCost(SMatrix{4,4}(diagm([0., 0., 0., 1.])) * 50),
          stateconstr::TSCR=(#SoftConstr(4, 0., 2., 50),

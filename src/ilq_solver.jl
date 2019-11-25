@@ -17,7 +17,7 @@
     max_elwise_diff_converged::Float64 = 0.01
     "The maximum elementwise difference bewteen operating points for per
     iteration step."
-    max_elwise_diff_step::Float64 = 1.0
+    max_elwise_diff_step::Float64 = 0.3
     "Preallocated memory for lq approximations."
     _lq_mem::TLM
     "Preallocated memory for quadraticization results."

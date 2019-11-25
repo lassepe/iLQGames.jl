@@ -36,7 +36,7 @@ Returns a vector of costs for each player
 """
 function cost(g::GeneralGame, traj::SystemTrajectory)
     map(player_costs(g)) do ci
-        sum(ci(g, traj.x[k], zero(traj.u[k]), time_disc2cont(traj, k)) for k in
+        sum(ci(g, traj.x[k], traj.u[k], time_disc2cont(traj, k)) for k in
             eachindex(traj.x))
     end
 end
