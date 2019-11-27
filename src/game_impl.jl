@@ -104,15 +104,14 @@ end
 dynamics(g::LQGame) = g.dyn
 player_costs(g::LQGame) = g.pcost
 
-function lq_approximation(g::GeneralGame, op::SystemTrajectory)
+function lq_approximation(solver, g::GeneralGame, op::SystemTrajectory)
     lqg = lqgame_preprocess_alloc(g)
-    qcache = zero(QuadCache{n_states(g),n_controls(g)})
-    lq_approximation!(lqg, qcache, g, op)
+    lq_approximation!(lqg, solver, g, op)
     return lqg
 end
 
 
-function lq_approximation!(lqg::LQGame, qcache::QuadCache, g::GeneralGame,
+function lq_approximation!(lqg::LQGame, solver, g::GeneralGame,
                            op::SystemTrajectory)
     for (k, (xₖ, uₖ)) in enumerate(zip(op.x, op.u))
         # discrete linearization along the operating point
@@ -120,7 +119,8 @@ function lq_approximation!(lqg::LQGame, qcache::QuadCache, g::GeneralGame,
         linearize!(lqg, dynamics(g), xₖ, uₖ, t, k)
         # quadratiation of the cost along the operating point
         player_costs(lqg)[k] = map(player_costs(g)) do pcₖⁱ
-            quadraticize!(qcache, pcₖⁱ, g, xₖ, uₖ, t)
+            c = quadraticize!(qcache(solver), pcₖⁱ, g, xₖ, uₖ, t)
+            return regularize(solver, c)
         end
     end
 end

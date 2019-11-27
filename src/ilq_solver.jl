@@ -1,4 +1,8 @@
 @with_kw struct iLQSolver{TLM, TOM, TQM}
+    "The regularization term for the state cost quadraticization."
+    state_regularization::Float64 = 1.0
+    "The regularization term for the control cost quadraticization."
+    control_regularization::Float64 = 1.0
     "The initial scaling of the feed-forward term."
     α_scale_init::Float64 = 0.15
     "The geometric scaling of the feed-forward term per scaling step in
@@ -20,6 +24,13 @@
     _qcache_mem::TQM
     "Preallocated memory for operting points."
     _op_mem::TOM
+end
+
+qcache(solver::iLQSolver) = solver._qcache_mem
+
+function regularize(solver::iLQSolver, c::QuadraticPlayerCost)
+    return QuadraticPlayerCost(c.l, c.Q + I * solver.state_regularization,
+                               c.r, c.R + I * solver.control_regularization)
 end
 
 function iLQSolver(g, args...; kwargs...)
@@ -102,7 +113,6 @@ function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
     current_op = initial_op
     current_strategy = initial_strategy
     lqg_approx = solver._lq_mem
-    qcache = solver._qcache_mem
 
     # 0. compute the operating point for the first run.
     # TODO -- we could probably allow to skip this in some warm-starting scenarios
@@ -116,7 +126,7 @@ function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
         refer to the *same* object."
 
         # 1. linearize dynamics and quadratisize costs to obtain an lq game
-        lq_approximation!(lqg_approx, qcache, g, current_op)
+        lq_approximation!(lqg_approx, solver, g, current_op)
 
         # 2. solve the current lq version of the game
         solve_lq_game!(current_strategy, lqg_approx)

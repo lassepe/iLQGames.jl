@@ -49,6 +49,8 @@ c1, c2 = player_costs(g)
 x = @SVector zeros(nx)
 u = @SVector zeros(nu)
 t = 0.
+# solve the lq game
+solver = iLQSolver(g)
 
 quad_sanity_check(g)
 
@@ -56,12 +58,10 @@ quad_sanity_check(g)
 # generate an operating point
 h = Int(T_horizon/ΔT)
 zero_op = zero(SystemTrajectory{h, ΔT, nx, nu})
-lqg = lq_approximation(g, zero_op)
+lqg = lq_approximation(solver, g, zero_op)
 
 # the lqg approximation evaluated at zero should be approximate the true cost:
 
-# solve the lq game
-solver = iLQSolver(g)
 # - setup initial_strategy
 steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
 acc_init(k::Int) = -cos(k/h*pi)*0.3
