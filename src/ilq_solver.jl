@@ -124,7 +124,8 @@ function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
         end
     end
     metadata = (op_init=deepcopy(current_op),
-                cost_data=DataFrame(iter=Int[], player_id=Int[], cost=Float64[]))
+                cost_data=DataFrame(iter=Int[], player_id=Int[], cost=Float64[]),
+                converged_iter=[])
     insert_costs!(metadata.cost_data, cost(g, current_op), i_iter)
 
     # ... and upate the current by integrating the non-linear dynamics
@@ -153,7 +154,11 @@ function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
         end
 
         i_iter += 1
-        converged = converged || has_converged(solver, last_op, current_op)
+
+        if !converged && has_converged(solver, last_op, current_op)
+            converged = true
+            push!(metadata.converged_iter, i_iter)
+        end
 
         # record the cost for the meta-data
         insert_costs!(metadata.cost_data, cost(g, current_op), i_iter)
