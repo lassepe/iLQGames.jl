@@ -1,8 +1,8 @@
 @with_kw struct iLQSolver{TLM, TOM, TQM}
     "The regularization term for the state cost quadraticization."
-    state_regularization::Float64 = 1.0
+    state_regularization::Float64 = 5
     "The regularization term for the control cost quadraticization."
-    control_regularization::Float64 = 1.0
+    control_regularization::Float64 = 5
     "The initial scaling of the feed-forward term."
     α_scale_init::Float64 = 0.85
     "The geometric scaling of the feed-forward term per scaling step in
@@ -158,8 +158,6 @@ function solve!(initial_op::SystemTrajectory, initial_strategy::StaticVector,
         # record the cost for the meta-data
         insert_costs!(metadata.cost_data, cost(g, current_op), i_iter)
     end
-
-    println(i_iter)
 
     # NOTE: for `converged == false` the result may not be meaningful. `converged`
     # has to be handled outside this function
