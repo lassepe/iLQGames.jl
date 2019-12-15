@@ -112,7 +112,7 @@ function plot_cost(g::AbstractGame, op::SystemTrajectory, dims, i::Int=1,
 end
 
 function animate_plot(plot_frame::Function, plot_args...;
-                      k_range::UnitRange, frame_sample::Int=2, fps::Int=10,
+                      k_range::UnitRange, frame_sample::Int=1, fps::Int=10,
                       filename::String="$(@__DIR__)/../debug_out/test.gif")
     anim = @animate for k in k_range
         plot_frame(plot_args...; k=k)
