@@ -60,8 +60,10 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
 
         # marker at the current time step
         for k in unique([k, kp])
-            scatter!(plt, [x[k]], [y[k]], seriescolor=player_colors[i],
-                     label="x_p$i", legend=legend)
+            if k > 0
+                scatter!(plt, [x[k]], [y[k]], seriescolor=player_colors[i],
+                         label="x_p$i", legend=legend)
+            end
         end
     end
 
@@ -69,6 +71,18 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
 end
 
 plot_traj(args...; kwargs...) = begin p = plot(); plot_traj!(p, args...; kwargs...) end
+
+function scatter_positions(args...; kwargs...)
+    plt = plot()
+    return scatter_positions!(plt, args; kwargs...)
+end
+function scatter_positions!(plt, x, g, player_colors)
+    for (i, xy_i) in enumerate(xyindex(g))
+        scatter!(plt, [x[xy_i][1]], [x[xy_i][2]], seriescolor=player_colors[i],
+                 markersize=5)
+    end
+    return plt
+end
 
 # cost plots
 function plot_cost(g::AbstractGame, op::SystemTrajectory, dims, i::Int=1,
