@@ -8,14 +8,17 @@ struct SystemTrajectory{h, ΔT, nx, nu, TX<:SizedVector{h,<:SVector{nx}},
     "The start time of this trajectory."
     t0::Float64
 end
+
 function SystemTrajectory{ΔT}(x::TX, u::TU, t0::Float64) where {h, ΔT, nx, nu,
                                                                 TX<:SizedVector{h,<:SVector{nx}},
                                                                 TU<:SizedVector{h,<:SVector{nu}}}
     return SystemTrajectory{h, ΔT, nx, nu, TX, TU}(x, u, t0)
 end
+
 samplingtime(::SystemTrajectory{h, ΔT}) where {h, ΔT} = ΔT
 horizon(::SystemTrajectory{h}) where {h} = h
 initialtime(traj::SystemTrajectory) = traj.t0
+
 function time_disc2cont(traj::SystemTrajectory, k::Int)
     @assert 1 <= k <= horizon(traj)
     return initialtime(traj) + (k-1)*samplingtime(traj)
@@ -37,7 +40,9 @@ timepoints(traj::SystemTrajectory) = (time_disc2cont(traj, k) for k in
     return SystemTrajectory{ΔT}(zero(SizedVector{h,SVector{nx,Float64}}),
                                 zero(SizedVector{h,SVector{nu,Float64}}), t0)
 end
+
 Base.zero(traj::SystemTrajectory) = zero(typeof(traj), initialtime(traj))
+
 function Base.zero(::Type{SystemTrajectory}, g)
     h = horizon(g)
     ΔT = samplingtime(g)
@@ -53,10 +58,12 @@ function zero!(traj::SystemTrajectory)
     end
     return traj
 end
+
 @inline function Base.copy(traj::SystemTrajectory)
     return SystemTrajectory{samplingtime(traj)}(copy(traj.x), copy(traj.u),
                                                 initialtime(traj))
 end
+
 @inline @inbounds function Base.copyto!(dest::SystemTrajectory, src::SystemTrajectory)
     @assert initialtime(dest) == initialtime(src)
     @assert horizon(dest) == horizon(src)

@@ -20,7 +20,9 @@ function solve_lq_game!(strategies, g::LQGame)
     Z = [pc.Q for pc in last(player_costs(g))]
     ζ = [pc.l for pc in last(player_costs(g))]
 
-    # Setup the S and Y matrix of the S * X = Y matrix equation
+    # Setup the S and Y matrix of the S * P = Y matrix equation
+    # As `nx` and `nu` are known at compile time and all operations below can be
+    # inlined, allocations can be eliminted by the compiler.
     S = @MMatrix zeros(nu, nu)
     Y = @MMatrix zeros(nu, nx + 1)
 
@@ -34,8 +36,8 @@ function solve_lq_game!(strategies, g::LQGame)
 
         # Compute Ps given previously computed Zs.
         # Refer to equation 6.17a in Basar and Olsder.
-        # This will involve solving a system of matrix linear equations of the
-        # form [S1s; S2s; ...] * [P1; P2; ...] = [Y1; Y2; ...].
+        # This will involve solving a system of linear matrix equations of the
+        # form S * P = Y.
         for (ii, udxᵢ) in enumerate(uindex(g))
             BᵢZᵢ = B[:, udxᵢ]' * Z[ii]
             # the current set of rows that we construct for player ii

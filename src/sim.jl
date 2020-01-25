@@ -17,14 +17,15 @@ function trajectory!(traj::SystemTrajectory{h}, cs::ControlSystem,
         # the deviation from the last operating point
         Δxₖ = xₖ - x̃ₖ
 
+        # return early if divergence from operating point exceeded
         infnorm(Δxₖ) <= max_elwise_divergence || return false
 
         # record the new operating point:
-        x_opₖ = traj.x[k] = xₖ
-        u_opₖ = traj.u[k] = control_input(γₖ, Δxₖ, ũₖ)
+        traj.x[k] = xₖ
+        traj.u[k] = uₖ = control_input(γₖ, Δxₖ, ũₖ)
 
         # integrate x forward in time for the next iteration.
-        xₖ = next_x(cs, x_opₖ, u_opₖ, tₖ)
+        xₖ = next_x(cs, xₖ, uₖ, tₖ)
     end
     return true
 end
