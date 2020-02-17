@@ -16,7 +16,7 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, g::AbstractGame,
 
     # cost
     pcs = cost(g, traj)
-    rangescale = isnothing(rangescale) ? extrema(pcs) : rangescale
+    rangescale = isnothing(rangescale) ? extrema(pcs) .+ (-0.01, 0.01) : rangescale
     player_colors = [get(cs, pc, rangescale) for pc in pcs]
 
     return plot_traj!(plt, traj, xyindex(g), player_colors, args...;
@@ -28,7 +28,7 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, g::AbstractGame,
     return  plot_traj!(plt, traj, xyindex(g), player_colors, args...; kwargs...)
 end
 
-""
+
 function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
                     player_colors::AbstractArray,
                     uids::Union{SIndex, Nothing}=nothing, alpha::Float64=1.,
@@ -53,8 +53,7 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
         x = collect(x[first(xy_i)] for x in traj.x)
         y = collect(x[last(xy_i)] for x in traj.x)
 
-        plotargs = (plt, x, y)
-        plot!(plotargs...; xlims=(-5, 5), ylims=(-5, 5),
+        plot!(plt, x, y; xlims=(-5, 5), ylims=(-5, 5),
               seriescolor=player_colors[i], label="p$i", legend=legend,
               seriesalpha=alpha)
 
