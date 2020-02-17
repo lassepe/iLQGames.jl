@@ -29,8 +29,6 @@ struct GeneralGame{uids, h, TD<:ControlSystem, TC<:StaticVector} <: AbstractGame
                                                             TD<:ControlSystem,
         TC<:StaticVector}
         game_sanity_checks(uids, TD, TC)
-        @assert TD <: ControlSystem
-        @assert eltype(TC) <: PlayerCost
         new{uids, h, TD, TC}(dyn, cost)
     end
 end

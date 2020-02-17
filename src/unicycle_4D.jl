@@ -7,7 +7,6 @@ A simple feedback linearizable unicycle model.
 
 $(TYPEDFIELDS)
 """
-# TODO: maybe use the
 struct Unicycle4D{ΔT} <: ControlSystem{ΔT, 4, 2} end
 
 function dx(cs::Unicycle4D, x::SVector{4}, u::SVector{2}, t::AbstractFloat)

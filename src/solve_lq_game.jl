@@ -60,8 +60,8 @@ function solve_lq_game!(strategies, g::LQGame)
         for ii in 1:n_players(g)
             cᵢ= cost[ii]
             PRᵢ = P' * cᵢ.R
-            ζ[ii] = F' * (ζ[ii] + Z[ii] * β) + cᵢ.l + PRᵢ * α - P' * cost[ii].r
-            Z[ii] = F' * Z[ii] * F + cost[ii].Q + PRᵢ * P
+            ζ[ii] = F' * (ζ[ii] + Z[ii] * β) + cᵢ.l + PRᵢ * α - P' * cᵢ.r
+            Z[ii] = F' * Z[ii] * F + cᵢ.Q + PRᵢ * P
         end
 
         strategies[kk] = AffineStrategy(P, α)
