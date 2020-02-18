@@ -16,13 +16,13 @@ end
 function NPlayer2DDoubleIntegratorCost(player_id, xids::TXI, uids::TUI, xg, t_final;
          inputcost::TIC=QuadCost(SMatrix{2,2}([1. 0.; 0. 1.]) * 10),
          inputconstr::TICR=tuple(),
-         statecost::TSC=QuadCost(SMatrix{4,4}(diagm([0., 1., 0., 1.])) * 40),
+         statecost::TSC=QuadCost(SMatrix{4,4}(diagm([0., 1., 0., 1.])) * 50),
          # TODO: think of a way to enforce v > 0
          stateconstr::TSCR=(SoftConstr(2, -2., 2., 50),
                             SoftConstr(4, -2., 2., 50)),
          proximitycost::TPC=ProximityCost(1.2, 50),
          goalcost::TGC=GoalCost(t_final, xg, SMatrix{4,4}(diagm([1.,0.,1.,0.])) *
-                                500)) where {TXI,TUI,TIC,TICR,TSC,TSCR,TPC,TGC}
+                                300)) where {TXI,TUI,TIC,TICR,TSC,TSCR,TPC,TGC}
 
     nx = sum(length.(xids))
     nu = sum(length.(uids))

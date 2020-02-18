@@ -51,7 +51,7 @@ end
 function main()
     g1D = generate_1D_pointmass_game()
     strategies1D = strategytype(g1D)(undef)
-    b = @benchmark(solve_lq_game!($strategies1D, $g1D), samples=1000)
+    b = @benchmark(solve_lq_game!($strategies1D, $g1D), samples=100, evals=1)
     display(b)
     solve_lq_game!(strategies1D, g1D)
 end

@@ -31,8 +31,9 @@ macro benchmark_solver(g, solver, x0)
         sleep(3)
         @benchmark(solve!(s.o0, s.γ0, $g, $solver, $x0),
                    setup=(s=(o0=copy($zero_op), γ0=copy($γ_init))),
-                   samples=1000,
-                   evals=1) |> display
+                   samples=100,
+                   evals=1,
+                   seconds=30) |> display
         _ , op, _ = solve!(copy(zero_op), copy(γ_init), $g, $solver, $x0)
         plot_traj(op, $g, [:red, :green, :blue]) |> display
     end
