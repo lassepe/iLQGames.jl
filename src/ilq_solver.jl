@@ -4,7 +4,7 @@
     "The regularization term for the control cost quadraticization."
     control_regularization::Float64 = 5.0
     "The initial scaling of the feed-forward term."
-    α_scale_init::Float64 = 0.5
+    α_scale_init::Float64 = 0.75
     "The geometric scaling of the feed-forward term per scaling step in
     backtrack scaling."
     α_scale_step::Float64 = 0.5
@@ -14,10 +14,10 @@
     max_scale_backtrack::Int = 20
     "The maximum elementwise difference bewteen operating points for
     convergence."
-    max_elwise_diff_converged::Float64 = α_scale_init/10
+    max_elwise_diff_converged::Float64 = 0.1
     "The maximum elementwise difference bewteen operating points for per
     iteration step."
-    max_elwise_diff_step::Float64 = 30 * max_elwise_diff_converged
+    max_elwise_diff_step::Float64 = 2.0
     "Preallocated memory for lq approximations."
     _lq_mem::TLM
     "Preallocated memory for quadraticization results."
@@ -25,6 +25,8 @@
     "Preallocated memory for operting points."
     _op_mem::TOM
 end
+
+force_ad_use(::Any) = false
 
 qcache(solver::iLQSolver) = solver._qcache_mem
 

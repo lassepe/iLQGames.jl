@@ -18,6 +18,10 @@ function goalcost end
 
 function quadraticize!(qcache::QuadCache, pc::NPlayerNavigationCost,
                        g::GeneralGame, x::SVector, u::SVector, t::AbstractFloat)
+    if force_ad_use(pc)
+        return _quadraticize_ad(pc, g, x, u, t)
+    end
+
     nx = n_states(pc)
     nu = n_controls(pc)
 

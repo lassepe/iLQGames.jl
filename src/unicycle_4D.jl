@@ -24,6 +24,11 @@ end
 
 function linearize_discrete(cs::Unicycle4D, x::SVector{4}, u::SVector{2},
                             t::AbstractFloat)
+
+    if force_ad_use(cs)
+        return discretize(_linearize_ad(cs, x, u, t), Val{samplingtime(cs)}())
+    end
+
     ΔT = samplingtime(cs)
     cθ = cos(x[3]) * ΔT
     sθ = sin(x[3]) * ΔT

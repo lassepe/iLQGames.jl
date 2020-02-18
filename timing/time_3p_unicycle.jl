@@ -1,8 +1,12 @@
-using Test
+using Revise
 using BenchmarkTools
+
+import iLQGames: force_ad_use
 
 using iLQGames:
     iLQSolver,
+    ControlSystem,
+    PlayerCost,
     Unicycle4D,
     NPlayerUnicycleCost,
     AffineStrategy,
@@ -12,7 +16,8 @@ using iLQGames:
     n_controls,
     n_states,
     solve!,
-    plot_traj
+    plot_traj,
+    transform_to_feedbacklin
 
 using StaticArrays
 using LinearAlgebra
@@ -21,16 +26,28 @@ using LinearAlgebra
 T_horizon = 10.
 ΔT = 0.1
 
-"--------------------------------- Unicycle4D ---------------------------------"
+macro benchmark_solver(g, solver, x0)
+    return quote
+        sleep(3)
+        @benchmark(solve!(s.o0, s.γ0, $g, $solver, $x0),
+                   setup=(s=(o0=copy($zero_op), γ0=copy($γ_init))),
+                   samples=1000,
+                   evals=1) |> display
+        _ , op, _ = solve!(copy(zero_op), copy(γ_init), $g, $solver, $x0)
+        plot_traj(op, $g, [:red, :green, :blue]) |> display
+    end
+end
 
-x01 = @SVector [-3., 0., 0., 0.025]
-x02 = @SVector [-0.1,  3.0, -pi/2, 0.05]
-x03 = @SVector [0.1,  -3.0, pi/2, 0.05]
+"--------------------------------- Nonlinear Unicycle4D ---------------------------"
+
+x01 = @SVector [-3., 0., 0., 0.05]
+x02 = @SVector [-0.1,  3.0, -pi/2, 0.1]
+x03 = @SVector [0.1,  -3.0, pi/2, 0.1]
 x0 = vcat(x01, x02, x03)
 # goal states (goal position of other player with opposite orientation)
-xg1 = @SVector [3., 0., 0., 0.]
-xg2 = @SVector [-0.1, -3., 0., 0.]
-xg3 = @SVector [ 0.1,  3., 0., 0.]
+xg1 = @SVector [3., 0., 0., 0.05]
+xg2 = @SVector [-0.1, -3., 0., 0.1]
+xg3 = @SVector [ 0.1,  3., 0., 0.1]
 g = generate_nplayer_navigation_game(Unicycle4D, NPlayerUnicycleCost, T_horizon,
                                      ΔT, xg1, xg2, xg3)
 zero_op = zero(SystemTrajectory, g)
@@ -44,12 +61,29 @@ solver = iLQSolver(g)
 γ_init = SizedVector{h}([AffineStrategy(@SMatrix(zeros(nu, nx)),
                                         @SVector(zeros(nu))) for k in 1:h])
 
-# benchmark the solver
-@benchmark(solve!(s.o0, s.γ0, $g, $solver, $x0),
-           setup=(s=(o0=copy($zero_op), γ0=copy($γ_init))),
-           samples=1000,
-           evals=1) |> display
+println("Nonlinear Unicycle4D")
+println("Manual Differentiation")
+force_ad_use(::ControlSystem) = false
+force_ad_use(::PlayerCost) = false
+@benchmark_solver(g, solver, x0)
 
-# solve the game and visualize
-_ , op, _ = solve!(copy(zero_op), copy(γ_init), g, solver, x0)
-plot_traj(op, g, [:red, :green, :blue]) |> display
+println("Automatic Differentiation")
+force_ad_use(::ControlSystem) = true
+force_ad_use(::PlayerCost) = true
+@benchmark_solver(g, solver, x0)
+
+"------------------------------ Flat Unicycle4D -----------------------------------"
+gξ, ξ0 = transform_to_feedbacklin(g, x0)
+solverξ = iLQSolver(gξ)
+
+println("=====================")
+println("Feedback linearized Unicycle4D")
+println("Manual Differentiation")
+force_ad_use(::ControlSystem) = false
+force_ad_use(::PlayerCost) = false
+@benchmark_solver(gξ, solverξ, ξ0)
+
+println("Automatic Differentiation")
+force_ad_use(::ControlSystem) = true
+force_ad_use(::PlayerCost) = true
+@benchmark_solver(gξ, solverξ, ξ0)
