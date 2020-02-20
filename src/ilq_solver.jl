@@ -81,6 +81,12 @@ function backtrack_scale!(current_strategy::SizedVector,
     return false
 end
 
+function solve(g::AbstractGame, solver::iLQSolver, args...)
+    op0 = zero(SystemTrajectory, g)
+    γ0 = zero(strategytype(g))
+    return solve!(op0, γ0, g, solver, args...)
+end
+
 function solve(initial_op::SystemTrajectory, initial_strategy::StaticVector, args...)
     result_op = copy(initial_op)
     result_strategy = copy(initial_strategy)
