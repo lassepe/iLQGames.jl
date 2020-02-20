@@ -28,11 +28,45 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, g::AbstractGame,
     return  plot_traj!(plt, traj, xyindex(g), player_colors, args...; kwargs...)
 end
 
-""
+function plot_traj(traj::SystemTrajectory)
+    return plot_traj(traj, [:black], tuple(@S(1:length(eltype(traj.u)))))
+end
+function plot_traj(traj::SystemTrajectory, player_colors, uids::Union{SIndex, Nothing})
+    plots = []
+
+    if !isnothing(uids)
+        push!(plots, plot_inputs(traj, player_colors, uids))
+    end
+
+    push!(plots, plot_states(traj))
+
+    return plot(plots...)
+end
+
+function plot_inputs(traj::SystemTrajectory)
+    return plot_inputs(traj, [:black], tuple(@S(1:length(eltype(traj.u)))))
+end
+function plot_inputs(traj::SystemTrajectory, player_colors, uids::SIndex; kwargs...)
+    # names for each input
+    nu = length(eltype(traj.u))
+    input_labels = reshape(["u$i" for i in 1:nu], 1, nu)
+    # find the player color for each input
+    input_colors = reshape([player_colors[findfirst(in.(i, uids))] for i in 1:nu], 1, nu)
+    return plot(hcat(traj.u...)'; layout=(nu, 1), label=input_labels,
+                seriescolor=input_colors, kwargs...)
+end
+
+function plot_states(traj::SystemTrajectory)
+    nx = length(eltype(traj.x))
+    state_labels = reshape(["x$i" for i in 1:nx], 1, nx)
+    return plot(hcat(traj.x...)'; layout=(nx, 1), label=state_labels,
+                seriescolor=:black)
+end
+
 function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
                     player_colors::AbstractArray,
                     uids::Union{SIndex, Nothing}=nothing, alpha::Float64=1.,
-                    legend::Symbol=:none,
+                    legend=:none,
                     path_marker=(:circle, 1, stroke(1, 1., :black)), ; k::Int=1,
                     kp=k)
     # buffer for all the plots
@@ -41,33 +75,27 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
     pu = plot(; layout=(nu, 1))
 
     if !isnothing(uids)
-        # names for each input
-        input_labels = show_labels ? reshape(["u$i" for i in 1:nu], 1, nu) : []
-        # find the player color for each input
-        input_colors = reshape([player_colors[findfirst(in.(i, uids))] for i in 1:nu], 1, nu)
-        plot!(pu, hcat(traj.u...)'; layout=(nu, 1), label=input_labels,
-              seriescolor=input_colors, legend=legend)
+        pu = plot_inputs(traj, player_colors, uids)
     end
+
     for (i, xy_i) in enumerate(xy_ids)
         # the trajectory
         x = collect(x[first(xy_i)] for x in traj.x)
         y = collect(x[last(xy_i)] for x in traj.x)
 
-        plotargs = (plt, x, y)
-        plot!(plotargs...; xlims=(-5, 5), ylims=(-5, 5),
-              seriescolor=player_colors[i], label="p$i", legend=legend,
-              seriesalpha=alpha)
+        plot!(plt, x, y; xlims=(-5, 5), ylims=(-5, 5), seriescolor=player_colors[i],
+              seriesalpha=alpha, legend=:none)
 
         # marker at the current time step
         for k in unique([k, kp])
             if k > 0
                 scatter!(plt, [x[k]], [y[k]], seriescolor=player_colors[i],
-                         label="x_p$i", legend=legend)
+                         legend=:none)
             end
         end
     end
 
-    return isnothing(uids) ? plt : plot(pu, plt, legend=legend)
+    return isnothing(uids) ? plt : plot(pu, plt)
 end
 
 plot_traj(args...; kwargs...) = begin p = plot(); plot_traj!(p, args...; kwargs...) end
