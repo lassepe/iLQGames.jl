@@ -21,13 +21,12 @@ $(TYPEDEF)
 A representation of a general game with potentially non-linear dynamics and
 non-quadratic costs.
 """
-struct GeneralGame{uids, h, TD<:ControlSystem, TC<:StaticVector} <: AbstractGame{uids, h}
+struct GeneralGame{uids, h, TD<:ControlSystem, TC} <: AbstractGame{uids, h}
     dyn::TD
     cost::TC
 
-    function GeneralGame{uids, h}(dyn::TD, cost::TC) where {uids, h,
-                                                            TD<:ControlSystem,
-        TC<:StaticVector}
+    function GeneralGame{uids, h}(dyn::TD, cost::TC) where {uids,h,
+                                                            TD<:ControlSystem,TC}
         game_sanity_checks(uids, TD, TC)
         new{uids, h, TD, TC}(dyn, cost)
     end
