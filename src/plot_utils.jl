@@ -1,7 +1,7 @@
 "The legacy version of the plot function that computes the player colors form a
 simple color map (just distinguishable colors)"
-function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
-                    uids::Union{SIndex, Nothing}=nothing,
+function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
+                    uids=nothing,
                     cname::AbstractString="blues", args...; kwargs...)
     # get a color for each player (using offset because first color is too faint)
     player_colors = colormap(cname, length(xy_ids)+1)[2:end]
@@ -31,7 +31,7 @@ end
 function plot_traj(traj::SystemTrajectory)
     return plot_traj(traj, [:black], tuple(@S(1:length(eltype(traj.u)))))
 end
-function plot_traj(traj::SystemTrajectory, player_colors, uids::Union{SIndex, Nothing})
+function plot_traj(traj::SystemTrajectory, player_colors, uids)
     plots = []
 
     if !isnothing(uids)
@@ -46,7 +46,7 @@ end
 function plot_inputs(traj::SystemTrajectory)
     return plot_inputs(traj, [:black], tuple(@S(1:length(eltype(traj.u)))))
 end
-function plot_inputs(traj::SystemTrajectory, player_colors, uids::SIndex; kwargs...)
+function plot_inputs(traj::SystemTrajectory, player_colors, uids; kwargs...)
     # names for each input
     nu = length(eltype(traj.u))
     input_labels = reshape(["u$i" for i in 1:nu], 1, nu)
@@ -63,9 +63,9 @@ function plot_states(traj::SystemTrajectory)
                 seriescolor=:black)
 end
 
-function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids::SIndex,
+function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
                     player_colors::AbstractArray,
-                    uids::Union{SIndex, Nothing}=nothing, alpha::Float64=1.,
+                    uids=nothing, alpha::Float64=1.,
                     legend=:none,
                     path_marker=(:circle, 1, stroke(1, 1., :black)), ; k::Int=1,
                     kp=k)

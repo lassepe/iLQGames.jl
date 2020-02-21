@@ -16,9 +16,6 @@ module iLQGames
     using Plots
     gr()
 
-    # some useful type shorthands
-    const SIndex{N} = Tuple{Vararg{SVector{N, Int}}} where N
-
     # some macro sugar to make life easier
     include("sugar.jl")
     include("performance.jl")
