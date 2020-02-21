@@ -1,8 +1,8 @@
 @with_kw struct iLQSolver{TLM, TOM, TQM}
     "The regularization term for the state cost quadraticization."
-    state_regularization::Float64 = 5.0
+    state_regularization::Float64 = 0.0
     "The regularization term for the control cost quadraticization."
-    control_regularization::Float64 = 5.0
+    control_regularization::Float64 = 0.0
     "The initial scaling of the feed-forward term."
     α_scale_init::Float64 = 0.5
     "The geometric scaling of the feed-forward term per scaling step in
