@@ -1,7 +1,7 @@
 import iLQGames: dx, xyindex
 using iLQGames:
     ControlSystem, GeneralGame, iLQSolver, PlayerCost, solve, plot_traj,
-    FunctionPlayerCost
+    FunctionPlayerCost, @animated
 
 using StaticArrays
 
@@ -30,4 +30,8 @@ g = GeneralGame{player_inputs, game_horizon}(dynamics, costs)
 solver = iLQSolver(g)
 x0 = SVector(1, 1, 0, 0.5)
 converged, trajectory, strategies = solve(g, solver, x0)
-plot_traj(trajectory, g, [:red, :green], player_inputs)
+
+# animate the resulting trajectory. Use the `plot_traj` call without @animated to
+# get a static plot instead.
+@animated(plot_traj(trajectory, g, [:red, :green], player_inputs),
+          1:game_horizon, "minimal_example.gif")

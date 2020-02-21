@@ -80,10 +80,14 @@ converged, trajectory, strategies = solve(g, solver, x0)
 
 Here what the path of the unicycle looks like (x- and y-position):
 ```julia
-plot_traj(trajectory, g, [:red, :green], player_inputs)
+# animate the resulting trajectory. Use the `plot_traj` call without @animated to
+# get a static plot instead.
+@animated(plot_traj(trajectory, g, [:red, :green], player_inputs),
+          1:game_horizon, "minimal_example.gif")
 ```
 
-![](examples/minimal_example.png)
-
-Player-2 accelerates to reach the desired speed. Player-1 steers the unicycle in
+At the equilibrium solution, Player-2 accelerates to reach the desired speed. Player-1 steers the unicycle in
 a figure-8 to stay close to the origin.
+
+![](examples/minimal_example.gif)
+
