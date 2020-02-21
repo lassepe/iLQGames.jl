@@ -1,7 +1,7 @@
 # iLQGames.jl
 
-An implementation of the iterative linear-quadratic methods for general-sum
-differential games.
+A framework for rapidly designing and solving nonlinear general-sum differential
+games, built around the iterative linear-quadratic method.
 
 For a full description of the algorithm itself and examples of how it can be
 applied, please refer to [paper](https://arxiv.org/abs/1909.04694).
@@ -19,24 +19,24 @@ differential games in real-time.
 
 ```
 
-## Minimal Example
+## Example
 
-Here is a minimal example of two players controlling a singe unicycle.
+Here is a minimal example of two players controlling a single 4D-unicycle.
 Player-1 controls the steering, Player-2 controls the acceleration.
+
+
+#### 1. Describe Dynamics
 
 We define a Unicycle as a subtype of our `ControlSystem` type and implement the
 differential equation by overloading `dx` for our type.
 
 
 ```julia
-import iLQGames: dx, xyindex
-using iLQGames:
-    ControlSystem, GeneralGame, iLQSolver, PlayerCost, solve, plot_traj,
-    FunctionPlayerCost
-
+import iLQGames: dx
+using iLQGames: ControlSystem, GeneralGame, iLQSolver, PlayerCost, solve, plot_traj, FunctionPlayerCost
 using StaticArrays
 
-# parametes: number of states, number of inputs, sampling time, horizon
+# parameters: number of states, number of inputs, sampling time, horizon
 nx, nu, ΔT, game_horizon = 4, 2, 0.1, 200
 
 # setup the dynamics
@@ -47,8 +47,10 @@ dynamics = Unicycle()
 
 ```
 
+#### 2. Setup Costs
+
 To setup the costs encoding each players objectives, we can derive a custom subtype
-from `PlayerCost`, or, as done here, simply hand the objective as a lambda function
+from `PlayerCost`, or, as done here, simply hand the cost function as a lambda function
 to the `FunctionPlayerCost`.
 
 ```julia
@@ -61,6 +63,7 @@ costs = (FunctionPlayerCost{nx,nu}((g, x, u, t) -> (x[1]^2 + x[2]^2 + u[1]^2)),
 player_inputs = (SVector(1), SVector(2))
 ```
 
+#### 3. Solve the Game
 With this information we can construct the game...
 
 ```julia
@@ -71,23 +74,21 @@ g = GeneralGame{player_inputs, game_horizon}(dynamics, costs)
 Automatic differentiation will save us from having to specify how to compute LQ approximations of the system.
 
 ```julia
-# get a solver, choose initial conditions and solve (in about 9 ms with automatic
-# differentiation)
+# get a solver, choose initial conditions and solve (in about 9 ms with automatic differentiation)
 solver = iLQSolver(g)
 x0 = SVector(1, 1, 0, 0.5)
 converged, trajectory, strategies = solve(g, solver, x0)
 ```
 
-Here what the path of the unicycle looks like (x- and y-position):
+Finally, we visualize the path of the unicycle like (x- and y-position):
 ```julia
-# animate the resulting trajectory. Use the `plot_traj` call without @animated to
-# get a static plot instead.
+# Use the `plot_traj` call without @animated to get a non-animated plot instead.
 @animated(plot_traj(trajectory, g, [:red, :green], player_inputs),
           1:game_horizon, "minimal_example.gif")
 ```
 
 At the equilibrium solution, Player-2 accelerates to reach the desired speed. Player-1 steers the unicycle in
-a figure-8 to stay close to the origin.
+a figure-8 to stay close to the origin.:
 
 ![](examples/minimal_example.gif)
 
