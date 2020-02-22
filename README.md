@@ -1,6 +1,7 @@
 # iLQGames.jl
 
 [![Build Status](https://travis-ci.org/lassepe/iLQGames.jl.svg?branch=master)](https://travis-ci.org/lassepe/iLQGames.jl)
+[![codecov](https://codecov.io/gh/lassepe/iLQGames.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/lassepe/iLQGames.jl)
 
 A framework for rapidly designing and solving nonlinear general-sum differential
 games, built around the iterative linear-quadratic method.
@@ -17,13 +18,13 @@ differential games in real-time.
 ## Installation
 
 ```julia
-]add github.com/lassepe/iLQGames.jl
+]add https://github.com/lassepe/iLQGames.jl
 
 ```
 
 ## Example
 
-Here is a minimal example of two players controlling a single 4D-unicycle.
+Here is a example of two players controlling a single 4D-unicycle.
 Player-1 controls the steering, Player-2 controls the acceleration.
 
 
