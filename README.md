@@ -1,5 +1,7 @@
 # iLQGames.jl
 
+[![Build Status](https://travis-ci.org/lassepe/iLQGames.jl.svg?branch=master)](https://travis-ci.org/lassepe/iLQGames.jl)
+
 A framework for rapidly designing and solving nonlinear general-sum differential
 games, built around the iterative linear-quadratic method.
 
