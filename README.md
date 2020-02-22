@@ -10,7 +10,7 @@ For a full description of the algorithm itself and examples of how it can be
 applied, please refer to [paper](https://arxiv.org/abs/1909.04694).
 A brief introduction to this framework and benchmarks against a [C++
 implementation](https://github.com/HJReachability/ilqgames)
-can be found in the [workshop paper]().
+can be found in [this paper]().
 Finally, [this paper](https://arxiv.org/abs/2002.04354) demonstrates the flexibility and performance of iLQGames.jl
 by combining it with a particle-filter scheme to reason about uncertainty in
 differential games in real-time.
