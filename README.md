@@ -24,7 +24,7 @@ differential games in real-time.
 
 ## Example
 
-Here is a example of two players controlling a single 4D-unicycle.
+Here is a example of two players controlling a *single* 4D-unicycle.
 Player-1 controls the steering, Player-2 controls the acceleration.
 
 
@@ -85,7 +85,9 @@ converged, trajectory, strategies = solve(g, solver, x0)
 
 Finally, we visualize the path of the unicycle like (x- and y-position):
 ```julia
-# Use the `plot_traj` call without @animated to get a non-animated plot instead.
+# for visualization we need to state which state indices correspond to px and py
+position_indices = tuple(SVector(1,2))
+# Note: you can use the `plot_traj` call without @animated to get a non-animated plot instead.
 @animated(plot_traj(trajectory, g, [:red, :green], player_inputs),
           1:game_horizon, "minimal_example.gif")
 ```
