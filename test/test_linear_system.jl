@@ -3,9 +3,10 @@ using Test
 using iLQGames:
     LinearSystem,
     discretize,
-#    discretize_exp,
     linearize,
-    linearize_discrete
+    linearize_discrete,
+    LinearizationStyle,
+    TrivialLinearization
 
 using StaticArrays
 
@@ -20,6 +21,11 @@ u0 = @SVector [2.]
 t0 = .11
 
 d1 = discretize(ls, Val{ΔT}())
+
+@testset "linearization style" begin
+    @test LinearizationStyle(ls) isa TrivialLinearization
+    @test LinearizationStyle(d1) isa TrivialLinearization
+end
 
 @testset "linearize" begin
     # linearizing a linear system should not make a difference

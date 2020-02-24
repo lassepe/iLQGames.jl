@@ -9,6 +9,7 @@ using iLQGames:
     AffineStrategy,
     LinearizationStyle,
     FeedbackLinearization,
+    TrivialLinearization,
     iLQSolver,
     GeneralGame,
     NPlayer2DDoubleIntegratorCost,
@@ -43,6 +44,7 @@ xg1 = @SVector [3., 0., 0., 0.]
 xg2 = @SVector [0., -3., 0., 0.]
 g = generate_nplayer_navigation_game(Unicycle4D, NPlayerUnicycleCost, T_horizon, ΔT,
                                      xg1, xg2)
+@test LinearizationStyle(dynamics(g)) isa FeedbackLinearization
 
 dyn = dynamics(g)
 nx = n_states(dyn)
@@ -69,6 +71,7 @@ acc_init(k::Int) = -cos(k/h*pi)*0.3
                                             steer_init(k), acc_init(k)])) for k in 1:h])
 
 gξ, ξ0 = transform_to_feedbacklin(g, x0)
+@test LinearizationStyle(dynamics(gξ)) isa TrivialLinearization
 solverξ = iLQSolver(gξ)
 γξ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
                                  (@SVector [-0.05, 0.02,

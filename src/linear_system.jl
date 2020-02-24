@@ -26,46 +26,11 @@ LinearizationStyle(::LinearSystem) = TrivialLinearization()
 dx(ls::LinearSystem, x::SVector, u::SVector, t::AbstractFloat)  = begin @assert !issampled(ls); ls.A*x + ls.B*u end
 next_x(ls::LinearSystem, x::SVector, u::SVector) = begin @assert issampled(ls); ls.A*x + ls.B*u end
 linearize(ls::LinearSystem, x::SVector, u::SVector, t::AbstractFloat) = ls
-
-"""
-    $(FUNCTIONNAME)(ls::LinearSystem, ΔT::AbstractFloat)
-
-Computes the zero-order-hold discretization of the linear system ls with time
-discretization step ΔT.
-"""
-function discretize_inv(ls::LinearSystem, ::Val{ΔT}) where {ΔT}
-    # the discrete time system matrix
-    Φ = exp(ls.A*ΔT)
-    # the discrete time input matrix
-    Γ = inv(ls.A) * (Φ - I) * ls.B
-
-    return LinearSystem{ΔT}(Φ, Γ)
-end
-
-function discretize_exp(ls::LinearSystem, ::Val{ΔT}) where {ΔT}
-    nx = n_states(ls)
-    nu = n_controls(ls)
-
-    M = vcat([ls.A ls.B], @SMatrix(zeros(nu, nu+nx)))
-    #M = vcat([A B], SMatrix{nu, nx+nu, Float64, nu*(nx+nu)}(zeros(nu, nx+nu)))
-
-    eMT = exp(M*ΔT)
-    rx = SVector{nx}(1:nx)
-    ru = SVector{nu}((nx+1):(nx+nu))
-
-    Φ = eMT[rx, rx]
-    Γ = eMT[rx, ru]
-
-    return LinearSystem{ΔT}(Φ, Γ)
-end
-
-discretize_euler(ls::LinearSystem, ::Val{ΔT}) where {ΔT} = LinearSystem{ΔT}(I+ΔT*ls.A, ΔT*ls.B)
-
 function discretize(ls::LinearSystem, vt::Val{ΔT}) where {ΔT}
     @assert !issampled(ls) "Can't discretize a discrete system."
     @assert ΔT > 0 "Discrtization requires finite sampling time ΔT."
     # use the euler approximation to avoid expensive matrix exponential
-    return discretize_euler(ls, vt)
+    return LinearSystem{ΔT}(I+ΔT*ls.A, ΔT*ls.B)
 end
 
 # TODO: this should probably know the absolute time (like the `SystemTrajectory`)

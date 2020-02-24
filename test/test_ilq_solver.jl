@@ -17,7 +17,9 @@ using iLQGames:
     iLQSolver,
     solve!,
     AffineStrategy,
-    generate_nplayer_navigation_game
+    generate_nplayer_navigation_game,
+    samplingtime,
+    horizon
 
 using iLQGames.TestUtils
 
@@ -72,3 +74,9 @@ acc_init(k::Int) = -cos(k/h*pi)*0.3
 # generate initial operating point from simulating initial strategy
 # solve the game
 display(@benchmark(solve!(copy(zero_op), copy(γ_init), $g, $solver, $x0)))
+
+_, traj, _ = solve!(copy(zero_op), copy(γ_init), g, solver, x0)
+@testset "solution trajectory sanity checks" begin
+    @test horizon(traj) == h
+    @test samplingtime(traj) == ΔT
+end
