@@ -1,7 +1,6 @@
 import iLQGames: dx, xyindex
 using iLQGames:
-    ControlSystem, GeneralGame, iLQSolver, PlayerCost, solve, plot_traj,
-    FunctionPlayerCost, @animated
+    ControlSystem, GeneralGame, iLQSolver, solve, plot_traj, FunctionPlayerCost, @animated
 
 using StaticArrays
 

@@ -17,9 +17,11 @@ differential games in real-time.
 
 ## Installation
 
-```julia
-]add https://github.com/lassepe/iLQGames.jl
+Within the Julia REPL run:
 
+```julia
+using Pkg
+Pkg.add(PackageSpec(url="https://github.com/lassepe/iLQGames.jl"))
 ```
 
 ## Example
@@ -36,7 +38,7 @@ differential equation by overloading `dx` for our type.
 
 ```julia
 import iLQGames: dx
-using iLQGames: ControlSystem, GeneralGame, iLQSolver, PlayerCost, solve, plot_traj, FunctionPlayerCost
+using iLQGames: ControlSystem, GeneralGame, iLQSolver, solve, plot_traj, FunctionPlayerCost
 using StaticArrays
 
 # parameters: number of states, number of inputs, sampling time, horizon
