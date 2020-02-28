@@ -49,10 +49,13 @@ end
 function plot_inputs(traj::SystemTrajectory, player_colors, uids; kwargs...)
     # names for each input
     nu = length(eltype(traj.u))
-    input_labels = reshape(["u$i" for i in 1:nu], 1, nu)
+    input_labels = reshape([latexstring("u_$i") for i in 1:nu], 1, nu)
     # find the player color for each input
     input_colors = reshape([player_colors[findfirst(in.(i, uids))] for i in 1:nu], 1, nu)
-    return plot(hcat(traj.u...)'; layout=(nu, 1), label=input_labels,
+    return plot(hcat(traj.u...)'; layout=(nu, 1),
+                legend=:none,
+                xlabel="time step",
+                ylabel=input_labels,
                 seriescolor=input_colors, kwargs...)
 end
 
@@ -78,13 +81,17 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
         pu = plot_inputs(traj, player_colors, uids)
     end
 
+    if length(xy_ids) == 1
+        player_colors = [:black for p in player_colors]
+    end
+
     for (i, xy_i) in enumerate(xy_ids)
         # the trajectory
         x = collect(x[first(xy_i)] for x in traj.x)
         y = collect(x[last(xy_i)] for x in traj.x)
 
-        plot!(plt, x, y; xlims=(-5, 5), ylims=(-5, 5), seriescolor=player_colors[i],
-              seriesalpha=alpha, legend=:none)
+        plot!(plt, x, y; xlims=(-2.5, 2.5), ylims=(-2.5, 2.5), seriescolor=player_colors[i],
+              seriesalpha=alpha, legend=:none, xlabel=L"p_x", ylabel=L"p_y")
 
         # marker at the current time step
         for k in unique([k, kp])

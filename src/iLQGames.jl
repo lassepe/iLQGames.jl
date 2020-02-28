@@ -7,6 +7,7 @@ module iLQGames
     using LinearAlgebra
     using Parameters
     using Colors, ColorSchemes
+    using LaTeXStrings
     import Base:
         getindex,
         setindex!,
