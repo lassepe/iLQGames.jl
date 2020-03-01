@@ -1,8 +1,5 @@
-import iLQGames: dx, xyindex
-using iLQGames:
-    ControlSystem, GeneralGame, iLQSolver, solve, plot_traj, FunctionPlayerCost, @animated
-
-using StaticArrays
+using iLQGames
+import iLQGames: dx
 
 # parametes: number of states, number of inputs, sampling time, horizon
 nx, nu, ΔT, game_horizon = 4, 2, 0.1, 200
@@ -33,5 +30,4 @@ converged, trajectory, strategies = solve(g, solver, x0)
 
 # for visualization, we need to state which state indices correspond to px and py
 position_indices = tuple(SVector(1,2))
-@animated(plot_traj(trajectory, position_indices, [:red, :green], player_inputs),
-          1:game_horizon, "minimal_example.gif")
+plot_traj(trajectory, position_indices, [:red, :green], player_inputs)

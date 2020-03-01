@@ -1,21 +1,32 @@
 module iLQGames
     using DocStringExtensions
+    using Reexport
     using Parameters
     using ForwardDiff
     using DiffResults
-    using StaticArrays
+    @reexport using StaticArrays
     using LinearAlgebra
     using Parameters
     using Colors, ColorSchemes
     using LaTeXStrings
+    using Plots
+    gr()
+
     import Base:
         getindex,
         setindex!,
         zero,
         copy
 
-    using Plots
-    gr()
+    # game setup
+    export ControlSystem, LTISystem, LTVSystem
+    export PlayerCost, QuadraticPlayerCost, FunctionPlayerCost
+    export AffineStrategy
+    # games solution
+    export GeneralGame
+    export iLQSolver, solve, solve!, cost
+    # visualization
+    export plot_traj, plot_states, plot_inputs, @animated
 
     # some macro sugar to make life easier
     include("sugar.jl")

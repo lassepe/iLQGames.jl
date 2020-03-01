@@ -37,9 +37,8 @@ differential equation by overloading `dx` for our type.
 
 
 ```julia
+using iLQGames
 import iLQGames: dx
-using iLQGames: ControlSystem, GeneralGame, iLQSolver, solve, plot_traj, FunctionPlayerCost
-using StaticArrays
 
 # parameters: number of states, number of inputs, sampling time, horizon
 nx, nu, ΔT, game_horizon = 4, 2, 0.1, 200
