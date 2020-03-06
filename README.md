@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/lassepe/iLQGames.jl.svg?branch=master)](https://travis-ci.org/lassepe/iLQGames.jl)
 [![codecov](https://codecov.io/gh/lassepe/iLQGames.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/lassepe/iLQGames.jl)
+ [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 A framework for rapidly designing and solving nonlinear general-sum differential
 games, built around the iterative linear-quadratic method.
