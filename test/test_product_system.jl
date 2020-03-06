@@ -10,10 +10,9 @@ using iLQGames:
 
 using StaticArrays
 
-
 # create two separate dynamics systems
-car1 = Car5D(1.0)
-car2 = Car5D(1.0)
+car1 = Car5D{0.1}(1.0)
+car2 = Car5D{0.1}(1.0)
 xid1 = SVector{5}(1:5)
 xid2 = SVector{5}(6:10)
 uid1 = SVector{2}(1:2)

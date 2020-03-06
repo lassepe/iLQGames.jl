@@ -28,7 +28,12 @@ using iLQGames:
     goalcost,
     ξ_from,
     subsystems,
-    transform_to_feedbacklin
+    transform_to_feedbacklin,
+    feedbacklin,
+    x_from,
+    λ_issingular,
+    sparse_feedbacklin,
+    next_x
 
 using iLQGames.TestUtils
 
@@ -81,3 +86,26 @@ quad_sanity_check(gξ)
 
 @info "Benchmark *with* feedback linearization:"
 display(@benchmark(solve!(copy(zero_op), copy(γξ_init), $gξ, $solverξ, $ξ0)))
+
+@testset "state conversion" begin
+    for i in 1:100
+        ξ = randn(SVector{n_states(dyn)})
+        x = x_from(dyn, ξ)
+        if !λ_issingular(dyn, ξ)
+            @test ξ ≈ ξ_from(dyn, x)
+        end
+    end
+end;
+
+@testset "sprase feedback linearization" begin
+    dyn_fblin_dense = feedbacklin(dyn)
+    dyn_fblin_sparse = sparse_feedbacklin(dyn)
+    # these should have the same behavior
+    for i in 1:100
+        x = randn(SVector{n_states(dyn_fblin_dense)})
+        u = randn(SVector{n_controls(dyn_fblin_dense)})
+        t = 0.0
+
+        @test next_x(dyn_fblin_dense, x, u, t) == next_x(dyn_fblin_sparse, x, u, t)
+    end
+end;

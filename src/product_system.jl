@@ -123,8 +123,9 @@ function feedbacklin(cs::ProductSystem)
     return LTISystem(dyn, ξxyindex(cs), ξindex(cs))
 end
 
-# TODO: this might be better in some cases (as the new system has some sparsity
-# properties)
+"A sparse version of the `feedbacklin` method that may be faster if the product
+system contains of many subsystems (exploits block diagonal structure of linearized
+system matrix)."
 function sparse_feedbacklin(cs::ProductSystem)
     feedbacklin_subs = map(subsystems(cs)) do sub
         feedbacklin(sub)
