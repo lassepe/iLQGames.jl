@@ -68,11 +68,14 @@ end
 
 function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
                     player_colors::AbstractArray,
-                    uids=nothing, alpha::Float64=1.,
-                    legend=:none,
-                    path_marker=(:circle, 1, stroke(1, 1., :black)), ; k::Int=1,
-                    kp=k)
+                    uids=nothing,
+                    plot_attributes=NamedTuple()
+                    ; k::Int=1, kp=k)
     # buffer for all the plots
+    default_plot_attributes = (legend=:none, seriesalpha=1.,
+                               xlabel=L"p_x [m]", ylabel=L"p_y [m]",
+                               xlims=(-2.5, 2.5), ylims=(-2.5, 2.5))
+    plot_attributes = merge(default_plot_attributes, plot_attributes)
 
     nu = length(eltype(traj.u))
     pu = plot(; layout=(nu, 1))
@@ -89,9 +92,7 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
         # the trajectory
         x = collect(x[first(xy_i)] for x in traj.x)
         y = collect(x[last(xy_i)] for x in traj.x)
-
-        plot!(plt, x, y; xlims=(-2.5, 2.5), ylims=(-2.5, 2.5), seriescolor=player_colors[i],
-              seriesalpha=alpha, legend=:none, xlabel=L"p_x", ylabel=L"p_y")
+        plot!(plt, x, y; seriescolor=player_colors[i], plot_attributes...)
 
         # marker at the current time step
         for k in unique([k, kp])
