@@ -70,7 +70,7 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
                     player_colors::AbstractArray,
                     uids=nothing,
                     plot_attributes=NamedTuple()
-                    ; k::Int=1, kp=k)
+                    ; k::Int=1, kp=nothing)
     # buffer for all the plots
     default_plot_attributes = (legend=:none, seriesalpha=1.,
                                xlabel=L"p_x [m]", ylabel=L"p_y [m]",
@@ -88,18 +88,20 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
         player_colors = [:black for p in player_colors]
     end
 
+    function mark_position!(p::Plots.Plot, px, py, marker)
+        # marker at the current time step
+        scatter!(plt, [px], [py]; marker=marker, legend=:none)
+    end
+
+
     for (i, xy_i) in enumerate(xy_ids)
         # the trajectory
-        x = collect(x[first(xy_i)] for x in traj.x)
-        y = collect(x[last(xy_i)] for x in traj.x)
-        plot!(plt, x, y; seriescolor=player_colors[i], plot_attributes...)
-
-        # marker at the current time step
-        for k in unique([k, kp])
-            if k > 0
-                scatter!(plt, [x[k]], [y[k]], seriescolor=player_colors[i],
-                         legend=:none)
-            end
+        pxs = collect(x[first(xy_i)] for x in traj.x)
+        pys = collect(x[last(xy_i)] for x in traj.x)
+        plot!(plt, pxs, pys; seriescolor=player_colors[i], plot_attributes...)
+        mark_position!(plt, pxs[k], pys[k], (:diamond, player_colors[i]))
+        if !isnothing(kp)
+            mark_position!(plt, pxs[kp], pys[kp], (:circle, player_colors[i]))
         end
     end
 
