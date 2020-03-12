@@ -1,28 +1,3 @@
-"The legacy version of the plot function that computes the player colors form a
-simple color map (just distinguishable colors)"
-function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
-                    uids=nothing,
-                    cname::AbstractString="blues", args...; kwargs...)
-    # get a color for each player (using offset because first color is too faint)
-    player_colors = colormap(cname, length(xy_ids)+1)[2:end]
-    # TODO, consider swapping uids and cname globally
-    return plot_traj!(plt, traj, xy_ids, player_colors, uids, args...; kwargs...)
-end
-
-"Colors each players trajectory by the players cost."
-function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, g::AbstractGame,
-                    cs::ColorScheme, rangescale::Union{Tuple, Nothing}=nothing,
-                    args...; kwargs...)
-
-    # cost
-    pcs = cost(g, traj)
-    rangescale = isnothing(rangescale) ? extrema(pcs) : rangescale
-    player_colors = [get(cs, pc, rangescale) for pc in pcs]
-
-    return plot_traj!(plt, traj, xyindex(g), player_colors, args...;
-                      kwargs...)
-end
-
 function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, g::AbstractGame,
                     player_colors::AbstractArray, args...; kwargs...)
     return  plot_traj!(plt, traj, xyindex(g), player_colors, args...; kwargs...)
@@ -74,7 +49,7 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
     # buffer for all the plots
     default_plot_attributes = (legend=:none, seriesalpha=1.,
                                xlabel=L"p_x [m]", ylabel=L"p_y [m]",
-                               xlims=(-2.5, 2.5), ylims=(-2.5, 2.5))
+                               xlims=(-3.5, 3.5), ylims=(-3.5, 3.5))
     plot_attributes = merge(default_plot_attributes, plot_attributes)
 
     nu = length(eltype(traj.u))
@@ -93,14 +68,15 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
         scatter!(plt, [px], [py]; marker=marker, legend=:none)
     end
 
-
     for (i, xy_i) in enumerate(xy_ids)
         # the trajectory
         pxs = collect(x[first(xy_i)] for x in traj.x)
         pys = collect(x[last(xy_i)] for x in traj.x)
         plot!(plt, pxs, pys; seriescolor=player_colors[i], plot_attributes...)
-        mark_position!(plt, pxs[k], pys[k], (:diamond, player_colors[i]))
-        if !isnothing(kp)
+        if k > 0
+            mark_position!(plt, pxs[k], pys[k], (:diamond, player_colors[i]))
+        end
+        if !isnothing(kp) && kp > 0
             mark_position!(plt, pxs[kp], pys[kp], (:circle, player_colors[i]))
         end
     end
@@ -114,10 +90,10 @@ function scatter_positions(args...; kwargs...)
     plt = plot()
     return scatter_positions!(plt, args; kwargs...)
 end
-function scatter_positions!(plt, x, g, player_colors)
+function scatter_positions!(plt, x, g, player_colors, marker=(:circle))
     for (i, xy_i) in enumerate(xyindex(g))
         scatter!(plt, [x[xy_i][1]], [x[xy_i][2]], seriescolor=player_colors[i],
-                 markersize=5)
+                 marker=marker)
     end
     return plt
 end
