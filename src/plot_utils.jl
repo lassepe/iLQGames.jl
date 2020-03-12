@@ -31,7 +31,7 @@ end
 function plot_traj(traj::SystemTrajectory)
     return plot_traj(traj, [:black], tuple(@S(1:length(eltype(traj.u)))))
 end
-function plot_traj(traj::SystemTrajectory, player_colors, uids)
+function plot_traj(traj::SystemTrajectory, player_colors::Vector, uids)
     plots = []
 
     if !isnothing(uids)
