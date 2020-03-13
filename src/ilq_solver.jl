@@ -88,8 +88,12 @@ function solve(g::AbstractGame, solver::iLQSolver, args...)
 end
 
 function solve(initial_strategy::StaticVector, g, args...)
-    result_strategy = copy(initial_strategy)
     return solve!(zero(SystemTrajectory, g), copy(initial_strategy), g, args...)
+end
+
+function solve(initial_op::SystemTrajectory, initial_strategy::StaticVector, g,
+               args...)
+    return solve!(copy(initial_op), copy(initial_strategy), g, args...)
 end
 
 "Copy the `initial_op` to a new operting point instance using preallocated memory."
