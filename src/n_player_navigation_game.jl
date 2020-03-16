@@ -1,4 +1,4 @@
-abstract type NPlayerNavigationCost{nx,nu} <: PlayerCost{nx,nu} end
+abstract type NPlayerNavigationCost <: PlayerCost end
 
 "Returns an the input cost object, e.g. ::QuadCost"
 function inputcost end
@@ -18,11 +18,11 @@ function goalcost end
 
 function quadraticize!(qcache::QuadCache, pc::NPlayerNavigationCost,
                        g::GeneralGame, x::SVector, u::SVector, t::AbstractFloat)
-    nx = n_states(pc)
-    nu = n_controls(pc)
+    nx = n_states(g)
+    nu = n_controls(g)
 
-    xi = xindex(pc)[player_id(pc)]
-    ui = uindex(pc)[player_id(pc)]
+    xi = xindex(g)[player_id(pc)]
+    ui = uindex(g)[player_id(pc)]
 
     # reset the cache
     reset!(qcache)
@@ -57,8 +57,8 @@ end
 
 function (pc::NPlayerNavigationCost)(g::AbstractGame, x::SVector, u::SVector, t::Float64)
     # extract the states and inputs for this player
-    xi = xindex(pc)[player_id(pc)]
-    ui = uindex(pc)[player_id(pc)]
+    xi = xindex(g)[player_id(pc)]
+    ui = uindex(g)[player_id(pc)]
     xᵢ = x[xi]
     uᵢ = u[ui]
     # setup the cost: each player wan't to:
@@ -106,8 +106,7 @@ function generate_nplayer_navigation_game(DynType::Type, CostModelType::Type,
 
     xids = xindex(dyn)
     uids = uindex(dyn)
-    costs = SVector{np}([CostModelType(i, xids, uids, goals[i], t_final)
-                         for i in 1:np])
+    costs = SVector{np}([CostModelType(i, goals[i], t_final) for i in 1:np])
 
     return GeneralGame{uids,h}(dyn, costs)
 end

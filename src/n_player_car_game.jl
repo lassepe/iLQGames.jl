@@ -1,12 +1,8 @@
 # TODO: tidy up. For fow, implementing both interfaces
-struct NPlayerCarCost{nx,nu,TXI<:NTuple,TUI<:NTuple,TG<:SVector{5},TR<:SMatrix{2,2},
-                      TQs<:SMatrix{5,5},TQg<:SMatrix{5,5}} <: NPlayerNavigationCost{nx,nu}
+struct NPlayerCarCost{TG<:SVector{5},TR<:SMatrix{2,2},
+                      TQs<:SMatrix{5,5},TQg<:SMatrix{5,5}} <: NPlayerNavigationCost
     "the index of the player this cost applies to"
     player_id::Int
-    "the index partitions of the state vector"
-    xids::TXI
-    "the index partitions of the input vector"
-    uids::TUI
     "the desired goal state for this player"
     xg::TG
     "the time after which the goal state cost is active"
@@ -30,7 +26,7 @@ struct NPlayerCarCost{nx,nu,TXI<:NTuple,TUI<:NTuple,TG<:SVector{5},TR<:SMatrix{2
     w::Float64
 end
 
-function NPlayerCarCost(player_id::Int, xids::TXI, uids::TUI, xg::TG, t_final::Float64;
+function NPlayerCarCost(player_id::Int, xg::TG, t_final::Float64;
                         R::TR = SMatrix{2,2}([.1 0.; 0. 1.]) * 10.,
                         Qs::TQs = SMatrix{5,5}(diagm([0, 0, 0, 0.2, 2.])) * 20.,
                         Qg::TQg = SMatrix{5,5}(diagm([1.,1.,1.,0.,0.]))*500,
@@ -40,14 +36,9 @@ function NPlayerCarCost(player_id::Int, xids::TXI, uids::TUI, xg::TG, t_final::F
                         des_v_bounds = (-0.05, 2.),
                         des_steer_bounds = (-deg2rad(30), deg2rad(30)),
                         w = 50.) where {TXI, TUI, TG, TR, TQs, TQg}
-    nx = sum(length.(xids))
-    nu = sum(length.(uids))
-    return NPlayerCarCost{nx,nu,TXI,TUI,TG,TR,TQs,TQg}(player_id, xids, uids, xg,
-                                                       t_final, R, Qs, Qg,
-                                                       r_avoid,
-                                                       des_acc_bounds,
-                                                       des_v_bounds,
-                                                       des_steer_bounds, w)
+
+    return NPlayerCarCost(player_id, xg, t_final, R, Qs, Qg, r_avoid,
+                          des_acc_bounds, des_v_bounds, des_steer_bounds, w)
 end
 
 "---------------- Implementing the NPlayerNavigationCost interface ----------------"
@@ -61,5 +52,3 @@ stateconstr(pc::NPlayerCarCost) = (SoftConstr(4, pc.des_steer_bounds..., pc.w),
                                    SoftConstr(5, pc.des_v_bounds..., pc.w))
 proximitycost(pc::NPlayerCarCost) = ProximityCost(pc.r_avoid, pc.w)
 goalcost(pc::NPlayerCarCost) = GoalCost(pc.t_final, pc.xg, pc.Qg)
-xindex(pc::NPlayerCarCost) = pc.xids
-uindex(pc::NPlayerCarCost) = pc.uids

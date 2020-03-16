@@ -62,8 +62,8 @@ to the `FunctionPlayerCost`.
 
 # player-1 wants the unicycle to stay close to the origin,
 # player-2 wants to keep close to 1 m/s
-costs = (FunctionPlayerCost{nx,nu}((g, x, u, t) -> (x[1]^2 + x[2]^2 + u[1]^2)),
-         FunctionPlayerCost{nx,nu}((g, x, u, t) -> ((x[4] - 1)^2 + u[2]^2)))
+costs = (FunctionPlayerCost((g, x, u, t) -> (x[1]^2 + x[2]^2 + u[1]^2)),
+         FunctionPlayerCost((g, x, u, t) -> ((x[4] - 1)^2 + u[2]^2)))
 # indices of inputs that each player controls
 player_inputs = (SVector(1), SVector(2))
 ```

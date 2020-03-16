@@ -1,8 +1,6 @@
-struct NPlayerUnicycleCost{nx,nu,TXI<:NTuple,TUI<:NTuple,TIC,TICR,TSC,TSCR,TPC,TGC}<:NPlayerNavigationCost{nx,nu}
+struct NPlayerUnicycleCost{TIC,TICR,TSC,TSCR,TPC,TGC}<:NPlayerNavigationCost
     "the index of the player this cost applies to"
     player_id::Int
-    xids::TXI
-    uids::TUI
     inputcost::TIC
     inputconstr::TICR
     statecost::TSC
@@ -11,7 +9,7 @@ struct NPlayerUnicycleCost{nx,nu,TXI<:NTuple,TUI<:NTuple,TIC,TICR,TSC,TSCR,TPC,T
     goalcost::TGC
 end
 
-function NPlayerUnicycleCost(player_id, xids::TXI, uids::TUI, xg, t_final;
+function NPlayerUnicycleCost(player_id, xg, t_final;
          inputcost::TIC=QuadCost(SMatrix{2,2}([1. 0.; 0. 1.]) * 10),
          inputconstr::TICR=(SoftConstr(1, deg2rad(-10), deg2rad(10), 50),
                             SoftConstr(2, -9.81, 9.81, 50)),
@@ -21,11 +19,8 @@ function NPlayerUnicycleCost(player_id, xids::TXI, uids::TUI, xg, t_final;
          goalcost::TGC=GoalCost(t_final, xg, SMatrix{4,4}(diagm([1.,1.,1.,0.])) *
                                 300)) where {TXI,TUI,TIC,TICR,TSC,TSCR,TPC,TGC}
 
-    nx = sum(length.(xids))
-    nu = sum(length.(uids))
-    return NPlayerUnicycleCost{nx,nu,TXI,TUI,TIC,TICR,TSC,TSCR,TPC,TGC}(
-        player_id, xids, uids, inputcost, inputconstr, statecost, stateconstr,
-        proximitycost, goalcost)
+    return NPlayerUnicycleCost(player_id, inputcost, inputconstr, statecost,
+                               stateconstr, proximitycost, goalcost)
 end
 
 "-----------------Implementing the NPlayerNavigationCost interface-----------------"
@@ -37,8 +32,6 @@ statecost(c::NPlayerUnicycleCost) = c.statecost
 stateconstr(c::NPlayerUnicycleCost) = c.stateconstr
 proximitycost(c::NPlayerUnicycleCost) = c.proximitycost
 goalcost(c::NPlayerUnicycleCost) = c.goalcost
-xindex(pc::NPlayerUnicycleCost) = pc.xids
-uindex(pc::NPlayerUnicycleCost) = pc.uids
 
 "------------------ Implementing Feedback Linearization Interface -----------------"
 
@@ -50,6 +43,5 @@ function transformed_cost(cs::Unicycle4D, c::NPlayerUnicycleCost)
     if λ_issingular(cs, ξg)
         @warn "State conversion map is singular at provided goal state."
     end
-    return NPlayer2DDoubleIntegratorCost(player_id(c), xindex(c), uindex(c), ξg,
-                                         t_active)
+    return NPlayer2DDoubleIntegratorCost(player_id(c), ξg, t_active)
 end

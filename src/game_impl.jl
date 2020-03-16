@@ -1,9 +1,5 @@
 "A simple contruction helper that runs some sanity checks on the types"
 @inline function game_sanity_checks(uids, TD, TC)
-    @assert(n_states(TD) == n_states(eltype(TC)),
-            "Cost and dynamics need the same state dimensions.")
-    @assert(n_controls(TD) == n_controls(eltype(TC)),
-            "Cost and dynamics need the same input dimensions")
     @assert(isempty(intersect(uids...)),
             "Invalid uids: Two players can not control the same input")
     @assert(sum(length(uis) for uis in uids) == n_controls(TD),

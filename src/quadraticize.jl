@@ -3,8 +3,8 @@
 
 A convencience implementation of the cost quadraticization.
 """
-function _quadraticize_ad(pc::PlayerCost{nx, nu}, g::GeneralGame, x::SVector{nx},
-                          u::SVector{nu}, t::AbstractFloat) where {nx, nu}
+function _quadraticize_ad(pc::PlayerCost, g::GeneralGame, x::SVector, u::SVector,
+                          t::AbstractFloat)
     @warn "You are using the fallback quadraticization using ForwardDiff.
     Consider implementing a custom `quadraticize` for your `ControlSystem`
     type." maxlog=1

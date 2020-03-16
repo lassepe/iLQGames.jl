@@ -2,13 +2,8 @@
 $(TYPEDEF)
 
 The abstract representation of the cost for a player in a game.
-
-# Parameters
-
-- `nx`    the number of states
-- `nu`:   the number of controls
 """
-abstract type PlayerCost{nx, nu} end
+abstract type PlayerCost end
 
 """
     $(FUNCTIONNAME)(x::SVector{nx}, u::SVector{nu}, t::AbstractFloat)
@@ -33,20 +28,14 @@ Returns the index of the player this cost is associated with.
 """
 function player_id end
 
-n_states(::Type{<:PlayerCost{nx}}) where {nx} = nx
-n_states(p::PlayerCost) = n_states(typeof(p))
-n_controls(::Type{<:PlayerCost{nx, nu}}) where {nx, nu} = nu
-n_controls(p::PlayerCost) = n_controls(typeof(p))
-
 """
 $(TYPEDEF)
 
 Represents a parameter free player cost that is defined by a funciton f.
 """
-struct FunctionPlayerCost{nx,nu,F} <: PlayerCost{nx,nu}
+struct FunctionPlayerCost{F} <: PlayerCost
     f::F
 end
-FunctionPlayerCost{nx, nu}(f::F) where {nx, nu, F} = FunctionPlayerCost{nx, nu, F}(f)
 (pc::FunctionPlayerCost)(args...) = pc.f(args...)
 
 """
@@ -54,17 +43,12 @@ $(TYPEDEF)
 
 Represents the quadratic players costs for a singel player in a game.
 
-# Parameters
-
-- `nx`: the number of states
-- `nu`: the number of controls
-
 # Fields
 
 $(TYPEDFIELDS)
 """
 struct QuadraticPlayerCost{nx, nu, TL<:SVector{nx}, TQ<:SMatrix{nx, nx},
-                           TRL<:SVector{nu}, TRQ<:SMatrix{nu, nu}} <: PlayerCost{nx, nu}
+                           TRL<:SVector{nu}, TRQ<:SMatrix{nu, nu}} <: PlayerCost
     "The linear state cost"
     l::TL
     "The qudratic state cost matrix"
