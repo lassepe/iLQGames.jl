@@ -49,7 +49,8 @@ function plot_traj!(plt::Plots.Plot, traj::SystemTrajectory, xy_ids,
     # buffer for all the plots
     default_plot_attributes = (legend=:none, seriesalpha=1.,
                                xlabel=L"p_x [m]", ylabel=L"p_y [m]",
-                               xlims=(-3.5, 3.5), ylims=(-3.5, 3.5))
+                               xlims=(-3.5, 3.5), ylims=(-3.5, 3.5),
+                               aspect_ratio=:equal)
     plot_attributes = merge(default_plot_attributes, plot_attributes)
 
     nu = length(eltype(traj.u))
