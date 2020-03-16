@@ -69,6 +69,6 @@ function lqgame_preprocess_alloc(g::AbstractGame)
     TC = SVector{np, TCi}
     quad_cost = SizedVector{h, TC, 1}(undef)
 
-    lqg = LQGame{uindex(g)}(lin_dyn, quad_cost)
+    lqg = LQGame(uindex(g), lin_dyn, quad_cost)
 end
 

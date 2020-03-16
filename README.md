@@ -72,7 +72,7 @@ player_inputs = (SVector(1), SVector(2))
 With this information we can construct the game...
 
 ```julia
-g = GeneralGame{player_inputs, game_horizon}(dynamics, costs)
+g = GeneralGame(game_horizon, player_inputs, dynamics, costs)
 ```
 
 ...and solve it for some initial conditions `x0`.

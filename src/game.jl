@@ -3,7 +3,7 @@ $(TYPEDEF)
 
 Abstract representation of a finite horizon game.
 """
-abstract type AbstractGame{uids, h} end
+abstract type AbstractGame end
 
 
 """
@@ -20,6 +20,12 @@ Returns the cost representation for the game (a vector of PlayerCost) for each
 player.
 """
 function player_costs end
+
+# TODO add documentation
+function uindex end
+function horizon end
+
+n_players(g::AbstractGame) = length(uindex(g))
 
 """
     $(TYPEDSIGNATURES)
@@ -58,9 +64,6 @@ xyindex(g::AbstractGame) = xyindex(dynamics(g))
 samplingtime(g::AbstractGame) = samplingtime(dynamics(g))
 
 # additional convenience methods
-n_players(g::AbstractGame{uids}) where {uids} = length(uids)
-uindex(g::AbstractGame{uids}) where {uids} = uids
-horizon(g::AbstractGame{uids, h}) where {uids, h} = h
 time_disc2cont(g::AbstractGame, k::Int, t0::Float64=0.) = (t0 +
                                                            (k-1)*samplingtime(g))
 pindex(g) = @S 1:n_players(g)

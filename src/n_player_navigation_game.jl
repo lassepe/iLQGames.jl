@@ -108,5 +108,5 @@ function generate_nplayer_navigation_game(DynType::Type, CostModelType::Type,
     uids = uindex(dyn)
     costs = SVector{np}([CostModelType(i, goals[i], t_final) for i in 1:np])
 
-    return GeneralGame{uids,h}(dyn, costs)
+    return GeneralGame(h, uids, dyn, costs)
 end

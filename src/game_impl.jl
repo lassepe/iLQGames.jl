@@ -17,20 +17,23 @@ $(TYPEDEF)
 A representation of a general game with potentially non-linear dynamics and
 non-quadratic costs.
 """
-struct GeneralGame{uids, h, TD<:ControlSystem, TC} <: AbstractGame{uids, h}
+struct GeneralGame{TH<:Integer,TU<:Tuple,TD<:ControlSystem, TC} <: AbstractGame
+    h::TH
+    uids::TU
     dyn::TD
     cost::TC
 
-    function GeneralGame{uids, h}(dyn::TD, cost::TC) where {uids,h,
-                                                            TD<:ControlSystem,TC}
+    function GeneralGame(h::TH, uids::TU, dyn::TD, cost::TC) where {TH,TU,TD,TC}
         game_sanity_checks(uids, TD, TC)
-        new{uids, h, TD, TC}(dyn, cost)
+        return new{TH,TU,TD,TC}(h, uids, dyn, cost)
     end
 end
 
-dyntype(::Type{<:GeneralGame{uids,h,TD}}) where {uids,h,TD} = TD
+dyntype(::Type{<:GeneralGame{TH,TU,TD}}) where {TH,TU,TD} = TD
 dynamics(g::GeneralGame) = g.dyn
 player_costs(g::GeneralGame) = g.cost
+horizon(g::GeneralGame) = g.h
+uindex(g::GeneralGame) = g.uids
 
 """
     $(TYPEDSIGNATURES)
@@ -49,7 +52,7 @@ function transform_to_feedbacklin(g::GeneralGame, x0)
     end |> SVector{n_players(g)}
 
     # transformed game
-    gξ = GeneralGame{uindex(g),horizon(g)}(lin_dyn, ξ_cost)
+    gξ = GeneralGame(horizon(g), uindex(g), lin_dyn, ξ_cost)
     # transform initial conditions
     ξ0 = ξ_from(dynamics(g), x0)
     if λ_issingular(dynamics(g), ξ0)
@@ -67,10 +70,6 @@ range of inputs.
 
 # Parameters
 
-- `uids`: the indices of the control inputs for every player
-- `h`:    the horizon of the game (number of steps, Int)
-- `nx`    the number of states
-- `nu`:   the number of controls
 - `TD`:   the type of the dynamics
 - `TC`:   the type of the player costs
 
@@ -78,24 +77,25 @@ range of inputs.
 
 $(TYPEDFIELDS)
 """
-struct LQGame{uids, h, TD<:Union{LTVSystem, LTISystem}, TC<:SizedVector{h}} <: AbstractGame{uids, h}
-    "The full linear system dynamics. A vector (time) over `LinearSystem`s."
+struct LQGame{TU,TD<:Union{LTVSystem, LTISystem}, TC<:SizedVector} <: AbstractGame
+    uids::TU
+    "The full linear system dynamics. A vector (time) of `LinearSystem`s."
     dyn::TD
-    "The cost representation. A vector (time) over vector (player) over
+    "The cost representation. A vector (time) of vector (player) of
     `QuadraticPlayerCost`"
     pcost::TC
 
-    function LQGame{uids}(dyn::TD, pcost::TC) where {uids,h,TD<:Union{LTVSystem,
-                                                                      LTISystem},
-                                                     TC<:SizedVector{h}}
+    function LQGame(uids::TU, dyn::TD, pcost::TC) where {TU,TD,TC}
         game_sanity_checks(uids, TD, eltype(TC))
         @assert eltype(eltype(TC)) <: QuadraticPlayerCost "LQGames require quadratic cots."
-        new{uids, h, TD, TC}(dyn, pcost)
+        return new{TU,TD,TC}(uids, dyn, pcost)
     end
 end
 
 dynamics(g::LQGame) = g.dyn
 player_costs(g::LQGame) = g.pcost
+horizon(g::LQGame) = length(g.pcost)
+uindex(g::LQGame) = g.uids
 
 function lq_approximation(solver, g::GeneralGame, op::SystemTrajectory)
     lqg = lqgame_preprocess_alloc(g)

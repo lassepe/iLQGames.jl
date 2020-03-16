@@ -18,7 +18,7 @@ costs = (FunctionPlayerCost((g, x, u, t) -> (x[1]^2 + x[2]^2 + u[1]^2)),
 # indices of inputs that each player controls
 player_inputs = (SVector(1), SVector(2))
 # the horizon of the game
-g = GeneralGame{player_inputs, game_horizon}(dynamics, costs)
+g = GeneralGame(game_horizon, player_inputs, dynamics, costs)
 
 # get a solver, choose initial conditions and solve (in about 9 ms with AD)
 solver = iLQSolver(g)
