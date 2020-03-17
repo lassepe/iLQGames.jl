@@ -32,6 +32,7 @@ statecost(c::NPlayerUnicycleCost) = c.statecost
 stateconstr(c::NPlayerUnicycleCost) = c.stateconstr
 proximitycost(c::NPlayerUnicycleCost) = c.proximitycost
 goalcost(c::NPlayerUnicycleCost) = c.goalcost
+ravoid(g) = proximitycost(first(player_costs(g))).r_avoid
 
 "------------------ Implementing Feedback Linearization Interface -----------------"
 
