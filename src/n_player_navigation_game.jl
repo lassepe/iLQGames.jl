@@ -95,7 +95,7 @@ end
 
 function generate_nplayer_navigation_game(DynType::Type, CostModelType::Type,
                                           T_horizon::Float64, ΔT::Float64,
-                                          goals::Vararg{SVector})
+                                          goals::Vararg{SVector}; kwargs...)
     # the number of players
     np = length(goals)
     # the time at which the goal cost is activated
@@ -106,7 +106,7 @@ function generate_nplayer_navigation_game(DynType::Type, CostModelType::Type,
 
     xids = xindex(dyn)
     uids = uindex(dyn)
-    costs = SVector{np}([CostModelType(i, goals[i], t_final) for i in 1:np])
+    costs = SVector{np}([CostModelType(i, goals[i], t_final; kwargs...) for i in 1:np])
 
     return GeneralGame(h, uids, dyn, costs)
 end
