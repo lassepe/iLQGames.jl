@@ -46,20 +46,27 @@ end
     return nothing
 end
 
-@with_kw struct ProximityCost
-    r_avoid::Float64
-    w::Float64
+@with_kw struct ProximityCost{TR,TW}
+    "A collection of avoidance raddii this player want's to keep from others."
+    rs::TR
+    "A collection of costs this player has for colliding with others."
+    ws::TW
 end
+ProximityCost(r, w, np) = ProximityCost(SVector{np}([r for _ in 1:np]),
+                                        SVector{np}([w for _ in 1:np]))
 
-@inline function (pc::ProximityCost)(xp1::SVector, xp2::SVector)
-    @unpack r_avoid, w = pc
-    Δxp = xp1 - xp2
-    return softconstr(sqrt(Δxp'*Δxp), r_avoid, Inf, w)
+"Proxmity cost for player i to player j. j is the index of the *other* player."
+@inline function (pc::ProximityCost)(xp_i::SVector, xp_j::SVector, j::Int)
+    @unpack rs, ws = pc
+    Δxp = xp_i - xp_j
+    return softconstr(sqrt(Δxp'*Δxp), rs[j], Inf, ws[j])
 end
 
 @inline function quad!(Q::MMatrix, l::MVector, pc::ProximityCost, x::SVector,
-                       xyi_1, xyi_2)
-    @unpack r_avoid, w = pc
+                       xyi_1, xyi_2, j::Int)
+    @unpack rs, ws = pc
+    r_avoid = rs[j]
+    w = ws[j]
 
     x1, y1 = xyi_1[1], xyi_1[2]
     x2, y2 = xyi_2[1], xyi_2[2]

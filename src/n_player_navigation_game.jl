@@ -45,7 +45,7 @@ function quadraticize!(qcache::QuadCache, pc::NPlayerNavigationCost,
     xyi_ego = xyindex(g)[player_id(pc)]
     for (j, xyi_other) in enumerate(xyindex(g))
         j != player_id(pc) || continue
-        quad!(qcache.Q, qcache.l, proximitycost(pc), x, xyi_ego, xyi_other)
+        quad!(qcache.Q, qcache.l, proximitycost(pc), x, xyi_ego, xyi_other, j)
     end
 
     # the goal cost
@@ -84,7 +84,7 @@ function (pc::NPlayerNavigationCost)(g::AbstractGame, x::SVector, u::SVector, t:
         j != player_id(pc) || continue
         # other positions
         xp_other = x[xys[j]]
-        cost += proximitycost(pc)(xp_ego, xp_other)
+        cost += proximitycost(pc)(xp_ego, xp_other, j)
     end
 
     # goal state cost cost:
@@ -106,7 +106,7 @@ function generate_nplayer_navigation_game(DynType::Type, CostModelType::Type,
 
     xids = xindex(dyn)
     uids = uindex(dyn)
-    costs = SVector{np}([CostModelType(i, goals[i], t_final; kwargs...) for i in 1:np])
+    costs = SVector{np}([CostModelType(i, goals[i], t_final, np; kwargs...) for i in 1:np])
 
     return GeneralGame(h, uids, dyn, costs)
 end

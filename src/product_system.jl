@@ -186,7 +186,7 @@ function decoupling_drift_term(cs::ProductSystem, x)
     return vcat(Tuple(ms)...)
 end
 
-function transformed_cost(cs::ProductSystem, c::PlayerCost)
+function transformed_cost(cs::ProductSystem, c::PlayerCost, np::Int)
     # forward to the corresponding subsystem
-    return transformed_cost(subsystems(cs)[player_id(c)], c)
+    return transformed_cost(subsystems(cs)[player_id(c)], c, np)
 end

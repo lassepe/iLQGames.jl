@@ -77,7 +77,7 @@ function λ_issingular end
 # Cost transformation
 
 """
-    $(FUNCTIONNAME)(cs::ControlSystem, c::PlayerCost)
+    $(FUNCTIONNAME)(cs::ControlSystem, c::PlayerCost, np::Int)
 
 Computes the transformed cost for the linear ξ coordinates.
 

@@ -48,7 +48,7 @@ function transform_to_feedbacklin(g::GeneralGame, x0)
     lin_dyn = feedbacklin(dynamics(g))
     # approximate the cost by a cost in ξ coordinates
     ξ_cost = map(enumerate(player_costs(g))) do (i, c)
-        transformed_cost(dynamics(g), c)
+        transformed_cost(dynamics(g), c, n_players(g))
     end |> SVector{n_players(g)}
 
     # transformed game
