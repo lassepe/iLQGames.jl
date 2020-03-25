@@ -3,8 +3,8 @@ using BenchmarkTools
 
 using iLQGames:
     iLQGames,
-    Car5D,
-    NPlayerCarCost,
+    Unicycle4D,
+    NPlayerUnicycleCost,
     quadraticize,
     _quadraticize_ad,
     linearize_discrete,
@@ -32,14 +32,14 @@ T_horizon = 10.
 ΔT = 0.1
 # initial conditions:
 # x = (x, y, phi, β, v)
-x01 = @SVector [-3., 0., 0., 0., 0.]
-x02 = @SVector [0.,  3., -pi/2, 0., 0.]
+x01 = @SVector [-3., 0., 0., 0.]
+x02 = @SVector [0.,  3., -pi/2, 0.]
 x0 = vcat(x01, x02)
 # goal states (goal position of other player with opposite orientation)
-xg1 = @SVector [3., 0., 0., 0., 0.]
-xg2 = @SVector [0., -3., -pi/2, 0., 0.]
+xg1 = @SVector [3., 0., 0., 0.]
+xg2 = @SVector [0., -3., -pi/2, 0.]
 # generate game
-g = generate_nplayer_navigation_game(Car5D, NPlayerCarCost, T_horizon, ΔT, xg1, xg2)
+g = generate_nplayer_navigation_game(Unicycle4D, NPlayerUnicycleCost, T_horizon, ΔT, xg1, xg2)
 
 # unpack for testing
 dyn = dynamics(g)

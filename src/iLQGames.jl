@@ -62,10 +62,8 @@ module iLQGames
 
     # some dynamical systems to work with
     include("lorenz.jl")
-    include("car_5d.jl")
     include("unicycle_4D.jl")
     include("n_player_navigation_game.jl")
-    include("n_player_car_game.jl")
     include("n_player_unicycle_game.jl")
     include("n_player_2Ddoubleintegrator_cost.jl")
 

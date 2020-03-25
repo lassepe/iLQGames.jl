@@ -6,9 +6,7 @@ using iLQGames:
     iLQSolver,
     GeneralGame,
     Unicycle4D,
-    Car5D,
     NPlayerUnicycleCost,
-    NPlayerCarCost,
     AffineStrategy,
     SystemTrajectory,
     dynamics,
@@ -29,33 +27,6 @@ using LinearAlgebra
 # generate a game
 T_horizon = 10.
 ΔT = 0.1
-
-"-------------------------------------- Car5D -------------------------------------"
-
-# initial conditions:
-# x = (x, y, phi, β, v)
-x01 = @SVector [-3., 0., 0., 0., 0.]
-x02 = @SVector [0.,  3., -pi/2, 0., 0.]
-x0 = vcat(x01, x02)
-# goal states (goal position of other player with opposite orientation)
-xg1 = @SVector [3., 0., 0., 0., 0.]
-xg2 = @SVector [0., -3., -pi/2, 0., 0.]
-g = generate_nplayer_navigation_game(Car5D, NPlayerCarCost, T_horizon,
-                                     ΔT, xg1, xg2)
-# generate game
-
-# unpack for testing
-dyn = dynamics(g)
-nx = n_states(dyn)
-nu = n_controls(dyn)
-pcs = player_costs(g)
-
-# test quadratization of the cost and quadratization of cost
-x = @SVector zeros(nx)
-u = @SVector zeros(nu)
-t = 0.
-
-quad_sanity_check(g)
 
 "--------------------------------- Unicycle4D ---------------------------------"
 
