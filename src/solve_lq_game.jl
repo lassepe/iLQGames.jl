@@ -11,8 +11,6 @@ function solve_lq_game!(strategies, g::LQGame)
     # extract control and input dimensions
     nx = n_states(g)
     nu = n_controls(g)
-
-    full_urange = SVector{nu}(1:nu)
     full_xrange = SVector{nx}(1:nx)
 
     # initializting the optimal cost to go representation for DP
@@ -41,7 +39,7 @@ function solve_lq_game!(strategies, g::LQGame)
         for (ii, udxᵢ) in enumerate(uindex(g))
             BᵢZᵢ = B[:, udxᵢ]' * Z[ii]
             # the current set of rows that we construct for player ii
-            S[udxᵢ, :] = cost[ii].R[udxᵢ, full_urange] + BᵢZᵢ*B
+            S[udxᵢ, :] = cost[ii].R[udxᵢ, :] + BᵢZᵢ*B
             # append the fully constructed row to the full S-Matrix
             Y[udxᵢ, :] = [(BᵢZᵢ*A) (B[:, udxᵢ]'*ζ[ii] + cost[ii].r[udxᵢ])]
         end
