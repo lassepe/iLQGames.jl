@@ -77,7 +77,7 @@ range of inputs.
 
 $(TYPEDFIELDS)
 """
-struct LQGame{TU,TD<:Union{LTVSystem, LTISystem}, TC<:SizedVector} <: AbstractGame
+struct LQGame{TU,TD<:Union{LTVSystem, LTISystem}, TC} <: AbstractGame
     uids::TU
     "The full linear system dynamics. A vector (time) of `LinearSystem`s."
     dyn::TD
@@ -87,7 +87,7 @@ struct LQGame{TU,TD<:Union{LTVSystem, LTISystem}, TC<:SizedVector} <: AbstractGa
 
     function LQGame(uids::TU, dyn::TD, pcost::TC) where {TU,TD,TC}
         game_sanity_checks(uids, TD, eltype(TC))
-        @assert eltype(eltype(TC)) <: QuadraticPlayerCost "LQGames require quadratic cots."
+        @assert eltype(eltype(TC)) <: QuadraticPlayerCost "LQGames require quadratic costs."
         return new{TU,TD,TC}(uids, dyn, pcost)
     end
 end

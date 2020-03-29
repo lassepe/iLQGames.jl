@@ -1,6 +1,6 @@
 function trajectory!(traj::SystemTrajectory{h}, cs::ControlSystem,
-                     γ::SizedVector{h, <:AffineStrategy},
-                     last_op::SystemTrajectory{h}, x0::SVector,
+                     γ::AbstractVector{<:AffineStrategy},
+                     last_op::SystemTrajectory{h}, x0::AbstractVector,
                      max_elwise_divergence::Float64=Inf) where {h}
 
     @assert samplingtime(traj) == samplingtime(last_op) == samplingtime(cs)
