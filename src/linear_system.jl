@@ -34,16 +34,16 @@ function discretize(ls::LinearSystem, vt::Val{ΔT}) where {ΔT}
 end
 
 # TODO: this should probably know the absolute time (like the `SystemTrajectory`)
-struct LTVSystem{h, ΔT, nx, nu, TD<:SizedVector{h, <:LinearSystem{ΔT, nx, nu}}} <: ControlSystem{ΔT, nx, nu}
+struct LTVSystem{ΔT, nx, nu, TD<:AbstractVector{<:LinearSystem{ΔT, nx, nu}}} <: ControlSystem{ΔT, nx, nu}
     "The discrete time series of linear systems."
     dyn::TD
-    LTVSystem(dyn::TD) where {h, ΔT, nx, nu, TD<:SizedVector{h, <:LinearSystem{ΔT, nx, nu}}} = begin
+    LTVSystem(dyn::TD) where {ΔT, nx, nu, TD<:AbstractVector{<:LinearSystem{ΔT, nx, nu}}} = begin
         @assert ΔT > 0 "LTVSystem require finite discretization steps."
-        new{h, ΔT, nx, nu, TD}(dyn)
+        new{ΔT, nx, nu, TD}(dyn)
     end
 end
 LinearizationStyle(::LTVSystem) = TrivialLinearization()
-Base.eltype(::Type{<:LTVSystem{h, ΔT, nx, nu, TD}}) where {h, ΔT, nx, nu, TD} = eltype(TD)
+Base.eltype(::Type{<:LTVSystem{ΔT, nx, nu, TD}}) where {ΔT, nx, nu, TD} = eltype(TD)
 Base.getindex(ds::LTVSystem, i) = getindex(ds.dyn, i)
 Base.setindex!(ds::LTVSystem, v, i) = setindex!(ds.dyn, v, i)
 next_x(cs::LTVSystem, xₖ::SVector, uₖ::SVector, k::Int) = next_x(cs.dyn[k], xₖ, uₖ)
