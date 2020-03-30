@@ -50,8 +50,8 @@ function generate_1D_pointmass_game()
 
     costs = @SVector [c1, c2]
     # the lq game (player one has control input 1 and 2; player 2 has control input 3
-    ltv_dyn = LTVSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
-    qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
+    ltv_dyn = LTVSystem(SizedVector{N_STEPS}(repeat([dyn], N_STEPS)))
+    qtv_costs = SizedVector{N_STEPS}(repeat([costs], N_STEPS))
     uids = (SVector(1), SVector(2))
     lqGame = LQGame(uids, ltv_dyn, qtv_costs)
 
@@ -103,8 +103,8 @@ function generate_2D_pointmass_game()
                                        0. 0. 0. 1.]))# R)
     costs = SVector(c1, c2)
 
-    ltv_dyn = LTVSystem(Size(N_STEPS)(repeat([dyn], N_STEPS)))
-    qtv_costs = Size(N_STEPS)(repeat([costs], N_STEPS))
+    ltv_dyn = LTVSystem(SizedVector{N_STEPS}(repeat([dyn], N_STEPS)))
+    qtv_costs = SizedVector{N_STEPS}(repeat([costs], N_STEPS))
     uids =  (SVector(1, 2), SVector(3, 4))
     lqGame = LQGame(uids, ltv_dyn, qtv_costs)
 

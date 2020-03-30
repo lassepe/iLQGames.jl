@@ -67,7 +67,7 @@ lqg = lq_approximation(solver, g, zero_op)
 # - setup initial_strategy
 steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
 acc_init(k::Int) = -cos(k/h*pi)*0.3
-γ_init = Size(h)([AffineStrategy((@SMatrix zeros(nu, nx)),
+γ_init = SizedVector{h}([AffineStrategy((@SMatrix zeros(nu, nx)),
 
                                  (@SVector [steer_init(k), 0.7*acc_init(k),
                                             steer_init(k), acc_init(k)])) for k in 1:h])

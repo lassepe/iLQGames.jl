@@ -11,7 +11,6 @@ function solve_lq_game!(strategies, g::LQGame)
     # extract control and input dimensions
     nx = n_states(g)
     nu = n_controls(g)
-    full_xrange = SVector{nx}(1:nx)
 
     # initializting the optimal cost to go representation for DP
     # quadratic cost to go
@@ -46,7 +45,7 @@ function solve_lq_game!(strategies, g::LQGame)
 
         # solve for the gains `P` and feed forward terms `α` simulatiously
         P_and_α = SMatrix(S)\SMatrix(Y)
-        P = P_and_α[:, full_xrange]
+        P = P_and_α[:, SOneTo(end-1)]
         α = P_and_α[:, end]
 
         # compute F and β as intermediate result for estimating the cost to go
