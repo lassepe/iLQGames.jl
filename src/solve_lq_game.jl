@@ -21,7 +21,8 @@ function solve_lq_game!(strategies, g::LQGame)
     # As `nx` and `nu` are known at compile time and all operations below can be
     # inlined, allocations can be eliminted by the compiler.
     S = @MMatrix zeros(nu, nu)
-    Y = @MMatrix zeros(nu, nx + 1)
+    YP = @MMatrix zeros(nu, nx)
+    Yα = @MVector zeros(nu)
 
     # working backwards in time to solve the dynamic program
     for kk in horizon(g):-1:1
@@ -40,13 +41,13 @@ function solve_lq_game!(strategies, g::LQGame)
             # the current set of rows that we construct for player ii
             S[udxᵢ, :] = cost[ii].R[udxᵢ, :] + BᵢZᵢ*B
             # append the fully constructed row to the full S-Matrix
-            Y[udxᵢ, :] = [(BᵢZᵢ*A) (B[:, udxᵢ]'*ζ[ii] + cost[ii].r[udxᵢ])]
+            YP[udxᵢ, :] = BᵢZᵢ*A
+            Yα[udxᵢ] = B[:, udxᵢ]'*ζ[ii] + cost[ii].r[udxᵢ]
         end
 
-        # solve for the gains `P` and feed forward terms `α` simulatiously
-        P_and_α = SMatrix(S)\SMatrix(Y)
-        P = P_and_α[:, SOneTo(end-1)]
-        α = P_and_α[:, end]
+        Sinv = inv(SMatrix(S))
+        P = Sinv * SMatrix(YP)
+        α = Sinv * SVector(Yα)
 
         # compute F and β as intermediate result for estimating the cost to go
         F = A - B * P
