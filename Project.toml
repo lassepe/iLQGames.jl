@@ -1,7 +1,7 @@
 name = "iLQGames"
 uuid = "ae812560-bd7e-11e9-3bd3-b502f7cff3d3"
 authors = ["lassepe <lasse.peters@tuhh.de>"]
-version = "0.1.0"
+version = "0.2.6"
 
 [deps]
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
@@ -23,6 +23,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+julia = "1"
 ColorSchemes = "3.9"
 Colors = "0.12"
 DataStructures = "0.17"
@@ -30,7 +31,7 @@ DiffResults = "1.0"
 DocStringExtensions = "0.8"
 DynamicalSystemsBase = "1.5"
 ForwardDiff = "0.10"
-GR = "0.50"
+GR = "0.49"
 IdentityRanges = "0.3"
 LaTeXStrings = "1.1"
 ORCA = "0.3"
