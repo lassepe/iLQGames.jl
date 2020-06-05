@@ -66,7 +66,7 @@ acc_init(k::Int) = -cos(k/h*pi)*0.3
                                  (@SVector [steer_init(k), 0.7*acc_init(k),
                                             steer_init(k), acc_init(k)])) for k in 1:h])
 @info "Benchmark *without* feedback linearization:"
-display(@benchmark(solve!(copy(zero_op), copy(γ_init), $g, $solver, $x0)))
+@benchmark(solve!(copy(zero_op), copy(γ_init), $g, $solver, $x0)) |> display
 
 
 steer_init(k::Int) = cos(k/h*pi) * deg2rad(0)
@@ -85,7 +85,7 @@ solverξ = iLQSolver(gξ)
 quad_sanity_check(gξ)
 
 @info "Benchmark *with* feedback linearization:"
-display(@benchmark(solve!(copy(zero_op), copy(γξ_init), $gξ, $solverξ, $ξ0)))
+@benchmark(solve!(copy(zero_op), copy(γξ_init), $gξ, $solverξ, $ξ0)) |> display
 
 @testset "state conversion" begin
     for i in 1:100
