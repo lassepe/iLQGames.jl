@@ -62,4 +62,4 @@ acc_init(k::Int) = -cos(k/h*pi)*0.1
                                             steer_init(k), acc_init(k)])) for k in 1:h])
 # generate initial operating point from simulating initial strategy
 # solve the game
-display(@benchmark(solve!(copy(zero_op), copy(γ_init), $g, $solver, $x0)))
+@benchmark(solve!(copy(zero_op), copy(γ_init), $g, $solver, $x0)) |> display

@@ -1,7 +1,9 @@
 # Some Simple Tests
 using Test
-
-using Pkg; Pkg.add(PackageSpec(url="https://github.com/lassepe/ProfileTools.jl"))
+using InteractiveUtils
+using BenchmarkTools
+BenchmarkTools.DEFAULT_PARAMETERS.samples=1
+BenchmarkTools.DEFAULT_PARAMETERS.evals=1
 
 macro testset_include(filename)
     @assert filename isa AbstractString
@@ -12,6 +14,27 @@ macro testset_include(filename)
         end;
     end
 end
+
+macro inferred_with_info(expr)
+    rexpr = quote
+        try
+            $expr
+            @show $(expr.args[1])
+            @inferred $expr
+            true
+        catch e
+            if typeof(e) == ErrorException && occursin("does not match inferred return type", e.msg)
+                @info "Type inference failed. Here is the result of @code_warntype\n"
+                InteractiveUtils.@code_warntype $expr
+                false
+            else
+                rethrow(e)
+            end
+        end
+    end
+    return esc(rexpr)
+end # macro
+
 
 @testset "all" begin
     @testset_include "test_control_system.jl"
