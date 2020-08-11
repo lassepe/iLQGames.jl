@@ -8,10 +8,10 @@ A framework for rapidly designing and solving nonlinear general-sum differential
 games, built around the iterative linear-quadratic method.
 
 For a full description of the algorithm itself and examples of how it can be
-applied, please refer to [paper](https://arxiv.org/abs/1909.04694).
+applied, please refer to our [original paper](https://arxiv.org/abs/1909.04694).
 A brief introduction to this framework and benchmarks against a [C++
 implementation](https://github.com/HJReachability/ilqgames)
-can be found in [this paper](https://arxiv.org/abs/2002.10185).
+can be found in this [short workshop manuscript](https://arxiv.org/abs/2002.10185).
 Finally, [this paper](https://arxiv.org/abs/2002.04354) demonstrates the flexibility and performance of iLQGames.jl
 by combining it with a particle-filter scheme to reason about uncertainty in
 differential games in real-time.
@@ -27,7 +27,7 @@ Pkg.add(PackageSpec(url="https://github.com/lassepe/iLQGames.jl"))
 
 ## Example
 
-Here is a example of two players controlling a *single* 4D-unicycle.
+Here is an example of two players controlling a *single* 4D-unicycle.
 Player-1 controls the steering, Player-2 controls the acceleration.
 
 
