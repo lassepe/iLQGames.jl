@@ -16,6 +16,8 @@ Finally, [this paper](https://arxiv.org/abs/2002.04354) demonstrates the flexibi
 by combining it with a particle-filter scheme to reason about uncertainty in
 differential games in real-time.
 
+[![Watch the video](media/workshop-video-preview.png)](https://www.dropbox.com/s/y65qxltloz6fh3q/EMAS-WorkshopTalk.webm?dl=0)
+
 ## Installation
 
 Within the Julia REPL run:
