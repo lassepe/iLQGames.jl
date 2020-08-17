@@ -4,11 +4,9 @@
 [![codecov](https://codecov.io/gh/lassepe/iLQGames.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/lassepe/iLQGames.jl)
  [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-A framework for rapidly designing and solving nonlinear general-sum differential
-games, built around the iterative linear-quadratic method.
+iLQGames.jl is a framework for rapidly designing and solving nonlinear general-sum differential
+games, built around [iterative linear-quadratic game approximations](https://arxiv.org/abs/1909.04694).
 
-For a full description of the algorithm itself and examples of how it can be
-applied, please refer to our [original paper](https://arxiv.org/abs/1909.04694).
 A brief introduction to this framework and benchmarks against a [C++
 implementation](https://github.com/HJReachability/ilqgames)
 can be found in this [short workshop manuscript](https://arxiv.org/abs/2002.10185).
@@ -87,7 +85,7 @@ x0 = SVector(1, 1, 0, 0.5)
 converged, trajectory, strategies = solve(g, solver, x0)
 ```
 
-Finally, we visualize the path of the unicycle like (x- and y-position):
+Finally, we can visualize the path of the unicycle as follows (x- and y-position):
 ```julia
 # for visualization we need to state which state indices correspond to px and py
 position_indices = tuple(SVector(1,2))
