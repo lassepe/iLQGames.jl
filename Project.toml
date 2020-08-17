@@ -24,7 +24,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 ColorSchemes = "3.9"
 Colors = "0.12"
-DataStructures = "0.17"
+DataStructures = "0.17, 0.18"
 DiffResults = "1.0"
 DocStringExtensions = "0.8"
 ForwardDiff = "0.10"
