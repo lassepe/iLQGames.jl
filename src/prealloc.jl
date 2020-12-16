@@ -36,7 +36,7 @@ function linearization_alloc(::JacobianLinearization, g::AbstractGame)
     TA = SMatrix{nx, nx, Float64, nx*nx}
     TB = SMatrix{nx, nu, Float64, nx*nu}
     TLS = LinearSystem{ΔT, nx, nu, TA, TB}
-    dyn = SizedVector{h, TLS, 1}(undef)
+    dyn = SizedVector{h, TLS}(undef)
     # time varying dynamics
     return LTVSystem(dyn)
 end
@@ -67,7 +67,7 @@ function lqgame_preprocess_alloc(g::AbstractGame)
     TRQ = SMatrix{nu, nu, Float64, nu*nu}
     TCi = QuadraticPlayerCost{nx, nu, TL, TQ, TRL, TRQ}
     TC = SVector{np, TCi}
-    quad_cost = SizedVector{h, TC, 1}(undef)
+    quad_cost = SizedVector{h, TC}(undef)
 
     lqg = LQGame(uindex(g), lin_dyn, quad_cost)
 end

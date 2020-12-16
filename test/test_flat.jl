@@ -106,6 +106,6 @@ end;
         u = randn(SVector{n_controls(dyn_fblin_dense)})
         t = 0.0
 
-        @test next_x(dyn_fblin_dense, x, u, t) == next_x(dyn_fblin_sparse, x, u, t)
+        @test next_x(dyn_fblin_dense, x, u, t) ≈ next_x(dyn_fblin_sparse, x, u, t)
     end
 end;
