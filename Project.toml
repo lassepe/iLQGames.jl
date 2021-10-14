@@ -1,7 +1,7 @@
 name = "iLQGames"
 uuid = "ae812560-bd7e-11e9-3bd3-b502f7cff3d3"
 authors = ["lassepe <lasse.peters@tuhh.de>"]
-version = "0.2.6"
+version = "0.2.7"
 
 [deps]
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
