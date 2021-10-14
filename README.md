@@ -1,6 +1,6 @@
 # iLQGames.jl
 
-![build](https://github.com/lassepe/iLQGames.jl/workflows/build/badge.svg)
+![ci](https://github.com/lassepe/iLQGames.jl/workflows/ci/badge.svg)
 [![codecov](https://codecov.io/gh/lassepe/iLQGames.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/lassepe/iLQGames.jl)
  [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
