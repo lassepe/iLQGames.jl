@@ -1,8 +1,8 @@
 # iLQGames.jl
 
-[![CI](https://github.com/lassepe/iLQGames.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/lassepe/iLQGames.jl/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/lassepe/iLQGames.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/lassepe/iLQGames.jl)
- [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![CI](https://github.com/JuliaGameTheoreticPlanning/iLQGames.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaGameTheoreticPlanning/iLQGames.jl/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/JuliaGameTheoreticPlanning/iLQGames.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaGameTheoreticPlanning/iLQGames.jl)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 iLQGames.jl is a framework for rapidly designing and solving nonlinear general-sum differential
 games, built around [iterative linear-quadratic game approximations](https://arxiv.org/abs/1909.04694).
@@ -22,7 +22,7 @@ Within the Julia REPL run:
 
 ```julia
 using Pkg
-Pkg.add(PackageSpec(url="https://github.com/lassepe/iLQGames.jl"))
+Pkg.add(PackageSpec(url="https://github.com/JuliaGameTheoreticPlanning/iLQGames.jl"))
 ```
 
 ## Example
